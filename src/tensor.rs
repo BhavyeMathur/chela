@@ -1,8 +1,10 @@
 mod dtype;
-mod vector;
+mod flatten_vector;
+
+mod recursive_vector_trait;
 
 use dtype::*;
-use vector::*;
+use flatten_vector::*;
 
 use std::ptr::NonNull;
 

@@ -14,5 +14,8 @@ mod tests {
 
         let _arr = Tensor::from_vector(vec![vec![50], vec![50], vec![50]]);
         let _arr = Tensor::from_vector(vec![vec![vec![50]], vec![vec![50]], vec![vec![50]]]);
+
+        // TODO unallow!
+        let _arr = Tensor::from_vector(vec![vec![50, 50], vec![50], vec![50]]);
     }
 }
