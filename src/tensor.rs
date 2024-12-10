@@ -9,12 +9,11 @@ mod constructors;
 use crate::tensor::data_buffer::DataBuffer;
 use crate::tensor::data_owned::DataOwned;
 use crate::tensor::data_view::DataView;
-use crate::tensor::dtype::RawDataType;
 
-pub(crate) struct TensorBase<T: DataBuffer> {
+pub struct TensorBase<T: DataBuffer> {
     data: T,
     shape: Vec<usize>,
 }
 
-type Tensor<T: RawDataType> = TensorBase<DataOwned<T>>;
-type TensorView<T: RawDataType> = TensorBase<DataView<T>>;
+pub type Tensor<T> = TensorBase<DataOwned<T>>;
+pub type TensorView<T> = TensorBase<DataView<T>>;

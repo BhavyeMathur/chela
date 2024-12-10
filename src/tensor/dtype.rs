@@ -1,4 +1,4 @@
-pub(crate) trait RawDataType {}
+pub trait RawDataType {}
 
 impl RawDataType for u8 {}
 impl RawDataType for u16 {}

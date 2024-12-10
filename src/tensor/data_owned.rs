@@ -5,9 +5,8 @@ use crate::tensor::dtype::RawDataType;
 
 use crate::traits::flatten::Flatten;
 use crate::traits::homogenous::Homogenous;
-use crate::traits::shape::Shape;
 
-pub(crate) struct DataOwned<T: RawDataType> {
+pub struct DataOwned<T: RawDataType> {
     ptr: NonNull<T>,
     len: usize,
     capacity: usize,
@@ -24,7 +23,7 @@ impl<T: RawDataType> DataOwned<T> {
 }
 
 impl<T: RawDataType> DataOwned<T> {
-    pub(crate) fn from(data: impl Flatten<T> + Homogenous) -> Self {
+    pub fn from(data: impl Flatten<T> + Homogenous) -> Self {
         let data = data.flatten();
 
         if data.len() == 0 {
