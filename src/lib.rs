@@ -1,10 +1,9 @@
 mod tensor;
-
-use tensor::*;
+mod traits;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::tensor::*;
 
     #[test]
     fn from_vector() {
@@ -23,9 +22,17 @@ mod tests {
 
     #[test]
     fn from_array() {
-        Tensor::from_array([500, 50, 100]);
-        Tensor::from_array([[500], [50], [100]]);
-        Tensor::from_array([[[500], [50], [30]], [[50], [0], [0]], [[100], [10], [20]]]);
+        let arr = Tensor::from_array([500, 50, 100]);
+        assert_eq!(arr.shape(), &vec![3]);
+
+        let arr = Tensor::from_array([[500], [50], [100]]);
+        assert_eq!(arr.shape(), &vec![3, 1]);
+
+        let arr = Tensor::from_array([[[500], [50], [30]], [[50], [0], [0]]]);
+        assert_eq!(arr.shape(), &vec![2, 3, 1]);
+
+        let arr = Tensor::from_array([[[50, 50, 50]], [[50, 50, 50]]]);
+        assert_eq!(arr.shape(), &vec![2, 1, 3]);
     }
 
     #[test]

@@ -3,15 +3,15 @@
 // [[0, 1], [2]] - not homogenous
 
 use crate::recursive_trait_base_cases;
-use super::shape::Shape;
+use crate::traits::shape::Shape;
 
-pub trait HomogenousVec: Shape {
+pub trait Homogenous: Shape {
     fn check_homogenous(&self) -> bool;
 }
 
-impl<T> HomogenousVec for Vec<T>
+impl<T> Homogenous for Vec<T>
 where
-    T: HomogenousVec,
+    T: Homogenous,
 {
     fn check_homogenous(&self) -> bool {
         let first_length = self[0].shape();
@@ -23,7 +23,7 @@ where
 
 macro_rules! homogenous_vec_trait {
     ( $dtype: ty ) => {
-        impl HomogenousVec for Vec<$dtype> {
+        impl Homogenous for Vec<$dtype> {
             fn check_homogenous(&self) -> bool {
                 true
             }

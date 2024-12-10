@@ -3,16 +3,16 @@
 // [[0], [50, 50], 100] -> [0, 50, 50, 100]
 // [[[0]]] -> [0]
 
-use super::dtype::RawDataType;
+use crate::tensor::dtype::RawDataType;
 use crate::recursive_trait_base_cases;
 
-pub trait FlattenVec<A> {
+pub trait Flatten<A> {
     fn flatten(self) -> Vec<A>;
 }
 
-impl<A, T> FlattenVec<A> for Vec<T>
+impl<A, T> Flatten<A> for Vec<T>
 where
-    T: FlattenVec<A>,
+    T: Flatten<A>,
     A: RawDataType,
 {
     fn flatten(self) -> Vec<A> {
@@ -24,7 +24,7 @@ where
 
 macro_rules! flatten_vec_trait {
     ( $dtype:ty ) => {
-        impl FlattenVec<$dtype> for Vec<$dtype> {
+        impl Flatten<$dtype> for Vec<$dtype> {
             fn flatten(self) -> Vec<$dtype> {
                 self
             }
