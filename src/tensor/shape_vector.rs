@@ -1,4 +1,4 @@
-use crate::recursive_vec_trait_base_cases;
+use crate::recursive_trait_base_cases;
 
 pub trait Shape {
     fn shape(&self) -> Vec<usize>;
@@ -23,4 +23,4 @@ macro_rules! shape_vec_trait {
     };
 }
 
-recursive_vec_trait_base_cases!(shape_vec_trait);
+recursive_trait_base_cases!(shape_vec_trait);

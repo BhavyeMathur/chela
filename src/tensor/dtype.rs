@@ -1,3 +1,5 @@
+use crate::recursive_trait_base_cases;
+
 pub(crate) trait RawDataType {}
 
 impl RawDataType for u8 {}
@@ -30,7 +32,17 @@ where
 
 impl<A, const N: usize> RawData for [A; N]
 where
-    A: RawDataType,
+    A: RawData,
 {
     type DType = A;
 }
+
+macro_rules! raw_data_array_trait {
+    ( $dtype:ty ) => {
+        impl<const N: usize> RawData for [$dtype; N] {
+            type DType = $dtype;
+        }
+    };
+}
+
+recursive_trait_base_cases!(raw_data_array_trait);

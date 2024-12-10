@@ -2,7 +2,7 @@
 // [[0], [1], [2]] - homogenous
 // [[0, 1], [2]] - not homogenous
 
-use crate::recursive_vec_trait_base_cases;
+use crate::recursive_trait_base_cases;
 use super::shape_vector::Shape;
 
 pub trait HomogenousVec: Shape {
@@ -11,7 +11,7 @@ pub trait HomogenousVec: Shape {
 
 impl<T> HomogenousVec for Vec<T>
 where
-    T: HomogenousVec + Shape,
+    T: HomogenousVec,
 {
     fn check_homogenous(&self) -> bool {
         let first_length = self[0].shape();
@@ -31,4 +31,4 @@ macro_rules! homogenous_vec_trait {
     };
 }
 
-recursive_vec_trait_base_cases!(homogenous_vec_trait);
+recursive_trait_base_cases!(homogenous_vec_trait);

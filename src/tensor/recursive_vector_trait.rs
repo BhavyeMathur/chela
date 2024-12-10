@@ -1,7 +1,7 @@
 // TODO make sure this doesn't export the macro to the public API
 
 #[macro_export(local_inner_macros)]
-macro_rules! recursive_vec_trait_base_cases {
+macro_rules! recursive_trait_base_cases {
     ( $macro_name: ident ) => {
         $macro_name!(i8);
         $macro_name!(i16);

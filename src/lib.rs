@@ -1,4 +1,3 @@
-mod device;
 mod tensor;
 
 use tensor::*;
@@ -8,12 +7,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn constructor() {
-        let _arr = Tensor::from_vector(vec![0, 50, 100]);
-        let _arr = Tensor::from_array([500, 50, 100]);
+    fn from_vector() {
+        Tensor::from_vector(vec![0, 50, 100]);
+        Tensor::from_vector(vec![vec![50], vec![50], vec![50]]);
+        Tensor::from_vector(vec![vec![vec![50]], vec![vec![50]], vec![vec![50]]]);
+    }
 
-        let _arr = Tensor::from_vector(vec![vec![50], vec![50], vec![50]]);
-        let _arr = Tensor::from_vector(vec![vec![vec![50]], vec![vec![50]], vec![vec![50]]]);
+    #[test]
+    fn from_array() {
+        Tensor::from_array([500, 50, 100]);
+        Tensor::from_array([[500], [50], [100]]);
+        Tensor::from_array([[[500], [50], [30]], [[50], [0], [0]], [[100], [10], [20]]]);
     }
 
     #[test]

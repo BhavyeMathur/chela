@@ -4,7 +4,7 @@
 // [[[0]]] -> [0]
 
 use super::dtype::RawDataType;
-use crate::recursive_vec_trait_base_cases;
+use crate::recursive_trait_base_cases;
 
 pub trait FlattenVec<A> {
     fn flatten(self) -> Vec<A>;
@@ -32,4 +32,4 @@ macro_rules! flatten_vec_trait {
     };
 }
 
-recursive_vec_trait_base_cases!(flatten_vec_trait);
+recursive_trait_base_cases!(flatten_vec_trait);
