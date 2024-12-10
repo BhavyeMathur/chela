@@ -1,11 +1,11 @@
 use crate::tensor::dtype::RawData;
-use crate::tensor::Tensor;
+use crate::tensor::DataOwned;
 
-impl<T, A> Tensor<T>
+impl<T, A> DataOwned<T>
 where
     T: RawData<DType = A>,
 {
-    pub fn shape(&self) -> &[usize] {
-        &self.shape
-    }
+    // pub fn shape(&self) -> &[usize] {
+    //     &self.shape
+    // }
 }
