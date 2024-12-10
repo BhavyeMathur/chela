@@ -11,7 +11,7 @@ where
     // TODO optimise this code. Right now, we recursively find the shape of each object
     // even though this can be memoized
     fn shape(&self) -> Vec<usize> {
-        [vec![self.len()], self[0].shape().to_vec()].concat()
+        [vec![self.len()], self[0].shape()].concat()
     }
 }
 
@@ -20,7 +20,7 @@ where
     T: Shape,
 {
     fn shape(&self) -> Vec<usize> {
-        [vec![self.len()], self[0].shape().to_vec()].concat()
+        [vec![self.len()], self[0].shape()].concat()
     }
 }
 

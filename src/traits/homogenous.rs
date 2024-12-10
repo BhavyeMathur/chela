@@ -14,10 +14,9 @@ where
     T: Homogenous,
 {
     fn check_homogenous(&self) -> bool {
-        let first_length = self[0].shape();
+        let first_shape = self[0].shape();
 
-        self.iter()
-            .all(|v| v.check_homogenous() && v.shape() == first_length)
+        self.iter().all(|v| v.shape() == first_shape)
     }
 }
 
