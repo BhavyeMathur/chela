@@ -6,14 +6,13 @@
 use crate::recursive_trait_base_cases;
 use crate::tensor::dtype::RawDataType;
 
-pub trait Flatten<A> {
+pub trait Flatten<A: RawDataType> {
     fn flatten(self) -> Vec<A>;
 }
 
-impl<A, T> Flatten<A> for Vec<T>
+impl<A: RawDataType, T> Flatten<A> for Vec<T>
 where
     T: Flatten<A>,
-    A: RawDataType,
 {
     fn flatten(self) -> Vec<A> {
         self.into_iter()
@@ -22,10 +21,9 @@ where
     }
 }
 
-impl<A, T, const N: usize> Flatten<A> for [T; N]
+impl<A: RawDataType, T, const N: usize> Flatten<A> for [T; N]
 where
     T: Flatten<A>,
-    A: RawDataType,
 {
     fn flatten(self) -> Vec<A> {
         self.into_iter()
@@ -34,18 +32,14 @@ where
     }
 }
 
-macro_rules! flatten_vec_trait {
+macro_rules! flatten_trait {
     ( $dtype:ty ) => {
         impl Flatten<$dtype> for Vec<$dtype> {
             fn flatten(self) -> Vec<$dtype> {
                 self
             }
         }
-    };
-}
 
-macro_rules! flatten_array_trait {
-    ( $dtype:ty ) => {
         impl<const N: usize> Flatten<$dtype> for [$dtype; N] {
             fn flatten(self) -> Vec<$dtype> {
                 Vec::from(self)
@@ -54,5 +48,4 @@ macro_rules! flatten_array_trait {
     };
 }
 
-recursive_trait_base_cases!(flatten_vec_trait);
-recursive_trait_base_cases!(flatten_array_trait);
+recursive_trait_base_cases!(flatten_trait);

@@ -9,13 +9,9 @@ pub trait Homogenous {
     fn check_homogenous(&self) -> bool;
 }
 
-impl<T> Homogenous for Vec<T>
-where
-    T: Homogenous + Shape,
-{
+impl<T: Homogenous + Shape> Homogenous for Vec<T> {
     fn check_homogenous(&self) -> bool {
         let first_shape = self[0].shape();
-
         self.iter().all(|v| v.shape() == first_shape)
     }
 }

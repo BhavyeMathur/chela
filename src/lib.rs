@@ -44,14 +44,11 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn assert_inhomogeneous_vector_error1() {
-        DataOwned::from(vec![vec![50, 50], vec![50]]);
-    }
+    fn assert_inhomogeneous_from() {
+        let arr = DataOwned::from(vec![vec![50, 50], vec![50]]);
+        assert_eq!(arr.len(), &3);
 
-    #[test]
-    #[should_panic]
-    fn assert_inhomogeneous_vector_error2() {
-        DataOwned::from(vec![vec![vec![50, 50]], vec![vec![50]], vec![vec![50]]]);
+        let arr = DataOwned::from(vec![vec![vec![50, 50]], vec![vec![50]], vec![vec![50]]]);
+        assert_eq!(arr.len(), &4);
     }
 }

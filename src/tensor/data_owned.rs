@@ -2,23 +2,18 @@ use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
 
 use crate::tensor::dtype::RawDataType;
+
 use crate::traits::flatten::Flatten;
 use crate::traits::homogenous::Homogenous;
 use crate::traits::shape::Shape;
 
-pub(crate) struct DataOwned<T>
-where
-    T: RawDataType,
-{
+pub(crate) struct DataOwned<T: RawDataType> {
     ptr: NonNull<T>,
     len: usize,
     capacity: usize,
 }
 
-impl<T> DataOwned<T>
-where
-    T: RawDataType,
-{
+impl<T: RawDataType> DataOwned<T> {
     pub fn len(&self) -> &usize {
         &self.len
     }
@@ -28,20 +23,12 @@ where
     }
 }
 
-impl<T> DataOwned<T>
-where
-    T: RawDataType,
-{
+impl<T: RawDataType> DataOwned<T> {
     pub(crate) fn from(data: impl Flatten<T> + Homogenous) -> Self {
-        assert!(
-            data.check_homogenous(),
-            "Tensor::from() failed, found inhomogeneous dimensions"
-        );
-
         let data = data.flatten();
 
         if data.len() == 0 {
-            panic!("cannot create data buffer from empty data");
+            panic!("Tensor::from() failed, cannot create data buffer from empty data");
         }
 
         let mut data = ManuallyDrop::new(data);
@@ -55,7 +42,9 @@ where
 
         Self { len, capacity, ptr }
     }
+}
 
+impl<T: RawDataType> Drop for DataOwned<T> {
     fn drop(&mut self) {
         unsafe { Vec::from_raw_parts(self.ptr.as_ptr(), self.len, self.capacity) };
 
