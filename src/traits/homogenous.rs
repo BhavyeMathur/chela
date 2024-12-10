@@ -5,18 +5,24 @@
 use crate::recursive_trait_base_cases;
 use crate::traits::shape::Shape;
 
-pub trait Homogenous: Shape {
+pub trait Homogenous {
     fn check_homogenous(&self) -> bool;
 }
 
 impl<T> Homogenous for Vec<T>
 where
-    T: Homogenous,
+    T: Homogenous + Shape,
 {
     fn check_homogenous(&self) -> bool {
         let first_shape = self[0].shape();
 
         self.iter().all(|v| v.shape() == first_shape)
+    }
+}
+
+impl<T, const N: usize> Homogenous for [T; N] {
+    fn check_homogenous(&self) -> bool {
+        true
     }
 }
 
