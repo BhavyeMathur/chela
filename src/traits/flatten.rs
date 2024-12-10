@@ -5,6 +5,10 @@
 
 use crate::recursive_trait_base_cases;
 use crate::tensor::dtype::RawDataType;
+use crate::traits::shape::Shape;
+use std::fmt::Debug;
+
+use std::ptr::copy_nonoverlapping;
 
 pub trait Flatten<A: RawDataType> {
     fn flatten(self) -> Vec<A>;
@@ -18,17 +22,39 @@ where
         self.into_iter()
             .flat_map(|nested| nested.flatten().into_iter())
             .collect()
+
+        // TODO deed to test performance with the following
+        // let len = self.shape().iter().product();
+        // let mut result = Vec::with_capacity(len);
+        //
+        // for nested in self {
+        //     result.append(nested.flatten().as_mut());
+        // }
+        // result
     }
 }
 
 impl<A: RawDataType, T, const N: usize> Flatten<A> for [T; N]
 where
     T: Flatten<A>,
+    [T; N]: Shape,
+    A: Debug,
 {
-    fn flatten(self) -> Vec<A> {
-        self.into_iter()
-            .flat_map(|nested| nested.flatten().into_iter())
-            .collect()
+    fn flatten(mut self) -> Vec<A> {
+        // ChatGPT suggested
+        assert!(align_of::<T>() >= align_of::<A>(), "alignment mismatch");
+
+        let len = self.shape().iter().product();
+        let mut result = Vec::with_capacity(len);
+
+        let src = self.as_mut_ptr() as *mut A;
+        let dst = result.as_mut_ptr();
+
+        unsafe {
+            copy_nonoverlapping(src, dst, len);
+            result.set_len(len);
+        }
+        result
     }
 }
 
