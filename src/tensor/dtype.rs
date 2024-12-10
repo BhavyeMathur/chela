@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 pub(crate) trait RawDataType {}
 
 impl RawDataType for u8 {}

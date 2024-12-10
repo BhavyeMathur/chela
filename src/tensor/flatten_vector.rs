@@ -1,3 +1,8 @@
+// Trait which recursively flattens a vector
+// [0, 50, 100] -> [0, 50, 100]
+// [[0], [50, 50], 100] -> [0, 50, 50, 100]
+// [[[0]]] -> [0]
+
 use super::dtype::RawDataType;
 use crate::recursive_vec_trait_base_cases;
 

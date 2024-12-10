@@ -14,8 +14,17 @@ mod tests {
 
         let _arr = Tensor::from_vector(vec![vec![50], vec![50], vec![50]]);
         let _arr = Tensor::from_vector(vec![vec![vec![50]], vec![vec![50]], vec![vec![50]]]);
+    }
 
-        // TODO unallow!
-        let _arr = Tensor::from_vector(vec![vec![50, 50], vec![50], vec![50]]);
+    #[test]
+    #[should_panic]
+    fn assert_inhomogeneous_vector_error1() {
+        Tensor::from_vector(vec![vec![50, 50], vec![50]]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn assert_inhomogeneous_vector_error2() {
+        Tensor::from_vector(vec![vec![vec![50, 50]], vec![vec![50]], vec![vec![50]]]);
     }
 }
