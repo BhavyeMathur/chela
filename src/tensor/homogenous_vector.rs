@@ -3,7 +3,7 @@
 // [[0, 1], [2]] - not homogenous
 
 use crate::recursive_trait_base_cases;
-use super::shape_vector::Shape;
+use super::shape::Shape;
 
 pub trait HomogenousVec: Shape {
     fn check_homogenous(&self) -> bool;

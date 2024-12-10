@@ -8,9 +8,17 @@ mod tests {
 
     #[test]
     fn from_vector() {
-        Tensor::from_vector(vec![0, 50, 100]);
-        Tensor::from_vector(vec![vec![50], vec![50], vec![50]]);
-        Tensor::from_vector(vec![vec![vec![50]], vec![vec![50]], vec![vec![50]]]);
+        let arr = Tensor::from_vector(vec![0, 50, 100]);
+        assert_eq!(arr.shape(), &vec![3]);
+
+        let arr = Tensor::from_vector(vec![vec![50], vec![50], vec![50]]);
+        assert_eq!(arr.shape(), &vec![3, 1]);
+
+        let arr = Tensor::from_vector(vec![vec![vec![50]], vec![vec![50]]]);
+        assert_eq!(arr.shape(), &vec![2, 1, 1]);
+
+        let arr = Tensor::from_vector(vec![vec![vec![50, 50, 50]], vec![vec![50, 50, 50]]]);
+        assert_eq!(arr.shape(), &vec![2, 1, 3]);
     }
 
     #[test]
