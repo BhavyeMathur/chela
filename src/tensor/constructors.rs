@@ -14,7 +14,7 @@ impl<T: RawDataType, const D: usize> Tensor<T, D> {
             "Tensor::from() failed, found inhomogeneous dimensions"
         );
 
-        let shape = data.shape();
+        let shape = data.shape().try_into().unwrap();
         let data = DataOwned::from(data);
 
         Self { data, shape }

@@ -1,3 +1,4 @@
+pub mod constructors;
 pub mod data_buffer;
 pub mod data_owned;
 pub mod data_view;
@@ -12,7 +13,7 @@ use crate::tensor::data_view::DataView;
 #[derive(Debug, Clone)]
 pub struct TensorBase<T: DataBuffer, const D: usize> {
     data: T,
-    shape: Vec<usize>,
+    shape: [usize; D],
 }
 
 pub type Tensor<T, const D: usize> = TensorBase<DataOwned<T>, D>;

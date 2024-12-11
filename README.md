@@ -8,7 +8,7 @@ A Rust library for linear algebra and machine learning!
 
 - Implemented faster `Tensor` constructor for nested arrays using unsafe Rust
 - `Clone` and `Debug` traits for `Tensor`
-- `TensorBase<T, N>` now stores its ndims as generic constant `N` using the `Nested<N>` trait
+- `TensorBase<T, N>` now stores its ndims as generic constant `N` using the `Nested<N>` trait & stores `shape` as an array
 
 ### Dec 9, 2024
 
