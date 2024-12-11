@@ -10,6 +10,7 @@ use crate::tensor::data_buffer::DataBuffer;
 use crate::tensor::data_owned::DataOwned;
 use crate::tensor::data_view::DataView;
 
+#[derive(Debug, Clone)]
 pub struct TensorBase<T: DataBuffer> {
     data: T,
     shape: Vec<usize>,

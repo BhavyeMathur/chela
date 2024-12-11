@@ -49,3 +49,9 @@ fn from_inhomogeneous_vector1() {
 fn from_inhomogeneous_vector2() {
     Tensor::from(vec![vec![vec![50, 50]], vec![vec![50]], vec![vec![50]]]);
 }
+
+#[test]
+fn println() {
+    println!("{:?}", Tensor::from([[[10, 20], [30, 40]]]));
+    println!("{:?}", Tensor::from([vec![vec![5, 10], vec![500, 100]]]));
+}

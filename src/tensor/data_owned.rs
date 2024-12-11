@@ -6,6 +6,7 @@ use crate::tensor::dtype::RawDataType;
 use crate::traits::flatten::Flatten;
 use crate::traits::homogenous::Homogenous;
 
+#[derive(Debug, Clone)]
 pub struct DataOwned<T: RawDataType> {
     ptr: NonNull<T>,
     len: usize,

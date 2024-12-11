@@ -7,6 +7,7 @@ A Rust library for linear algebra and machine learning!
 ### Dec 10, 2024
 
 - Implemented faster `Tensor` constructor for nested arrays using unsafe Rust
+- `Clone` and `Debug` traits for `Tensor`
 
 ### Dec 9, 2024
 
