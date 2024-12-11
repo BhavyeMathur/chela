@@ -6,6 +6,10 @@ impl<T: RawDataType, const D: usize> Tensor<T, D> {
         &self.shape
     }
 
+    pub fn stride(&self) -> &[usize] {
+        &self.stride
+    }
+
     pub fn len(&self) -> &usize {
         &self.shape[0]
     }

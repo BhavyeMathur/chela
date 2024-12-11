@@ -14,6 +14,7 @@ use crate::tensor::data_view::DataView;
 pub struct TensorBase<T: DataBuffer, const D: usize> {
     data: T,
     shape: [usize; D],
+    stride: [usize; D],
 }
 
 pub type Tensor<T, const D: usize> = TensorBase<DataOwned<T>, D>;
