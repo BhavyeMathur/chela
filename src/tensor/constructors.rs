@@ -4,10 +4,11 @@ use crate::tensor::Tensor;
 
 use crate::traits::flatten::Flatten;
 use crate::traits::homogenous::Homogenous;
+use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
 
-impl<T: RawDataType> Tensor<T> {
-    pub fn from(data: impl Flatten<T> + Homogenous + Shape) -> Self {
+impl<T: RawDataType, const D: usize> Tensor<T, D> {
+    pub fn from(data: impl Flatten<T> + Homogenous + Shape + Nested<D>) -> Self {
         assert!(
             data.check_homogenous(),
             "Tensor::from() failed, found inhomogeneous dimensions"

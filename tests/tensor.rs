@@ -55,3 +55,8 @@ fn println() {
     println!("{:?}", Tensor::from([[[10, 20], [30, 40]]]));
     println!("{:?}", Tensor::from([vec![vec![5, 10], vec![500, 100]]]));
 }
+
+#[test]
+fn test() {
+    let a = Tensor::from([[[10, 20], [30, 40]]]);
+}
