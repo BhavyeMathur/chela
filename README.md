@@ -6,7 +6,7 @@ A Rust library for linear algebra and machine learning!
 
 ### Dec 11, 2024
 
-- Added `stride()` method for `Tensor`
+- Added `stride()` & `ndims()` method for `Tensor`
 - `Tensor` now stores `stride` & `shape` as `Vec<usize>`
 
 ### Dec 10, 2024

@@ -10,6 +10,10 @@ impl<T: RawDataType> Tensor<T> {
         &self.stride
     }
 
+    pub fn ndims(&self) -> usize {
+        self.ndims
+    }
+
     pub fn len(&self) -> &usize {
         &self.shape[0]
     }

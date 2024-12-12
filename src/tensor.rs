@@ -15,6 +15,7 @@ pub struct TensorBase<T: DataBuffer> {
     data: T,
     shape: Vec<usize>,
     stride: Vec<usize>,
+    ndims: usize,
 }
 
 pub type Tensor<T> = TensorBase<DataOwned<T>>;

@@ -29,6 +29,7 @@ impl<T: RawDataType> Tensor<T> {
             data,
             shape,
             stride,
+            ndims: D,
         }
     }
 }
