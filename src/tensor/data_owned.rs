@@ -7,10 +7,10 @@ use crate::traits::flatten::Flatten;
 use crate::traits::homogenous::Homogenous;
 
 #[derive(Debug, Clone)]
-pub struct DataOwned<T: RawDataType> {
-    ptr: NonNull<T>,
-    len: usize,
-    capacity: usize,
+pub(crate) struct DataOwned<T: RawDataType> {
+    pub(super) ptr: NonNull<T>,
+    pub(super) len: usize,
+    pub(super) capacity: usize,
 }
 
 impl<T: RawDataType> DataOwned<T> {
@@ -31,6 +31,7 @@ impl<T: RawDataType> DataOwned<T> {
             panic!("Tensor::from() failed, cannot create data buffer from empty data");
         }
 
+        // take control of the data so that Rust doesn't drop it once the vector goes out of scope
         let mut data = ManuallyDrop::new(data);
 
         // safe to unwrap because we've checked length above
@@ -46,6 +47,7 @@ impl<T: RawDataType> DataOwned<T> {
 
 impl<T: RawDataType> Drop for DataOwned<T> {
     fn drop(&mut self) {
+        // drops the data
         unsafe { Vec::from_raw_parts(self.ptr.as_ptr(), self.len, self.capacity) };
 
         self.len = 0;
