@@ -4,6 +4,7 @@ pub mod data_owned;
 pub mod data_view;
 pub mod dtype;
 
+pub mod index;
 pub mod shape;
 
 use crate::tensor::data_buffer::DataBuffer;

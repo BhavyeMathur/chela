@@ -73,6 +73,12 @@ fn println() {
 }
 
 #[test]
-fn test() {
-    let a = Tensor::from([[[10, 20], [30, 40]]]);
+fn index() {
+    let a = Tensor::from([10, 20, 30, 40]);
+    assert_eq!(a[0], 10);
+    assert_eq!(a[3], 40);
+
+    let a = Tensor::from([[10, 20], [30, 40]]);
+    assert_eq!(a[[0, 1]], 20);
+    assert_eq!(a[[1, 1]], 40);
 }
