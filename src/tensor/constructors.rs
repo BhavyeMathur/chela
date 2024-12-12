@@ -1,23 +1,21 @@
 use crate::tensor::data_owned::DataOwned;
 use crate::tensor::dtype::RawDataType;
 use crate::tensor::Tensor;
-
 use crate::traits::flatten::Flatten;
 use crate::traits::homogenous::Homogenous;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
 
-impl<T: RawDataType, const D: usize> Tensor<T, D> {
-    pub fn from(data: impl Flatten<T> + Homogenous + Shape + Nested<D>) -> Self {
+impl<T: RawDataType> Tensor<T> {
+    pub fn from<const D: usize>(data: impl Flatten<T> + Shape + Nested<{ D }>) -> Self {
         assert!(
             data.check_homogenous(),
             "Tensor::from() failed, found inhomogeneous dimensions"
         );
 
-        // shape is guaranteed to be [usize; D]
-        let shape: [usize; D] = data.shape().try_into().unwrap();
+        let shape: Vec<usize> = data.shape().into();
 
-        let mut stride = [0; D];
+        let mut stride = vec![0; D];
         let mut p = 1;
 
         for i in (0..D).rev() {
@@ -27,6 +25,10 @@ impl<T: RawDataType, const D: usize> Tensor<T, D> {
 
         let data = DataOwned::from(data);
 
-        Self { data, shape, stride }
+        Self {
+            data,
+            shape,
+            stride,
+        }
     }
 }

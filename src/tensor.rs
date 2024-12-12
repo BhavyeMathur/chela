@@ -11,11 +11,11 @@ use crate::tensor::data_owned::DataOwned;
 use crate::tensor::data_view::DataView;
 
 #[derive(Debug, Clone)]
-pub struct TensorBase<T: DataBuffer, const D: usize> {
+pub struct TensorBase<T: DataBuffer> {
     data: T,
-    shape: [usize; D],
-    stride: [usize; D],
+    shape: Vec<usize>,
+    stride: Vec<usize>,
 }
 
-pub type Tensor<T, const D: usize> = TensorBase<DataOwned<T>, D>;
-pub type TensorView<T, const D: usize> = TensorBase<DataView<T>, D>;
+pub type Tensor<T> = TensorBase<DataOwned<T>>;
+pub type TensorView<T> = TensorBase<DataView<T>>;

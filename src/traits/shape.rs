@@ -1,6 +1,7 @@
 use crate::recursive_trait_base_cases;
+use crate::traits::homogenous::Homogenous;
 
-pub trait Shape {
+pub trait Shape: Homogenous {
     fn shape(&self) -> Vec<usize>;
 }
 
