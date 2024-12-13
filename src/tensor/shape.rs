@@ -1,7 +1,7 @@
-use crate::tensor::dtype::RawDataType;
-use crate::tensor::Tensor;
+use crate::data_buffer::DataBuffer;
+use crate::TensorBase;
 
-impl<T: RawDataType> Tensor<T> {
+impl<T: DataBuffer> TensorBase<T> {
     pub fn shape(&self) -> &[usize] {
         &self.shape
     }
@@ -15,6 +15,10 @@ impl<T: RawDataType> Tensor<T> {
     }
 
     pub fn len(&self) -> &usize {
+        if self.shape.len() == 0 {
+            return &0;
+        }
+
         &self.shape[0]
     }
 }
