@@ -134,3 +134,62 @@ fn slice_along_1d() {
     assert_eq!(slice.shape(), &vec![3]);
     assert_eq!(slice.ndims(), 1);
 }
+
+#[test]
+fn slice_along_nd() {
+    let a = Tensor::from([[10], [20], [30], [40]]);
+
+    let slice = a.slice_along(Axis(0), 1);
+    assert_eq!(slice.len(), &1);
+    assert_eq!(slice.shape(), &vec![1]);
+    assert_eq!(slice.ndims(), 1);
+    assert_eq!(slice[0], 20);
+
+    let slice = a.slice_along(Axis(1), 0);
+    assert_eq!(slice.len(), &4);
+    assert_eq!(slice.shape(), &vec![4]);
+    assert_eq!(slice.ndims(), 1);
+    assert_eq!(slice[0], 10);
+
+    let a = Tensor::from([
+        [[10, 20, 30], [40, 50, 60]],
+        [[70, 80, 90], [100, 110, 120]],
+    ]);
+
+    let slice = a.slice_along(Axis(2), 2);
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &vec![2, 2]);
+    assert_eq!(slice.ndims(), 2);
+    assert_eq!(slice[[0, 0]], 30);
+    assert_eq!(slice[[1, 0]], 90);
+
+    let slice = a.slice_along(Axis(1), 1);
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &vec![2, 3]);
+    assert_eq!(slice.ndims(), 2);
+    assert_eq!(slice[[0, 0]], 40);
+    assert_eq!(slice[[1, 2]], 120);
+
+    let slice = a.slice_along(Axis(2), 1..);
+
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &vec![2, 2, 2]);
+    assert_eq!(slice.ndims(), 3);
+
+    assert_eq!(slice[[0, 0, 0]], 20);
+    assert_eq!(slice[[0, 0, 1]], 30);
+    assert_eq!(slice[[0, 1, 0]], 50);
+    assert_eq!(slice[[1, 0, 0]], 80);
+    assert_eq!(slice[[1, 1, 1]], 120);
+
+    let slice = a.slice_along(Axis(1), 1..);
+
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &vec![2, 1, 3]);
+    assert_eq!(slice.ndims(), 3);
+
+    assert_eq!(slice[[0, 0, 0]], 40);
+    assert_eq!(slice[[0, 0, 2]], 60);
+    assert_eq!(slice[[1, 0, 0]], 100);
+    assert_eq!(slice[[1, 0, 2]], 120);
+}

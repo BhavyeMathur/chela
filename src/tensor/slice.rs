@@ -10,9 +10,8 @@ where
     T: RawDataType,
 {
     pub fn slice_along<S: Index>(&self, axis: Axis, index: S) -> TensorView<T> {
-        let shape = index.indexed_shape(&axis, &self.shape);
+        let (shape, stride) = index.indexed_shape_and_stride(&axis, &self.shape, &self.stride);
         let offset = self.stride[axis.0] * index.index_of_first_element();
-        let stride = self.stride.clone();
 
         TensorView::from(&self, offset, shape, stride)
     }

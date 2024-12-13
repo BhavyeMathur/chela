@@ -37,7 +37,16 @@ impl<T: RawDataType> Tensor<T> {
 impl<T: RawDataType> TensorView<T> {
     pub(crate) fn from(tensor: &Tensor<T>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self {
         let ndims = shape.len();
-        let len = shape.iter().product();
+
+        // let mut len = 1;
+        // for i in 0..ndims {
+        //     len += stride[i] * (shape[i] - 1);
+        // }
+        //
+        // the following code is equivalent to the above loop
+        let len = shape.iter().zip(stride.iter())
+            .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
+            .sum::<usize>() + 1;
 
         let data = DataView::from_owned(&tensor.data, offset, len);
 

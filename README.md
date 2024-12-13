@@ -8,6 +8,7 @@ A Rust library for linear algebra and machine learning!
 
 - Added `TensorView` constructors
 - Implemented `Index<usize>` trait for `DataBuffer`
+- Added `slice_along()` method for `Tensor`
 
 ### Dec 11, 2024
 

@@ -3,19 +3,21 @@ use crate::Axis;
 use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 pub(crate) trait Index: IndexImpl {
-    fn indexed_shape(&self, axis: &Axis, shape: &Vec<usize>) -> Vec<usize> {
+    fn indexed_shape_and_stride(&self, axis: &Axis, shape: &Vec<usize>, stride: &Vec<usize>) -> (Vec<usize>, Vec<usize>) {
         let mut shape = shape.clone();
-        let axis = axis.0;
+        let mut stride = stride.clone();
 
+        let axis = axis.0;
         let len = self.len(axis, &shape);
 
         if len == 0 {
             shape.remove(axis);
+            stride.remove(axis);
         } else {
             shape[axis] = len;
         }
 
-        shape
+        (shape, stride)
     }
 
     fn index_of_first_element(&self) -> usize;
