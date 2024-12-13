@@ -8,9 +8,9 @@ use crate::traits::homogenous::Homogenous;
 
 #[derive(Debug, Clone)]
 pub struct DataOwned<T: RawDataType> {
-    ptr: NonNull<T>,
-    len: usize,
-    capacity: usize,
+    pub(crate) ptr: NonNull<T>,
+    pub(crate) len: usize,
+    pub(crate) capacity: usize,
 }
 
 impl<T: RawDataType> DataOwned<T> {

@@ -82,3 +82,14 @@ fn index() {
     assert_eq!(a[[0, 1]], 20);
     assert_eq!(a[[1, 1]], 40);
 }
+
+#[test]
+fn squeeze() {
+    let mut arr = Tensor::from([[[1, 2, 3], [4, 5, 6]]]);
+    arr.squeeze();
+    assert_eq!(arr.len(), &2);
+    assert_eq!(arr.shape(), &vec![2, 3]);
+    assert_eq!(arr.stride(), &vec![3, 1]);
+
+    let mut arr = Tensor::from([[[1, 2, 3], [4, 5, 6]]]);
+}

@@ -6,6 +6,7 @@ pub mod dtype;
 
 pub mod index;
 pub mod shape;
+pub mod squeeze;
 
 use crate::tensor::data_buffer::DataBuffer;
 use crate::tensor::data_owned::DataOwned;
