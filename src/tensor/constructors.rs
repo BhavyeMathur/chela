@@ -1,8 +1,8 @@
+use crate::data_view::DataView;
 use crate::tensor::data_owned::DataOwned;
 use crate::tensor::dtype::RawDataType;
 use crate::tensor::{Tensor, TensorView};
 use crate::traits::flatten::Flatten;
-use crate::traits::homogenous::Homogenous;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
 
@@ -35,11 +35,14 @@ impl<T: RawDataType> Tensor<T> {
 }
 
 impl<T: RawDataType> TensorView<T> {
-    pub(crate) fn from(tensor: &Tensor<T>, shape: Vec<usize>, stride: Vec<usize>) -> Self {
+    pub(crate) fn from(tensor: &Tensor<T>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self {
         let ndims = shape.len();
+        let len = shape.iter().product();
+
+        let data = DataView::from_owned(&tensor.data, offset, len);
 
         TensorView {
-            data: (&tensor.data).into(),
+            data,
             shape,
             stride,
             ndims,

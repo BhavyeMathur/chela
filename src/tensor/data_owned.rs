@@ -1,4 +1,5 @@
 use std::mem::ManuallyDrop;
+use std::ops::Index;
 use std::ptr::NonNull;
 
 use crate::tensor::dtype::RawDataType;
@@ -7,7 +8,7 @@ use crate::traits::flatten::Flatten;
 use crate::traits::homogenous::Homogenous;
 
 #[derive(Debug, Clone)]
-pub(crate) struct DataOwned<T: RawDataType> {
+pub struct DataOwned<T: RawDataType> {
     pub(super) ptr: NonNull<T>,
     pub(super) len: usize,
     pub(super) capacity: usize,
@@ -52,5 +53,17 @@ impl<T: RawDataType> Drop for DataOwned<T> {
 
         self.len = 0;
         self.capacity = 0;
+    }
+}
+
+impl<T> Index<usize> for DataOwned<T>
+where
+    T: RawDataType,
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &T {
+        assert!(index < self.len, "Index '{index}' out of bounds"); // type implies 0 <= index
+        unsafe { &*self.ptr.as_ptr().offset(index as isize) }
     }
 }

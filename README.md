@@ -4,6 +4,11 @@ A Rust library for linear algebra and machine learning!
 
 ## Changelog
 
+### Dec 12, 2024
+
+- Added `TensorView` constructors
+- Implemented `Index<usize>` trait for `DataBuffer`
+
 ### Dec 11, 2024
 
 - Added `stride()` & `ndims()` methods for `Tensor`

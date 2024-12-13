@@ -1,27 +1,14 @@
-use crate::tensor::data_owned::DataOwned;
-use crate::tensor::dtype::RawDataType;
-use crate::tensor::Tensor;
+use crate::data_buffer::DataBuffer;
+use crate::TensorBase;
 use std::ops::Index;
 
-impl<T> Index<usize> for DataOwned<T>
+impl<T, const D: usize> Index<[usize; D]> for TensorBase<T>
 where
-    T: RawDataType,
+    T: DataBuffer,
 {
-    type Output = T;
+    type Output = <T as Index<usize>>::Output;
 
-    fn index(&self, index: usize) -> &T {
-        assert!(0 <= index && index < self.len, "Index '{index}' out of bounds");
-        unsafe { &*self.ptr.as_ptr().offset(index as isize) }
-    }
-}
-
-impl<T, const D: usize> Index<[usize; D]> for Tensor<T>
-where
-    T: RawDataType,
-{
-    type Output = T;
-
-    fn index(&self, index: [usize; D]) -> &T {
+    fn index(&self, index: [usize; D]) -> &Self::Output {
         assert_eq!(
             D, self.ndims,
             "[] index must equal number of tensor dimensions!"
@@ -36,10 +23,10 @@ where
     }
 }
 
-impl<T: RawDataType> Index<usize> for Tensor<T> {
-    type Output = T;
+impl<T: DataBuffer> Index<usize> for TensorBase<T> {
+    type Output = <T as Index<usize>>::Output;
 
-    fn index(&self, index: usize) -> &T {
+    fn index(&self, index: usize) -> &Self::Output {
         &self[[index]]
     }
 }
