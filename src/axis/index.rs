@@ -2,7 +2,7 @@ use crate::Axis;
 
 use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
-pub(crate) trait Index: IndexImpl {
+pub(crate) trait Index: IndexImpl + Clone {
     fn indexed_shape_and_stride(&self, axis: &Axis, shape: &Vec<usize>, stride: &Vec<usize>) -> (Vec<usize>, Vec<usize>) {
         let mut shape = shape.clone();
         let mut stride = stride.clone();

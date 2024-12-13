@@ -1,3 +1,4 @@
+use crate::data_buffer::DataBuffer;
 use crate::data_view::DataView;
 use crate::tensor::data_owned::DataOwned;
 use crate::tensor::dtype::RawDataType;
@@ -5,6 +6,7 @@ use crate::tensor::{Tensor, TensorView};
 use crate::traits::flatten::Flatten;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
+use crate::TensorBase;
 
 impl<T: RawDataType> Tensor<T> {
     pub fn from<const D: usize>(data: impl Flatten<T> + Shape + Nested<{ D }>) -> Self {
@@ -35,7 +37,10 @@ impl<T: RawDataType> Tensor<T> {
 }
 
 impl<T: RawDataType> TensorView<T> {
-    pub(crate) fn from(tensor: &Tensor<T>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self {
+    pub(crate) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
+    where
+        B: DataBuffer<DType=T>,
+    {
         let ndims = shape.len();
 
         // let mut len = 1;
@@ -48,13 +53,24 @@ impl<T: RawDataType> TensorView<T> {
             .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
             .sum::<usize>() + 1;
 
-        let data = DataView::from_owned(&tensor.data, offset, len);
+        let data = DataView::from_buffer(&tensor.data, offset, len);
 
         TensorView {
             data,
             shape,
             stride,
             ndims,
+        }
+    }
+}
+
+impl<B: DataBuffer> From<&TensorBase<B>> for TensorView<B::DType> {
+    fn from(value: &TensorBase<B>) -> Self {
+        Self {
+            data: value.data.to_view(),
+            shape: value.shape.clone(),
+            stride: value.stride.clone(),
+            ndims: value.ndims,
         }
     }
 }

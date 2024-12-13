@@ -1,3 +1,4 @@
+use crate::data_buffer::DataBuffer;
 use crate::tensor::data_owned::DataOwned;
 use crate::tensor::dtype::RawDataType;
 use std::ops::Index;
@@ -10,10 +11,13 @@ pub struct DataView<T: RawDataType> {
 }
 
 impl<T: RawDataType> DataView<T> {
-    pub(crate) fn from_owned(value: &DataOwned<T>, offset: usize, len: usize) -> Self {
-        assert!(offset + len <= value.len);
+    pub(crate) fn from_buffer<B>(value: &B, offset: usize, len: usize) -> Self
+    where
+        B: DataBuffer<DType = T>,
+    {
+        assert!(offset + len <= value.len());
         Self {
-            ptr: unsafe { value.ptr.offset(offset as isize) },
+            ptr: unsafe { value.ptr().offset(offset as isize) },
             len,
         }
     }
