@@ -4,6 +4,10 @@ A Rust library for linear algebra and machine learning!
 
 ## Changelog
 
+### Dec 13, 2024
+
+- Full `TensorBase` slicing support!
+
 ### Dec 12, 2024
 
 - Added `TensorView` constructors

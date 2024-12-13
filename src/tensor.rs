@@ -4,7 +4,7 @@ pub mod data_owned;
 pub mod data_view;
 pub mod dtype;
 
-pub mod index;
+pub mod index_impl;
 pub mod shape;
 pub mod slice;
 

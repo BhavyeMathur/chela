@@ -195,7 +195,7 @@ fn slice_along_nd() {
 }
 
 #[test]
-fn slice() {
+fn slice_homogenous() {
     let a = Tensor::from([
         [[1, 2, 3], [4, 5, 6]],
         [[7, 8, 9], [10, 11, 12]],
@@ -231,4 +231,22 @@ fn slice() {
     assert_eq!(slice[[0, 0, 1]], 2);
     assert_eq!(slice[[0, 1, 0]], 4);
     assert_eq!(slice[[0, 1, 1]], 5);
+}
+
+#[test]
+fn slice_heterogeneous() {
+    let a = Tensor::from([
+        [[1, 2, 3], [4, 5, 6]],
+        [[7, 8, 9], [10, 11, 12]],
+        [[13, 14, 15], [16, 17, 18]],
+    ]);
+
+    let slice = a.slice(s![0, .., 0]);
+
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &vec![2]);
+    assert_eq!(slice.ndims(), 1);
+
+    assert_eq!(slice[0], 1);
+    assert_eq!(slice[1], 4);
 }

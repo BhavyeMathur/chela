@@ -1,4 +1,4 @@
-use crate::axis::index::Index;
+use crate::axis::indexer::Indexer;
 
 use crate::tensor::TensorView;
 
@@ -14,7 +14,7 @@ where
 {
     pub fn slice_along<S>(&self, axis: Axis, index: S) -> TensorView<T>
     where
-        S: Index,
+        S: Indexer,
     {
         let (shape, stride) = index.indexed_shape_and_stride(&axis, &self.shape, &self.stride);
         let offset = self.stride[axis.0] * index.index_of_first_element();
@@ -24,7 +24,7 @@ where
 
     pub fn slice<S, const N: usize>(&self, index: [S; N]) -> TensorView<T>
     where
-        S: Index,
+        S: Indexer,
     {
         // repeatedly calls the slice_along() method for each element in the index
         // we keep a track of which axis to slice along using the axis variable
