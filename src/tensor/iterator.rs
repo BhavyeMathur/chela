@@ -28,39 +28,80 @@ fn collapse_contiguous(shape: &Vec<usize>, stride: &Vec<usize>) -> (Vec<usize>, 
     (collapsed_shape, collapsed_stride)
 }
 
+#[non_exhaustive]
+pub struct TensorViewFlatIter<T>
+where
+    T: RawDataType,
+{
+    ptr: *const T,
+    shape: Vec<usize>,
+    stride: Vec<usize>,
+    ndims: usize,
+
+    size: usize,
+    iterator_index: usize,
+
+    indices: Vec<usize>, // current index along each dimension
+    flat_index: usize,
+}
+
 impl<T: RawDataType> TensorView<T> {
-    fn flat_indices(&self) -> Vec<usize> {
-        let (shape, stride) = collapse_contiguous(&self.shape, &self.stride);
+    pub fn flat_iter(&self) -> TensorViewFlatIter<T> {
+        TensorViewFlatIter::from(&self)
+    }
+}
+
+impl<T: RawDataType> TensorViewFlatIter<T> {
+    fn from(tensor: &TensorView<T>) -> Self {
+        let (shape, stride) = collapse_contiguous(&tensor.shape, &tensor.stride);
         let ndims = shape.len();
 
-        let size = self.size();
-        let mut flat_indices = Vec::with_capacity(size);
-        let mut indices = vec![0; ndims];
-        let mut flat_index = 0;
+        Self {
+            ptr: tensor.data.ptr.as_ptr().cast_const(),
+            shape,
+            stride,
+            ndims,
+            size: tensor.size(),
+            iterator_index: 0,
+            indices: vec![0; tensor.ndims],
+            flat_index: 0,
+        }
+    }
+}
 
-        for _ in 0..size {
-            flat_indices.push(flat_index);
+impl<T> Iterator for TensorViewFlatIter<T>
+where
+    T: RawDataType,
+{
+    type Item = T;
 
-            for i in (0..ndims).rev() {
-                indices[i] += 1;
-
-                if indices[i] < shape[i] {
-                    flat_index += stride[i];
-                    break;
-                }
-
-                flat_index -= stride[i] * (shape[i] - 1);
-                indices[i] = 0; // reset this dimension and carry over to the next
-            }
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.iterator_index == self.size {
+            return None;
         }
 
-        flat_indices
+        let current_index = self.flat_index as isize;
+
+        for i in (0..self.ndims).rev() {
+            self.indices[i] += 1;
+
+            if self.indices[i] < self.shape[i] {
+                self.flat_index += self.stride[i];
+                break;
+            }
+
+            self.flat_index -= self.stride[i] * (self.shape[i] - 1);
+            self.indices[i] = 0; // reset this dimension and carry over to the next
+        }
+
+        self.iterator_index += 1;
+        Some(unsafe { *self.ptr.offset(current_index) })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::flatten::collapse_contiguous;
+    use crate::iterator::collapse_contiguous;
     use crate::{s, Tensor};
 
     #[test]
@@ -80,23 +121,14 @@ mod tests {
         assert_eq!(shape, [3, 3]);
         assert_eq!(stride, [6, 1]);
 
-        let indices = b.flat_indices();
-        assert_eq!(indices, [0, 1, 2, 6, 7, 8, 12, 13, 14]);
-
         let b = a.slice(s![1]);
         let (shape, stride) = collapse_contiguous(&b.shape, &b.stride);
         assert_eq!(shape, [6]);
         assert_eq!(stride, [1]);
 
-        let indices = b.flat_indices();
-        assert_eq!(indices, [0, 1, 2, 3, 4, 5]);
-
         let b = a.slice(s![..2, 1, 1..]);
         let (shape, stride) = collapse_contiguous(&b.shape, &b.stride);
         assert_eq!(shape, [2, 2]);
         assert_eq!(stride, [6, 1]);
-
-        let indices = b.flat_indices();
-        assert_eq!(indices, [0, 1, 6, 7]);
     }
 }

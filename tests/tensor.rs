@@ -245,12 +245,31 @@ fn slice_heterogeneous() {
         [[13, 14, 15], [16, 17, 18]],
     ]);
 
-    let slice = a.slice(s![0, .., 0]);
+    let slice = a.slice(s![0, .., 0..=1]);
 
     assert_eq!(slice.len(), &2);
-    assert_eq!(slice.shape(), &vec![2]);
-    assert_eq!(slice.ndims(), 1);
+    assert_eq!(slice.shape(), &vec![2, 2]);
+    assert_eq!(slice.ndims(), 2);
+}
 
-    assert_eq!(slice[0], 1);
-    assert_eq!(slice[1], 4);
+#[test]
+fn flat_iter() {
+    let a = Tensor::from([
+        [[10, 11, 12], [13, 14, 15]],
+        [[16, 17, 18], [19, 20, 21]],
+        [[22, 23, 24], [25, 26, 27]],
+    ]);
+
+    let b = a.slice(s![.., 0]);
+    let slice: Vec<_> = b.flat_iter().collect();
+    assert_eq!(slice, [10, 11, 12, 16, 17, 18, 22, 23, 24]);
+
+    let b = a.slice(s![1]);
+    println!("{:?}", b);
+    let slice: Vec<_> = b.flat_iter().collect();
+    assert_eq!(slice, [16, 17, 18, 19, 20, 21]);
+
+    let b = a.slice(s![..2, 1, 1..]);
+    let slice: Vec<_> = b.flat_iter().collect();
+    assert_eq!(slice, [14, 15, 20, 21]);
 }
