@@ -260,6 +260,9 @@ fn flat_iter() {
         [[22, 23, 24], [25, 26, 27]],
     ]);
 
+    let slice: Vec<_> = a.flat_iter().collect();
+    assert_eq!(slice, [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]);
+
     let b = a.slice(s![.., 0]);
     let slice: Vec<_> = b.flat_iter().collect();
     assert_eq!(slice, [10, 11, 12, 16, 17, 18, 22, 23, 24]);

@@ -101,11 +101,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::iterator::collapse_contiguous;
+    use crate::view_flat_iterator::collapse_contiguous;
     use crate::{s, Tensor};
 
     #[test]
-    fn flat_indices() {
+    fn test_collapse_contiguous() {
         let a = Tensor::from([
             [[0, 1, 2], [3, 4, 5]],
             [[6, 7, 8], [9, 10, 11]],

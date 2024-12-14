@@ -7,7 +7,8 @@ pub mod dtype;
 pub mod index_impl;
 pub mod shape;
 pub mod slice;
-pub mod iterator;
+pub mod view_flat_iterator;
+pub mod flat_iterator;
 
 use crate::tensor::data_buffer::DataBuffer;
 use crate::tensor::data_owned::DataOwned;

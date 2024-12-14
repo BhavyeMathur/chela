@@ -4,9 +4,14 @@ A Rust library for linear algebra and machine learning!
 
 ## Changelog
 
+### Dec 14, 2024
+
+- Added a flat Iterator for `Tensor` and `TensorView`
+
 ### Dec 13, 2024
 
 - Full `TensorBase` slicing support!
+- `squeeze()` & `unsqueeze()` methods
 
 ### Dec 12, 2024
 
