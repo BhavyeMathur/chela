@@ -1,6 +1,6 @@
 use crate::data_owned::DataOwned;
 use crate::dtype::RawDataType;
-use crate::Tensor;
+use crate::{Tensor, TensorView};
 use std::intrinsics::copy_nonoverlapping;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
@@ -29,9 +29,21 @@ impl<T: RawDataType> Clone for DataOwned<T> {
 }
 
 impl<T: RawDataType> Clone for Tensor<T> {
-    fn clone(&self) -> Self {
-        Self {
+    fn clone(&self) -> Tensor<T> {
+        Tensor {
             data: self.data.clone(),
+            shape: self.shape.clone(),
+            stride: self.stride.clone(),
+            ndims: self.ndims.clone(),
+        }
+    }
+}
+
+impl<T: RawDataType> TensorView<T> {
+    pub fn clone(&self) -> Tensor<T> {
+        let data: Vec<T> = self.flat_iter().collect();
+        Tensor {
+            data: DataOwned::new(data),
             shape: self.shape.clone(),
             stride: self.stride.clone(),
             ndims: self.ndims.clone(),

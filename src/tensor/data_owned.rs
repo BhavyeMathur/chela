@@ -25,6 +25,24 @@ impl<T: RawDataType> DataOwned<T> {
 }
 
 impl<T: RawDataType> DataOwned<T> {
+    pub fn new(data: Vec<T>) -> Self {
+        if data.len() == 0 {
+            panic!("Tensor::from() failed, cannot create data buffer from empty data");
+        }
+
+        // take control of the data so that Rust doesn't drop it once the vector goes out of scope
+        let mut data = ManuallyDrop::new(data);
+
+        // safe to unwrap because we've checked length above
+        let ptr = data.as_mut_ptr();
+
+        Self {
+            len: data.len(),
+            capacity: data.capacity(),
+            ptr: NonNull::new(ptr).unwrap(),
+        }
+    }
+
     pub fn from(data: impl Flatten<T> + Homogenous) -> Self {
         let data = data.flatten();
 

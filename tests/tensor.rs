@@ -254,7 +254,7 @@ fn slice_heterogeneous() {
 
 #[test]
 fn clone() {
-    let mut arr;
+    let arr;
     {
         let temp = Tensor::from([[[10, 20, 30]], [[40, 50, 60]]]);
         arr = temp.clone();
@@ -267,6 +267,18 @@ fn clone() {
 
     assert_eq!(arr[[0, 0, 0]], 10);
     assert_eq!(arr[[1, 0, 2]], 60);
+
+    let arr2 = arr.slice(s![1, 0, ..]).clone();
+    drop(arr);
+
+    assert_eq!(arr2.len(), &3);
+    assert_eq!(arr2.shape(), &vec![3]);
+    assert_eq!(arr2.stride(), &vec![1]);
+    assert_eq!(arr2.ndims(), 1);
+
+    assert_eq!(arr2[0], 40);
+    assert_eq!(arr2[1], 50);
+    assert_eq!(arr2[2], 60);
 }
 
 #[test]

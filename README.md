@@ -7,6 +7,7 @@ A Rust library for linear algebra and machine learning!
 ### Dec 14, 2024
 
 - Added a flat Iterator for `Tensor` and `TensorView`
+- Implemented `clone()` method
 
 ### Dec 13, 2024
 
@@ -27,7 +28,7 @@ A Rust library for linear algebra and machine learning!
 
 ### Dec 10, 2024
 
-- Implemented faster `Tensor` constructor for nested arrays using unsafe Rust
+- Optimised `Tensor` constructor for nested arrays using unsafe copy
 - `Clone` and `Debug` traits for `Tensor`
 - `TensorBase<T, N>` now stores its ndims as generic constant `N` using the `Nested<N>` trait & stores `shape` as an array
 
