@@ -7,7 +7,7 @@ A Rust library for linear algebra and machine learning!
 ### Dec 14, 2024
 
 - Added a flat Iterator for `Tensor` and `TensorView`
-- Implemented `clone()` method
+- Implemented `clone()` & `flatten()` methods
 
 ### Dec 13, 2024
 

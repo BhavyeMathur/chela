@@ -1,6 +1,7 @@
+use crate::data_buffer::DataBuffer;
 use crate::data_owned::DataOwned;
 use crate::dtype::RawDataType;
-use crate::{Tensor, TensorView};
+use crate::{Tensor, TensorBase, TensorView};
 use std::intrinsics::copy_nonoverlapping;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
@@ -28,22 +29,33 @@ impl<T: RawDataType> Clone for DataOwned<T> {
     }
 }
 
-impl<T: RawDataType> Clone for Tensor<T> {
-    fn clone(&self) -> Tensor<T> {
-        Tensor {
-            data: self.data.clone(),
-            shape: self.shape.clone(),
-            stride: self.stride.clone(),
-            ndims: self.ndims.clone(),
-        }
+pub(crate) trait TensorClone<T: RawDataType> {
+    fn copy_data(&self) -> DataOwned<T>;
+}
+
+impl<T: RawDataType> TensorClone<T> for Tensor<T> {
+    fn copy_data(&self) -> DataOwned<T> {
+        self.data.clone()
     }
 }
 
-impl<T: RawDataType> TensorView<T> {
-    pub fn clone(&self) -> Tensor<T> {
+impl<T: RawDataType> TensorClone<T> for TensorView<T> {
+    fn copy_data(&self) -> DataOwned<T> {
         let data: Vec<T> = self.flat_iter().collect();
+        DataOwned::new(data)
+    }
+}
+
+
+impl<B, T> TensorBase<B>
+where
+    B: DataBuffer<DType=T>,
+    T: RawDataType,
+    TensorBase<B>: TensorClone<T>,
+{
+    pub fn clone(&self) -> Tensor<B::DType> {
         Tensor {
-            data: DataOwned::new(data),
+            data: self.copy_data(),
             shape: self.shape.clone(),
             stride: self.stride.clone(),
             ndims: self.ndims.clone(),
