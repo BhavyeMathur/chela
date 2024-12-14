@@ -1,5 +1,4 @@
 use crate::data_buffer::DataBuffer;
-use crate::data_view::DataView;
 use crate::tensor::dtype::RawDataType;
 use crate::{TensorBase, TensorView};
 
@@ -21,30 +20,42 @@ where
         let ndims = shape.len();
 
         TensorView {
-            data: DataView::from(&self.data),
+            data: self.data.to_view(),
             shape,
             stride,
             ndims,
         }
     }
 
-    pub fn unsqueeze(&mut self, axis: usize) -> TensorView<T> {
+    pub fn unsqueeze(&self, axis: usize) -> TensorView<T> {
         assert!(axis <= self.ndims, "dimension out of bounds");
 
         let mut shape = self.shape.clone();
         let mut stride = self.stride.clone();
 
-        shape.insert(axis, 1);
+        if shape.len() > axis {
+            shape.insert(axis, 1)
+        } else {
+            shape.push(1)
+        };
 
-        let mut p = 1;
+        // let mut p = 1;
+        //
+        // for i in (0..self.ndims).rev() {
+        //     stride[i] = p;
+        //     p *= shape[i];
+        // }
 
-        for i in (0..self.ndims).rev() {
-            stride[i] = p;
-            p *= shape[i];
-        }
+        if stride.len() > axis {
+            stride.insert(axis, stride[axis] * shape[axis + 1])
+        } else {
+            stride.push(1)
+        };
+
+        let ndims = shape.len();
 
         TensorView {
-            data: DataView::from(&self.data),
+            data: self.data.to_view(),
             shape,
             stride,
             ndims,
