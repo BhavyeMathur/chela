@@ -1,24 +1,53 @@
+use crate::data_buffer::DataBuffer;
+use crate::data_view::DataView;
 use crate::tensor::dtype::RawDataType;
-use crate::tensor::Tensor;
+use crate::{TensorBase, TensorView};
 
-// TODO implement for tensorview as well
-// Squeeze for tensors
-impl<T: RawDataType> Tensor<T>{
-    pub fn squeeze_inplace(&mut self){
-        self.stride.dedup();
-        if self.shape[0] == 1 {
-            self.stride.remove(0);
-            println!("{:?}", self.stride);
+impl<B, T> TensorBase<B>
+where
+    B: DataBuffer<DType = T>,
+    T: RawDataType,
+{
+    pub fn squeeze(&self) -> TensorView<T> {
+        let mut shape = self.shape.clone();
+        let mut stride = self.stride.clone();
+
+        (shape, stride) = shape
+            .iter()
+            .zip(stride.iter())
+            .filter(|&(axis_length, _)| axis_length != &1)
+            .unzip();
+
+        let ndims = shape.len();
+
+        TensorView {
+            data: DataView::from(&self.data),
+            shape,
+            stride,
+            ndims,
         }
-        self.shape.retain(|&i| i != 1);
     }
 
-    pub fn unsqueeze_inplace(&mut self, axis: usize){
-        assert!(axis <= self.shape.len(), "dimension out of bounds");
-        self.shape.insert(axis, 1);
-    }
+    pub fn unsqueeze(&mut self, axis: usize) -> TensorView<T> {
+        assert!(axis <= self.ndims, "dimension out of bounds");
 
-    pub fn squeeze(self) -> Tensor<T> where T:RawDataType{
-        self.data.
+        let mut shape = self.shape.clone();
+        let mut stride = self.stride.clone();
+
+        shape.insert(axis, 1);
+
+        let mut p = 1;
+
+        for i in (0..self.ndims).rev() {
+            stride[i] = p;
+            p *= shape[i];
+        }
+
+        TensorView {
+            data: DataView::from(&self.data),
+            shape,
+            stride,
+            ndims,
+        }
     }
 }
