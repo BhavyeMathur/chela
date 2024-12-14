@@ -7,6 +7,7 @@ pub mod dtype;
 pub mod index_impl;
 pub mod shape;
 pub mod slice;
+pub mod flatten;
 
 use crate::tensor::data_buffer::DataBuffer;
 use crate::tensor::data_owned::DataOwned;
