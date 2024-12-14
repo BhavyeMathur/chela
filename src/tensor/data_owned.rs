@@ -7,7 +7,7 @@ use crate::tensor::dtype::RawDataType;
 use crate::traits::flatten::Flatten;
 use crate::traits::homogenous::Homogenous;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct DataOwned<T: RawDataType> {
     pub(super) ptr: NonNull<T>,
     pub(super) len: usize,
@@ -37,12 +37,12 @@ impl<T: RawDataType> DataOwned<T> {
 
         // safe to unwrap because we've checked length above
         let ptr = data.as_mut_ptr();
-        let ptr = NonNull::new(ptr).unwrap();
 
-        let len = data.len();
-        let capacity = data.capacity();
-
-        Self { len, capacity, ptr }
+        Self {
+            len: data.len(),
+            capacity: data.capacity(),
+            ptr: NonNull::new(ptr).unwrap(),
+        }
     }
 }
 
