@@ -26,7 +26,7 @@ impl<T: RawDataType> DataOwned<T> {
 
 impl<T: RawDataType> DataOwned<T> {
     pub fn new(data: Vec<T>) -> Self {
-        if data.len() == 0 {
+        if data.is_empty() {
             panic!("Tensor::from() failed, cannot create data buffer from empty data");
         }
 
@@ -44,23 +44,7 @@ impl<T: RawDataType> DataOwned<T> {
     }
 
     pub fn from(data: impl Flatten<T> + Homogenous) -> Self {
-        let data = data.flatten();
-
-        if data.len() == 0 {
-            panic!("Tensor::from() failed, cannot create data buffer from empty data");
-        }
-
-        // take control of the data so that Rust doesn't drop it once the vector goes out of scope
-        let mut data = ManuallyDrop::new(data);
-
-        // safe to unwrap because we've checked length above
-        let ptr = data.as_mut_ptr();
-
-        Self {
-            len: data.len(),
-            capacity: data.capacity(),
-            ptr: NonNull::new(ptr).unwrap(),
-        }
+        Self::new(data.flatten())
     }
 }
 
@@ -82,6 +66,6 @@ where
 
     fn index(&self, index: usize) -> &T {
         assert!(index < self.len, "Index '{index}' out of bounds"); // type implies 0 <= index
-        unsafe { &*self.ptr.as_ptr().offset(index as isize) }
+        unsafe { &*self.ptr.as_ptr().add(index) }
     }
 }

@@ -39,6 +39,6 @@ where
 
     fn index(&self, index: usize) -> &T {
         assert!(index < self.len, "Index '{index}' out of bounds"); // type implies 0 <= index
-        unsafe { &*self.ptr.as_ptr().offset(index as isize) }
+        unsafe { &*self.ptr.as_ptr().add(index) }
     }
 }

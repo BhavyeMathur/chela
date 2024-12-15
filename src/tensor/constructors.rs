@@ -12,7 +12,7 @@ impl<T: RawDataType> Tensor<T> {
             "Tensor::from() failed, found inhomogeneous dimensions"
         );
 
-        let shape: Vec<usize> = data.shape().into();
+        let shape = data.shape();
 
         // calculates the stride from the tensor's shape
         // shape [5, 3, 2, 1] -> stride [10, 2, 1, 1]

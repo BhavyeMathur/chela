@@ -28,7 +28,7 @@ impl Indexer for Index {
 }
 
 impl IndexerImpl for Index {
-    fn len(&self, axis: usize, shape: &Vec<usize>) -> usize {
+    fn len(&self, axis: usize, shape: &[usize]) -> usize {
         match self {
             Index::Usize(index) => IndexerImpl::len(index, axis, shape),
             Index::Range(index) => IndexerImpl::len(index, axis, shape),

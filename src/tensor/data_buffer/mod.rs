@@ -7,10 +7,6 @@ pub(super) use crate::data_buffer::buffer::DataBuffer;
 pub(super) use crate::data_buffer::data_owned::DataOwned;
 pub(super) use crate::data_buffer::data_view::DataView;
 
-use crate::tensor::dtype::RawDataType;
-
-use std::ops::Index;
-
 #[cfg(test)]
 mod tests {
     use crate::data_buffer::DataOwned;

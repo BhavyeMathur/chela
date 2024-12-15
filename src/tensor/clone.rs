@@ -70,7 +70,7 @@ where
             data: self.copy_data(),
             shape: self.shape.clone(),
             stride: self.stride.clone(),
-            ndims: self.ndims.clone(),
+            ndims: self.ndims,
         }
     }
 }

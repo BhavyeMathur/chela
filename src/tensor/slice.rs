@@ -19,7 +19,7 @@ where
         let (shape, stride) = index.indexed_shape_and_stride(&axis, &self.shape, &self.stride);
         let offset = self.stride[axis.0] * index.index_of_first_element();
 
-        TensorView::from(&self, offset, shape, stride)
+        TensorView::from(self, offset, shape, stride)
     }
 
     pub fn slice<S, const N: usize>(&self, index: [S; N]) -> TensorView<T>
