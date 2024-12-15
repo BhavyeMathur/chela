@@ -39,13 +39,6 @@ where
             shape.push(1)
         };
 
-        // let mut p = 1;
-        //
-        // for i in (0..self.ndims).rev() {
-        //     stride[i] = p;
-        //     p *= shape[i];
-        // }
-
         if stride.len() > axis {
             stride.insert(axis, stride[axis] * shape[axis + 1])
         } else {
