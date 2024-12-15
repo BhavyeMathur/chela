@@ -37,7 +37,7 @@ impl<T: RawDataType> Tensor<T> {
 }
 
 impl<T: RawDataType> TensorView<T> {
-    pub(crate) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
+    pub(super) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
     where
         B: DataBuffer<DType=T>,
     {

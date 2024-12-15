@@ -29,7 +29,7 @@ impl<T: RawDataType> Clone for DataOwned<T> {
     }
 }
 
-pub(crate) trait TensorClone<T: RawDataType> {
+pub(super) trait TensorClone<T: RawDataType> {
     fn copy_data(&self) -> DataOwned<T>;
 }
 

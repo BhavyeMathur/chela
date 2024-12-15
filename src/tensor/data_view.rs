@@ -6,12 +6,12 @@ use std::ptr::NonNull;
 
 #[derive(Debug, Clone)]
 pub struct DataView<T: RawDataType> {
-    pub(crate) ptr: NonNull<T>,
-    pub(crate) len: usize,
+    pub(super) ptr: NonNull<T>,
+    pub(super) len: usize,
 }
 
 impl<T: RawDataType> DataView<T> {
-    pub(crate) fn from_buffer<B>(value: &B, offset: usize, len: usize) -> Self
+    pub(super) fn from_buffer<B>(value: &B, offset: usize, len: usize) -> Self
     where
         B: DataBuffer<DType = T>,
     {

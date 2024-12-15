@@ -1,6 +1,6 @@
 use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
-pub(crate) trait IndexerImpl {
+pub(super) trait IndexerImpl {
     fn len(&self, axis: usize, shape: &Vec<usize>) -> usize;
 }
 
