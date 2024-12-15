@@ -1,12 +1,9 @@
-use crate::data_buffer::DataBuffer;
-use crate::data_view::DataView;
-use crate::tensor::data_owned::DataOwned;
+use crate::data_buffer::{DataBuffer, DataOwned, DataView};
 use crate::tensor::dtype::RawDataType;
-use crate::tensor::{Tensor, TensorView};
+use crate::tensor::{Tensor, TensorBase, TensorView};
 use crate::traits::flatten::Flatten;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
-use crate::TensorBase;
 
 impl<T: RawDataType> Tensor<T> {
     pub fn from<const D: usize>(data: impl Flatten<T> + Shape + Nested<{ D }>) -> Self {
@@ -37,7 +34,7 @@ impl<T: RawDataType> Tensor<T> {
 }
 
 impl<T: RawDataType> TensorView<T> {
-    pub(crate) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
+    pub(super) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
     where
         B: DataBuffer<DType=T>,
     {

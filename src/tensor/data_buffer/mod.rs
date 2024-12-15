@@ -1,6 +1,12 @@
-use crate::tensor::data_owned::DataOwned;
-use crate::tensor::data_view::DataView;
+pub(super) mod data_owned;
+pub(super) mod data_view;
+pub(super) mod clone;
+
+pub(super) use crate::data_buffer::data_owned::DataOwned;
+pub(super) use crate::data_buffer::data_view::DataView;
+
 use crate::tensor::dtype::RawDataType;
+
 use std::ops::Index;
 use std::ptr::NonNull;
 

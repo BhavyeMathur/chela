@@ -1,4 +1,4 @@
-pub trait RawDataType: Clone {}
+pub trait RawDataType: Clone + Copy {}
 
 impl RawDataType for u8 {}
 impl RawDataType for u16 {}

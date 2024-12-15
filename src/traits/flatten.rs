@@ -41,8 +41,7 @@ where
     A: Debug,
 {
     fn flatten(mut self) -> Vec<A> {
-        // ChatGPT suggested
-        assert!(align_of::<T>() >= align_of::<A>(), "alignment mismatch");
+        assert!(align_of::<T>() >= align_of::<A>(), "alignment mismatch");  // ChatGPT suggested
 
         let len = self.shape().iter().product();
         let mut result = Vec::with_capacity(len);

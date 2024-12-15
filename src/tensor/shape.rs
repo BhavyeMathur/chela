@@ -21,4 +21,8 @@ impl<T: DataBuffer> TensorBase<T> {
 
         &self.shape[0]
     }
+
+    pub fn size(&self) -> usize {
+        self.shape.iter().product()
+    }
 }

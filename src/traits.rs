@@ -1,5 +1,5 @@
 #[macro_use]
-pub(crate) mod macros;
+mod macros;
 
 pub(crate) mod flatten;
 pub(crate) mod homogenous;

@@ -7,3 +7,4 @@ edition = "2021"
 
 [lints.rust]
 private_bounds = "allow"
+dead_code = "allow"
