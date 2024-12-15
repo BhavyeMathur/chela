@@ -17,6 +17,8 @@ pub trait DataBuffer: Index<usize> {
 
     fn ptr(&self) -> NonNull<Self::DType>;
 
+    fn const_ptr(&self) -> *const Self::DType;
+
     fn to_view(&self) -> DataView<Self::DType>;
 }
 
@@ -35,6 +37,10 @@ impl<T: RawDataType> DataBuffer for DataOwned<T> {
         self.ptr
     }
 
+    fn const_ptr(&self) -> *const T {
+        self.ptr.as_ptr()
+    }
+
     fn to_view(&self) -> DataView<T> {
         let ptr = self.ptr;
         let len = self.len;
@@ -50,6 +56,10 @@ impl<T: RawDataType> DataBuffer for DataView<T> {
 
     fn ptr(&self) -> NonNull<T> {
         self.ptr
+    }
+
+    fn const_ptr(&self) -> *const T {
+        self.ptr.as_ptr()
     }
 
     fn to_view(&self) -> DataView<T> {
