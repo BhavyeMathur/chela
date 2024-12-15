@@ -1,6 +1,6 @@
+pub(super) mod clone;
 pub(super) mod data_owned;
 pub(super) mod data_view;
-pub(super) mod clone;
 
 pub(super) use crate::data_buffer::data_owned::DataOwned;
 pub(super) use crate::data_buffer::data_view::DataView;
@@ -42,13 +42,6 @@ impl<T: RawDataType> DataBuffer for DataOwned<T> {
         let len = self.len;
         DataView { ptr, len }
     }
-
-    // fn clone(&self) -> DataOwned<T> {
-    //
-    //     DataOwned{
-    //         ptr
-    //     }
-    // }
 }
 impl<T: RawDataType> DataBuffer for DataView<T> {
     type DType = T;
@@ -64,6 +57,4 @@ impl<T: RawDataType> DataBuffer for DataView<T> {
     fn to_view(&self) -> DataView<T> {
         (*self).clone()
     }
-
-    // fn clone(&self) -> DataView<T> {}
 }

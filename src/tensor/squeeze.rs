@@ -1,6 +1,6 @@
 use crate::data_buffer::DataBuffer;
 use crate::tensor::dtype::RawDataType;
-use crate::{TensorBase, TensorView};
+use crate::{Axis, TensorBase, TensorView};
 
 impl<B, T> TensorBase<B>
 where
@@ -27,20 +27,20 @@ where
         }
     }
 
-    pub fn unsqueeze(&self, axis: usize) -> TensorView<T> {
-        assert!(axis <= self.ndims, "dimension out of bounds");
+    pub fn unsqueeze(&self, axis: Axis) -> TensorView<T> {
+        assert!(axis.0 <= self.ndims, "dimension out of bounds");
 
         let mut shape = self.shape.clone();
         let mut stride = self.stride.clone();
 
-        if shape.len() > axis {
-            shape.insert(axis, 1)
+        if shape.len() > axis.0 {
+            shape.insert(axis.0, 1)
         } else {
             shape.push(1)
         };
 
-        if stride.len() > axis {
-            stride.insert(axis, stride[axis] * shape[axis + 1])
+        if stride.len() > axis.0 {
+            stride.insert(axis.0, stride[axis.0] * shape[axis.0 + 1])
         } else {
             stride.push(1)
         };
