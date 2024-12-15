@@ -1,29 +1,29 @@
-use chela::tensor::*;
+use chela::*;
 
 #[test]
 fn from_vector() {
     let arr = Tensor::from(vec![0, 50, 100]);
     assert_eq!(arr.len(), &3);
-    assert_eq!(arr.shape(), &vec![3]);
-    assert_eq!(arr.stride(), &vec![1]);
+    assert_eq!(arr.shape(), &[3]);
+    assert_eq!(arr.stride(), &[1]);
     assert_eq!(arr.ndims(), 1);
 
     let arr = Tensor::from(vec![vec![50], vec![50], vec![50]]);
     assert_eq!(arr.len(), &3);
-    assert_eq!(arr.shape(), &vec![3, 1]);
-    assert_eq!(arr.stride(), &vec![1, 1]);
+    assert_eq!(arr.shape(), &[3, 1]);
+    assert_eq!(arr.stride(), &[1, 1]);
     assert_eq!(arr.ndims(), 2);
 
     let arr = Tensor::from(vec![vec![vec![50]], vec![vec![50]]]);
     assert_eq!(arr.len(), &2);
-    assert_eq!(arr.shape(), &vec![2, 1, 1]);
-    assert_eq!(arr.stride(), &vec![1, 1, 1]);
+    assert_eq!(arr.shape(), &[2, 1, 1]);
+    assert_eq!(arr.stride(), &[1, 1, 1]);
     assert_eq!(arr.ndims(), 3);
 
     let arr = Tensor::from(vec![vec![vec![50, 50, 50]], vec![vec![50, 50, 50]]]);
     assert_eq!(arr.len(), &2);
-    assert_eq!(arr.shape(), &vec![2, 1, 3]);
-    assert_eq!(arr.stride(), &vec![3, 3, 1]);
+    assert_eq!(arr.shape(), &[2, 1, 3]);
+    assert_eq!(arr.stride(), &[3, 3, 1]);
     assert_eq!(arr.ndims(), 3);
 }
 
@@ -31,26 +31,26 @@ fn from_vector() {
 fn from_array() {
     let arr = Tensor::from([500, 50, 100]);
     assert_eq!(arr.len(), &3);
-    assert_eq!(arr.shape(), &vec![3]);
-    assert_eq!(arr.stride(), &vec![1]);
+    assert_eq!(arr.shape(), &[3]);
+    assert_eq!(arr.stride(), &[1]);
     assert_eq!(arr.ndims(), 1);
 
     let arr = Tensor::from([[500], [50], [100]]);
     assert_eq!(arr.len(), &3);
-    assert_eq!(arr.shape(), &vec![3, 1]);
-    assert_eq!(arr.stride(), &vec![1, 1]);
+    assert_eq!(arr.shape(), &[3, 1]);
+    assert_eq!(arr.stride(), &[1, 1]);
     assert_eq!(arr.ndims(), 2);
 
     let arr = Tensor::from([[[500], [50], [30]], [[50], [0], [0]]]);
     assert_eq!(arr.len(), &2);
-    assert_eq!(arr.shape(), &vec![2, 3, 1]);
-    assert_eq!(arr.stride(), &vec![3, 1, 1]);
+    assert_eq!(arr.shape(), &[2, 3, 1]);
+    assert_eq!(arr.stride(), &[3, 1, 1]);
     assert_eq!(arr.ndims(), 3);
 
     let arr = Tensor::from([[[50, 50, 50]], [[50, 50, 50]]]);
     assert_eq!(arr.len(), &2);
-    assert_eq!(arr.shape(), &vec![2, 1, 3]);
-    assert_eq!(arr.stride(), &vec![3, 3, 1]);
+    assert_eq!(arr.shape(), &[2, 1, 3]);
+    assert_eq!(arr.stride(), &[3, 3, 1]);
     assert_eq!(arr.ndims(), 3);
 }
 
@@ -84,12 +84,237 @@ fn index() {
 }
 
 #[test]
-fn squeeze() {
-    let mut arr = Tensor::from([[[1, 2, 3], [4, 5, 6]]]);
-    arr.squeeze();
-    assert_eq!(arr.len(), &2);
-    assert_eq!(arr.shape(), &vec![2, 3]);
-    assert_eq!(arr.stride(), &vec![3, 1]);
+fn slice_along_1d() {
+    let a = Tensor::from([10, 20, 30, 40]);
 
-    let mut arr = Tensor::from([[[1, 2, 3], [4, 5, 6]]]);
+    let slice = a.slice_along(Axis(0), 1);
+    assert_eq!(slice.len(), &0);
+    assert_eq!(slice.shape(), &[]);
+    assert_eq!(slice.ndims(), 0);
+
+    let slice = a.slice_along(Axis(0), ..);
+    assert_eq!(slice.len(), &4);
+    assert_eq!(slice[0], 10);
+    assert_eq!(slice[3], 40);
+    assert_eq!(slice.shape(), &[4]);
+    assert_eq!(slice.ndims(), 1);
+
+    let slice = a.slice_along(Axis(0), 2..);
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice[0], 30);
+    assert_eq!(slice[1], 40);
+    assert_eq!(slice.shape(), &[2]);
+    assert_eq!(slice.ndims(), 1);
+
+    let slice = a.slice_along(Axis(0), ..3);
+    assert_eq!(slice.len(), &3);
+    assert_eq!(slice[0], 10);
+    assert_eq!(slice[2], 30);
+    assert_eq!(slice.shape(), &[3]);
+    assert_eq!(slice.ndims(), 1);
+
+    let slice = a.slice_along(Axis(0), ..=3);
+    assert_eq!(slice.len(), &4);
+    assert_eq!(slice[0], 10);
+    assert_eq!(slice[3], 40);
+    assert_eq!(slice.shape(), &[4]);
+    assert_eq!(slice.ndims(), 1);
+
+    let slice = a.slice_along(Axis(0), 1..3);
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice[0], 20);
+    assert_eq!(slice[1], 30);
+    assert_eq!(slice.shape(), &[2]);
+    assert_eq!(slice.ndims(), 1);
+
+    let slice = a.slice_along(Axis(0), 1..=3);
+    assert_eq!(slice.len(), &3);
+    assert_eq!(slice[0], 20);
+    assert_eq!(slice[2], 40);
+    assert_eq!(slice.shape(), &[3]);
+    assert_eq!(slice.ndims(), 1);
+}
+
+#[test]
+fn slice_along_nd() {
+    let a = Tensor::from([[10], [20], [30], [40]]);
+
+    let slice = a.slice_along(Axis(0), 1);
+    assert_eq!(slice.len(), &1);
+    assert_eq!(slice.shape(), &[1]);
+    assert_eq!(slice.ndims(), 1);
+    assert_eq!(slice[0], 20);
+
+    let slice = a.slice_along(Axis(1), 0);
+    assert_eq!(slice.len(), &4);
+    assert_eq!(slice.shape(), &[4]);
+    assert_eq!(slice.ndims(), 1);
+    assert_eq!(slice[0], 10);
+
+    let a = Tensor::from([
+        [[10, 20, 30], [40, 50, 60]],
+        [[70, 80, 90], [100, 110, 120]],
+    ]);
+
+    let slice = a.slice_along(Axis(2), 2);
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &[2, 2]);
+    assert_eq!(slice.ndims(), 2);
+    assert_eq!(slice[[0, 0]], 30);
+    assert_eq!(slice[[1, 0]], 90);
+
+    let slice = a.slice_along(Axis(1), 1);
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &[2, 3]);
+    assert_eq!(slice.ndims(), 2);
+    assert_eq!(slice[[0, 0]], 40);
+    assert_eq!(slice[[1, 2]], 120);
+
+    let slice = a.slice_along(Axis(2), 1..);
+
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &[2, 2, 2]);
+    assert_eq!(slice.ndims(), 3);
+
+    assert_eq!(slice[[0, 0, 0]], 20);
+    assert_eq!(slice[[0, 0, 1]], 30);
+    assert_eq!(slice[[0, 1, 0]], 50);
+    assert_eq!(slice[[1, 0, 0]], 80);
+    assert_eq!(slice[[1, 1, 1]], 120);
+
+    let slice = a.slice_along(Axis(1), 1..);
+
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &[2, 1, 3]);
+    assert_eq!(slice.ndims(), 3);
+
+    assert_eq!(slice[[0, 0, 0]], 40);
+    assert_eq!(slice[[0, 0, 2]], 60);
+    assert_eq!(slice[[1, 0, 0]], 100);
+    assert_eq!(slice[[1, 0, 2]], 120);
+}
+
+#[test]
+fn slice_homogenous() {
+    let a = Tensor::from([
+        [[1, 2, 3], [4, 5, 6]],
+        [[7, 8, 9], [10, 11, 12]],
+    ]);
+
+    let slice = a.slice([1, 1]);
+
+    assert_eq!(slice.len(), &3);
+    assert_eq!(slice.shape(), &[3]);
+    assert_eq!(slice.ndims(), 1);
+
+    assert_eq!(slice[0], 10);
+    assert_eq!(slice[1], 11);
+    assert_eq!(slice[2], 12);
+
+    let slice = a.slice([1..=1, 1..=1]);
+
+    assert_eq!(slice.len(), &1);
+    assert_eq!(slice.shape(), &[1, 1, 3]);
+    assert_eq!(slice.ndims(), 3);
+
+    assert_eq!(slice[[0, 0, 0]], 10);
+    assert_eq!(slice[[0, 0, 1]], 11);
+    assert_eq!(slice[[0, 0, 2]], 12);
+
+    let slice = a.slice([0..=0, 0..=1, 0..=1]);
+
+    assert_eq!(slice.len(), &1);
+    assert_eq!(slice.shape(), &[1, 2, 2]);
+    assert_eq!(slice.ndims(), 3);
+
+    assert_eq!(slice[[0, 0, 0]], 1);
+    assert_eq!(slice[[0, 0, 1]], 2);
+    assert_eq!(slice[[0, 1, 0]], 4);
+    assert_eq!(slice[[0, 1, 1]], 5);
+}
+
+#[test]
+fn slice_heterogeneous() {
+    let a = Tensor::from([
+        [[1, 2, 3], [4, 5, 6]],
+        [[7, 8, 9], [10, 11, 12]],
+        [[13, 14, 15], [16, 17, 18]],
+    ]);
+
+    let slice = a.slice(s![0, .., 0]);
+
+    assert_eq!(slice.len(), &2);
+    assert_eq!(slice.shape(), &[2]);
+    assert_eq!(slice.ndims(), 1);
+
+    assert_eq!(slice[0], 1);
+    assert_eq!(slice[1], 4);
+}
+
+#[test]
+fn squeeze_first_dimension() {
+    let a = Tensor::from([
+        [[[1, 2, 3], [4, 5, 6]]],
+    ]);
+    let b = a.squeeze();
+    assert_eq!(b.shape(), &[2, 3]);
+    assert_eq!(b.stride(), &[3, 1]);
+}
+
+#[test]
+fn squeeze_multiple_dimensions() {
+    let a = Tensor::from([
+        [[[[1, 2, 3]], [[4, 5, 6]]]],
+    ]);
+    let b = a.squeeze();
+    assert_eq!(b.shape(), &[2, 3]);
+    assert_eq!(b.stride(), &[3, 1]);
+}
+
+#[test]
+fn squeeze_one_dimension() {
+    let a: Tensor<i32> = Tensor::from([0]);
+    let b = a.squeeze();
+    assert_eq!(b.shape(), &[]);
+    assert_eq!(b.stride(), &[]);
+}
+
+#[test]
+fn squeeze_no_extra_dimensions() {
+    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let b = a.squeeze();
+    assert_eq!(b.shape(), &[2, 3]);
+    assert_eq!(b.stride(), &[3, 1]);
+}
+
+#[test]
+fn unsqueeze_single_element() {
+    let a: Tensor<i32> = Tensor::from([0]);
+    let b = a.unsqueeze(0);
+    assert_eq!(b.shape(), &[1, 1]);
+    assert_eq!(b.stride(), &[1, 1]);
+}
+
+#[test]
+fn unsqueeze_random_dimension_first_axis() {
+    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let b = a.unsqueeze(0);
+    assert_eq!(b.shape(), &[1, 2, 3]);
+    assert_eq!(b.stride(), &[6, 3, 1]);
+}
+
+#[test]
+fn unsqueeze_random_dimension_axis_1() {
+    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let b = a.unsqueeze(1);
+    assert_eq!(b.shape(), &[2, 1, 3]);
+    assert_eq!(b.stride(), &[3, 3, 1]);
+}
+
+#[test]
+fn unsqueeze_random_dimension_last_axis() {
+    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let b = a.unsqueeze(2);
+    assert_eq!(b.shape(), &[2, 3, 1]);
+    assert_eq!(b.stride(), &[3, 1, 1]);
 }

@@ -1,4 +1,5 @@
 use std::mem::ManuallyDrop;
+use std::ops::Index;
 use std::ptr::NonNull;
 
 use crate::tensor::dtype::RawDataType;
@@ -8,9 +9,9 @@ use crate::traits::homogenous::Homogenous;
 
 #[derive(Debug, Clone)]
 pub struct DataOwned<T: RawDataType> {
-    pub(crate) ptr: NonNull<T>,
-    pub(crate) len: usize,
-    pub(crate) capacity: usize,
+    pub(super) ptr: NonNull<T>,
+    pub(super) len: usize,
+    pub(super) capacity: usize,
 }
 
 impl<T: RawDataType> DataOwned<T> {
@@ -31,6 +32,7 @@ impl<T: RawDataType> DataOwned<T> {
             panic!("Tensor::from() failed, cannot create data buffer from empty data");
         }
 
+        // take control of the data so that Rust doesn't drop it once the vector goes out of scope
         let mut data = ManuallyDrop::new(data);
 
         // safe to unwrap because we've checked length above
@@ -46,9 +48,22 @@ impl<T: RawDataType> DataOwned<T> {
 
 impl<T: RawDataType> Drop for DataOwned<T> {
     fn drop(&mut self) {
+        // drops the data
         unsafe { Vec::from_raw_parts(self.ptr.as_ptr(), self.len, self.capacity) };
 
         self.len = 0;
         self.capacity = 0;
+    }
+}
+
+impl<T> Index<usize> for DataOwned<T>
+where
+    T: RawDataType,
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &T {
+        assert!(index < self.len, "Index '{index}' out of bounds"); // type implies 0 <= index
+        unsafe { &*self.ptr.as_ptr().offset(index as isize) }
     }
 }

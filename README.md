@@ -4,6 +4,16 @@ A Rust library for linear algebra and machine learning!
 
 ## Changelog
 
+### Dec 13, 2024
+
+- Full `TensorBase` slicing support!
+
+### Dec 12, 2024
+
+- Added `TensorView` constructors
+- Implemented `Index<usize>` trait for `DataBuffer`
+- Added `slice_along()` method for `Tensor`
+
 ### Dec 11, 2024
 
 - Added `stride()` & `ndims()` methods for `Tensor`

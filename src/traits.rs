@@ -1,7 +1,7 @@
 #[macro_use]
-pub mod macros;
+pub(crate) mod macros;
 
-pub mod flatten;
-pub mod homogenous;
-pub mod shape;
-pub mod nested;
+pub(crate) mod flatten;
+pub(crate) mod homogenous;
+pub(crate) mod nested;
+pub(crate) mod shape;
