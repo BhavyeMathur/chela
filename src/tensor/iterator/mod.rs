@@ -1,12 +1,12 @@
 use crate::dtype::RawDataType;
+use crate::iterator::flat_index_iterator::FlatIndexIterator;
 use crate::iterator::flat_iterator::FlatIterator;
-use crate::iterator::shape_stride_iterator::ShapeStrideRange;
 use crate::{Tensor, TensorView};
 use std::ops::Range;
 
 pub mod flat_iterator;
-mod collapse_contiguous;
-mod shape_stride_iterator;
+pub(super) mod collapse_contiguous;
+pub mod flat_index_iterator;
 
 impl<T: RawDataType> Tensor<T> {
     pub fn flat_iter(&self) -> FlatIterator<T, Range<isize>> {
@@ -15,8 +15,8 @@ impl<T: RawDataType> Tensor<T> {
 }
 
 impl<T: RawDataType> TensorView<T> {
-    pub fn flat_iter(&self) -> FlatIterator<T, ShapeStrideRange> {
-        let indices = ShapeStrideRange::from(&self.shape, &self.stride);
+    pub fn flat_iter(&self) -> FlatIterator<T, FlatIndexIterator> {
+        let indices = FlatIndexIterator::from(&self.shape, &self.stride);
         FlatIterator::from(self, indices)
     }
 }
