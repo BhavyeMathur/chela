@@ -1,70 +1,56 @@
 pub(super) mod clone;
 pub(super) mod data_owned;
 pub(super) mod data_view;
+pub(super) mod buffer;
 
+pub(super) use crate::data_buffer::buffer::DataBuffer;
 pub(super) use crate::data_buffer::data_owned::DataOwned;
 pub(super) use crate::data_buffer::data_view::DataView;
 
 use crate::tensor::dtype::RawDataType;
 
 use std::ops::Index;
-use std::ptr::NonNull;
 
-pub trait DataBuffer: Index<usize> {
-    type DType: RawDataType;
+#[cfg(test)]
+mod tests {
+    use crate::data_buffer::DataOwned;
 
-    fn len(&self) -> usize;
+    #[test]
+    fn from_vector() {
+        let arr = DataOwned::from(vec![0, 50, 100]);
+        assert_eq!(arr.len(), &3);
 
-    fn ptr(&self) -> NonNull<Self::DType>;
+        let arr = DataOwned::from(vec![vec![50], vec![50], vec![50]]);
+        assert_eq!(arr.len(), &3);
 
-    fn const_ptr(&self) -> *const Self::DType;
+        let arr = DataOwned::from(vec![vec![vec![50]], vec![vec![50]]]);
+        assert_eq!(arr.len(), &2);
 
-    fn to_view(&self) -> DataView<Self::DType>;
-
-    // fn clone(&self) -> DataOwned<Self::DType>;
-}
-
-// Two kinds of data buffers
-// DataOwned: owns its data & responsible for cleaning it up
-// DataView: reference to data owned by another buffer
-
-impl<T: RawDataType> DataBuffer for DataOwned<T> {
-    type DType = T;
-
-    fn len(&self) -> usize {
-        self.len
+        let arr = DataOwned::from(vec![vec![vec![50, 50, 50]], vec![vec![50, 50, 50]]]);
+        assert_eq!(arr.len(), &6);
     }
 
-    fn ptr(&self) -> NonNull<T> {
-        self.ptr
+    #[test]
+    fn from_array() {
+        let arr = DataOwned::from([500, 50, 100]);
+        assert_eq!(arr.len(), &3);
+
+        let arr = DataOwned::from([[500], [50], [100]]);
+        assert_eq!(arr.len(), &3);
+
+        let arr = DataOwned::from([[[500], [50], [30]], [[50], [0], [0]]]);
+        assert_eq!(arr.len(), &6);
+
+        let arr = DataOwned::from([[[50, 50]], [[50, 50]]]);
+        assert_eq!(arr.len(), &4);
     }
 
-    fn const_ptr(&self) -> *const T {
-        self.ptr.as_ptr()
-    }
+    #[test]
+    fn from_inhomogeneous_vector() {
+        let arr = DataOwned::from(vec![vec![50, 50], vec![50]]);
+        assert_eq!(arr.len(), &3);
 
-    fn to_view(&self) -> DataView<T> {
-        let ptr = self.ptr;
-        let len = self.len;
-        DataView { ptr, len }
-    }
-}
-impl<T: RawDataType> DataBuffer for DataView<T> {
-    type DType = T;
-
-    fn len(&self) -> usize {
-        self.len
-    }
-
-    fn ptr(&self) -> NonNull<T> {
-        self.ptr
-    }
-
-    fn const_ptr(&self) -> *const T {
-        self.ptr.as_ptr()
-    }
-
-    fn to_view(&self) -> DataView<T> {
-        (*self).clone()
+        let arr = DataOwned::from(vec![vec![vec![50, 50]], vec![vec![50]], vec![vec![50]]]);
+        assert_eq!(arr.len(), &4);
     }
 }
