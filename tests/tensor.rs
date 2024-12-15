@@ -282,6 +282,28 @@ fn clone() {
 }
 
 #[test]
+fn clone_contiguous() {
+    let a = Tensor::from([
+        [[10, 11, 12], [13, 14, 15]],
+        [[16, 17, 18], [19, 20, 21]],
+        [[22, 23, 24], [25, 26, 27]],
+    ]);
+
+    let view = a.slice([..]);
+    view.clone();
+
+    assert_eq!(view[[0, 0, 0]], 10);
+    assert_eq!(view[[2, 1, 2]], 27);
+
+    let a = Tensor::from(vec![5; 10]);
+    let view = a.slice([..]);
+    view.clone();
+
+    assert_eq!(view[0], 5);
+    assert_eq!(view[9], 5);
+}
+
+#[test]
 fn flat_iter() {
     let a = Tensor::from([
         [[10, 11, 12], [13, 14, 15]],

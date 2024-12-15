@@ -22,10 +22,6 @@ impl<T: RawDataType> DataOwned<T> {
     pub(in crate::tensor) fn capacity(&self) -> &usize {
         &self.capacity
     }
-
-    pub(in crate::tensor) fn ptr(&self) -> *const T {
-        self.ptr.as_ptr()
-    }
 }
 
 impl<T: RawDataType> DataOwned<T> {

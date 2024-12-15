@@ -1,45 +1,44 @@
+use crate::data_buffer::DataBuffer;
 use crate::dtype::RawDataType;
-use crate::Tensor;
+use crate::TensorBase;
 
 #[non_exhaustive]
-pub struct TensorFlatIter<T>
+pub struct FlatIterator<T, I>
 where
     T: RawDataType,
+    I: Iterator<Item=isize>,
 {
     ptr: *const T,
-    size: isize,
-    index: isize,
+    indices: I,
 }
 
-impl<T: RawDataType> Tensor<T> {
-    pub fn flat_iter(&self) -> TensorFlatIter<T> {
-        TensorFlatIter::from(&self)
-    }
-}
-
-impl<T: RawDataType> TensorFlatIter<T> {
-    fn from(tensor: &Tensor<T>) -> Self {
+impl<T, I> FlatIterator<T, I>
+where
+    T: RawDataType,
+    I: Iterator<Item=isize>,
+{
+    pub(super) fn from<B>(tensor: &TensorBase<B>, indices: I) -> Self
+    where
+        B: DataBuffer<DType=T>,
+    {
         Self {
-            ptr: tensor.data.ptr(),
-            size: tensor.size() as isize,
-            index: 0,
+            ptr: tensor.data.const_ptr(),
+            indices,
         }
     }
 }
 
-impl<T> Iterator for TensorFlatIter<T>
+impl<T, I> Iterator for FlatIterator<T, I>
 where
     T: RawDataType,
+    I: Iterator<Item=isize>,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index == self.size {
-            return None;
+        match self.indices.next() {
+            None => None,
+            Some(i) => Some(unsafe { *self.ptr.offset(i) })
         }
-
-        let rvalue = unsafe { *self.ptr.offset(self.index) };
-        self.index += 1;
-        Some(rvalue)
     }
 }

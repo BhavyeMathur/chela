@@ -20,10 +20,6 @@ impl<T: RawDataType> DataView<T> {
             len,
         }
     }
-
-    pub(in crate::tensor) fn ptr(&self) -> *const T {
-        self.ptr.as_ptr()
-    }
 }
 
 impl<T: RawDataType> From<&DataOwned<T>> for DataView<T> {

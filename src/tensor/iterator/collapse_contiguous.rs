@@ -1,6 +1,10 @@
 // interprets all contiguously stored dimensions as 1 big dimension
 // if the entire array is stored contiguously, this results in just 1 long dimension
-pub(super) fn collapse_contiguous(shape: &Vec<usize>, stride: &Vec<usize>) -> (Vec<usize>, Vec<usize>) {
+pub(in crate::tensor) fn collapse_contiguous(shape: &Vec<usize>, stride: &Vec<usize>) -> (Vec<usize>, Vec<usize>) {
+    if stride.last() != Some(&1) {
+        return (shape.clone(), stride.clone());
+    }
+
     let mut stride_if_contiguous = 1;
     let mut ndims = shape.len();
 
@@ -23,4 +27,38 @@ pub(super) fn collapse_contiguous(shape: &Vec<usize>, stride: &Vec<usize>) -> (V
     collapsed_stride.push(1);
 
     (collapsed_shape, collapsed_stride)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::collapse_contiguous;
+    use crate::{s, Tensor};
+
+    #[test]
+    fn test_collapse_contiguous() {
+        let a = Tensor::from([
+            [[0, 1, 2], [3, 4, 5]],
+            [[6, 7, 8], [9, 10, 11]],
+            [[12, 13, 14], [15, 16, 17]],
+        ]);
+
+        let (shape, stride) = collapse_contiguous(&a.shape, &a.stride);
+        assert_eq!(shape, [18]);
+        assert_eq!(stride, [1]);
+
+        let b = a.slice(s![.., 0]);
+        let (shape, stride) = collapse_contiguous(&b.shape, &b.stride);
+        assert_eq!(shape, [3, 3]);
+        assert_eq!(stride, [6, 1]);
+
+        let b = a.slice(s![1]);
+        let (shape, stride) = collapse_contiguous(&b.shape, &b.stride);
+        assert_eq!(shape, [6]);
+        assert_eq!(stride, [1]);
+
+        let b = a.slice(s![..2, 1, 1..]);
+        let (shape, stride) = collapse_contiguous(&b.shape, &b.stride);
+        assert_eq!(shape, [2, 2]);
+        assert_eq!(stride, [6, 1]);
+    }
 }
