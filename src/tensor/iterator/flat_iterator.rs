@@ -20,7 +20,7 @@ impl<T: RawDataType> Tensor<T> {
 impl<T: RawDataType> TensorFlatIter<T> {
     fn from(tensor: &Tensor<T>) -> Self {
         Self {
-            ptr: tensor.data.ptr.as_ptr().cast_const(),
+            ptr: tensor.data.ptr(),
             size: tensor.size() as isize,
             index: 0,
         }

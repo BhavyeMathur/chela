@@ -1,32 +1,6 @@
 use crate::dtype::RawDataType;
+use crate::iterator::collapse_contiguous::collapse_contiguous;
 use crate::TensorView;
-
-// interprets all contiguously stored dimensions as 1 big dimension
-// if the entire array is stored contiguously, this results in just 1 long dimension
-fn collapse_contiguous(shape: &Vec<usize>, stride: &Vec<usize>) -> (Vec<usize>, Vec<usize>) {
-    let mut stride_if_contiguous = 1;
-    let mut ndims = shape.len();
-
-    for (&axis_length, &actual_stride) in shape.iter().zip(stride.iter()).rev() {
-        if stride_if_contiguous != actual_stride {
-            break;
-        }
-        ndims -= 1;
-        stride_if_contiguous *= axis_length;
-    }
-
-    if stride_if_contiguous == 1 { // none of the dimensions are contiguous
-        return (shape.clone(), stride.clone());
-    }
-
-    let mut collapsed_shape = shape[..ndims].to_vec();
-    let mut collapsed_stride = stride[..ndims].to_vec();
-
-    collapsed_shape.push(stride_if_contiguous);
-    collapsed_stride.push(1);
-
-    (collapsed_shape, collapsed_stride)
-}
 
 #[non_exhaustive]
 pub struct TensorViewFlatIter<T>
@@ -57,7 +31,7 @@ impl<T: RawDataType> TensorViewFlatIter<T> {
         let ndims = shape.len();
 
         Self {
-            ptr: tensor.data.ptr.as_ptr().cast_const(),
+            ptr: tensor.data.ptr(),
             shape,
             stride,
             ndims,
@@ -101,7 +75,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::view_flat_iterator::collapse_contiguous;
+    use super::collapse_contiguous;
     use crate::{s, Tensor};
 
     #[test]

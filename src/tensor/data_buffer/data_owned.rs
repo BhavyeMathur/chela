@@ -15,12 +15,16 @@ pub struct DataOwned<T: RawDataType> {
 }
 
 impl<T: RawDataType> DataOwned<T> {
-    pub fn len(&self) -> &usize {
+    pub(in crate::tensor) fn len(&self) -> &usize {
         &self.len
     }
 
-    pub fn capacity(&self) -> &usize {
+    pub(in crate::tensor) fn capacity(&self) -> &usize {
         &self.capacity
+    }
+
+    pub(in crate::tensor) fn ptr(&self) -> *const T {
+        self.ptr.as_ptr()
     }
 }
 

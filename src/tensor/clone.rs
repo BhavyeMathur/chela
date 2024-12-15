@@ -1,33 +1,7 @@
-use crate::data_buffer::DataBuffer;
-use crate::data_owned::DataOwned;
+use crate::data_buffer::{DataBuffer, DataOwned};
 use crate::dtype::RawDataType;
 use crate::{Tensor, TensorBase, TensorView};
-use std::intrinsics::copy_nonoverlapping;
-use std::mem::ManuallyDrop;
-use std::ptr::NonNull;
 
-impl<T: RawDataType> Clone for DataOwned<T> {
-    fn clone(&self) -> DataOwned<T> {
-        let mut data = Vec::with_capacity(self.len);
-
-        let src = self.ptr.as_ptr();
-        let dst = data.as_mut_ptr();
-
-        unsafe {
-            copy_nonoverlapping(src, dst, self.len);
-            data.set_len(self.len);
-        }
-
-        // take control of the data so that Rust doesn't drop it once the vector goes out of scope
-        let data = ManuallyDrop::new(data);
-
-        Self {
-            len: data.len(),
-            capacity: data.capacity(),
-            ptr: NonNull::new(dst).unwrap(),
-        }
-    }
-}
 
 pub(super) trait TensorClone<T: RawDataType> {
     fn copy_data(&self) -> DataOwned<T>;
