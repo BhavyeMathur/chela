@@ -8,6 +8,7 @@ pub mod slice;
 pub mod iterator;
 pub mod flatten;
 pub mod clone;
+pub mod squeeze;
 
 use crate::tensor::data_buffer::{DataBuffer, DataOwned, DataView};
 

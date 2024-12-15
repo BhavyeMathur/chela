@@ -365,3 +365,71 @@ fn flatten() {
     assert_eq!(b[0], 14);
     assert_eq!(b[3], 21);
 }
+
+#[test]
+fn squeeze_first_dimension() {
+    let a = Tensor::from([
+        [[[1, 2, 3], [4, 5, 6]]],
+    ]);
+    let b = a.squeeze();
+    assert_eq!(b.shape(), &[2, 3]);
+    assert_eq!(b.stride(), &[3, 1]);
+}
+
+#[test]
+fn squeeze_multiple_dimensions() {
+    let a = Tensor::from([
+        [[[[1, 2, 3]], [[4, 5, 6]]]],
+    ]);
+    let b = a.squeeze();
+    assert_eq!(b.shape(), &[2, 3]);
+    assert_eq!(b.stride(), &[3, 1]);
+}
+
+#[test]
+fn squeeze_one_dimension() {
+    let a: Tensor<i32> = Tensor::from([0]);
+    let b = a.squeeze();
+    assert_eq!(b.shape(), &[]);
+    assert_eq!(b.stride(), &[]);
+}
+
+#[test]
+fn squeeze_no_extra_dimensions() {
+    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let b = a.squeeze();
+    assert_eq!(b.shape(), &[2, 3]);
+    assert_eq!(b.stride(), &[3, 1]);
+}
+
+#[test]
+fn unsqueeze_single_element() {
+    let a: Tensor<i32> = Tensor::from([0]);
+    let b = a.unsqueeze(Axis(0));
+    assert_eq!(b.shape(), &[1, 1]);
+    assert_eq!(b.stride(), &[1, 1]);
+}
+
+#[test]
+fn unsqueeze_random_dimension_first_axis() {
+    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let b = a.unsqueeze(Axis(0));
+    assert_eq!(b.shape(), &[1, 2, 3]);
+    assert_eq!(b.stride(), &[6, 3, 1]);
+}
+
+#[test]
+fn unsqueeze_random_dimension_axis_1() {
+    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let b = a.unsqueeze(Axis(1));
+    assert_eq!(b.shape(), &[2, 1, 3]);
+    assert_eq!(b.stride(), &[3, 3, 1]);
+}
+
+#[test]
+fn unsqueeze_random_dimension_last_axis() {
+    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let b = a.unsqueeze(Axis(2));
+    assert_eq!(b.shape(), &[2, 3, 1]);
+    assert_eq!(b.stride(), &[3, 1, 1]);
+}

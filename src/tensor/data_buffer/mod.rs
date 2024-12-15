@@ -1,6 +1,6 @@
+pub(super) mod clone;
 pub(super) mod data_owned;
 pub(super) mod data_view;
-pub(super) mod clone;
 
 pub(super) use crate::data_buffer::data_owned::DataOwned;
 pub(super) use crate::data_buffer::data_view::DataView;
@@ -20,6 +20,8 @@ pub trait DataBuffer: Index<usize> {
     fn const_ptr(&self) -> *const Self::DType;
 
     fn to_view(&self) -> DataView<Self::DType>;
+
+    // fn clone(&self) -> DataOwned<Self::DType>;
 }
 
 // Two kinds of data buffers
