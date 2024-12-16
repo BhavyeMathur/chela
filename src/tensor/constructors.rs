@@ -33,7 +33,7 @@ impl<T: RawDataType> Tensor<T> {
     }
 
     pub fn full(n: T, shape: Vec<usize>) -> Self {
-        assert!(shape.len() > 0, "Cannot create a zero-dimension tensor!");
+        assert!(!shape.is_empty(), "Cannot create a zero-dimension tensor!");
 
         let vector_ns = vec![n; shape.iter().product()];
 
