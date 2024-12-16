@@ -1,7 +1,7 @@
 use crate::data_buffer::{DataBuffer, DataOwned};
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::collapse_contiguous;
-use crate::iterator::flat_index_iterator::FlatIndexIterator;
+use crate::iterator::flat_index_generator::FlatIndexGenerator;
 use crate::{Tensor, TensorBase, TensorView};
 use std::ptr::copy_nonoverlapping;
 
@@ -41,7 +41,7 @@ impl<T: RawDataType> TensorClone<T> for TensorView<T> {
                 let src = self.data.const_ptr();
                 let mut dst = data.as_mut_ptr();
 
-                for i in FlatIndexIterator::from(&shape, &stride) {
+                for i in FlatIndexGenerator::from(&shape, &stride) {
                     unsafe {
                         copy_nonoverlapping(src.offset(i), dst, contiguous_stride);
                         dst = dst.add(contiguous_stride);
