@@ -1,7 +1,7 @@
 use crate::iterator::collapse_contiguous::collapse_contiguous;
 
 #[non_exhaustive]
-pub struct FlatIndexIterator
+pub struct FlatIndexGenerator
 {
     shape: Vec<usize>,
     stride: Vec<usize>,
@@ -14,8 +14,8 @@ pub struct FlatIndexIterator
     flat_index: usize,
 }
 
-impl FlatIndexIterator {
-    pub(in crate::tensor) fn from(shape: &Vec<usize>, stride: &Vec<usize>) -> Self {
+impl FlatIndexGenerator {
+    pub(in crate::tensor) fn from(shape: &[usize], stride: &[usize]) -> Self {
         let (shape, stride) = collapse_contiguous(shape, stride);
         let ndims = shape.len();
         let size = shape.iter().product();
@@ -32,7 +32,7 @@ impl FlatIndexIterator {
     }
 }
 
-impl Iterator for FlatIndexIterator {
+impl Iterator for FlatIndexGenerator {
     type Item = isize;
 
     fn next(&mut self) -> Option<Self::Item> {

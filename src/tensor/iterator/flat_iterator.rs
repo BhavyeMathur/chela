@@ -1,44 +1,25 @@
-use crate::data_buffer::DataBuffer;
 use crate::dtype::RawDataType;
-use crate::TensorBase;
+use crate::iterator::buffer_iterator::BufferIterator;
+use crate::iterator::flat_index_generator::FlatIndexGenerator;
+use crate::{Tensor, TensorView};
+use std::ops::Range;
 
-#[non_exhaustive]
-pub struct FlatIterator<T, I>
-where
-    T: RawDataType,
-    I: Iterator<Item=isize>,
-{
-    ptr: *const T,
-    indices: I,
+pub trait FlatIterator<T: RawDataType> {
+    type Indices: Iterator<Item=isize>;
+    fn flat_iter(&self) -> BufferIterator<T, Self::Indices>;
 }
 
-impl<T, I> FlatIterator<T, I>
-where
-    T: RawDataType,
-    I: Iterator<Item=isize>,
-{
-    pub(super) fn from<B>(tensor: &TensorBase<B>, indices: I) -> Self
-    where
-        B: DataBuffer<DType=T>,
-    {
-        Self {
-            ptr: tensor.data.const_ptr(),
-            indices,
-        }
+impl<T: RawDataType> FlatIterator<T> for Tensor<T> {
+    type Indices = Range<isize>;
+    fn flat_iter(&self) -> BufferIterator<T, Self::Indices> {
+        BufferIterator::from(self, 0..self.size() as isize)
     }
 }
 
-impl<T, I> Iterator for FlatIterator<T, I>
-where
-    T: RawDataType,
-    I: Iterator<Item=isize>,
-{
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.indices.next() {
-            None => None,
-            Some(i) => Some(unsafe { *self.ptr.offset(i) })
-        }
+impl<T: RawDataType> FlatIterator<T> for TensorView<T> {
+    type Indices = FlatIndexGenerator;
+    fn flat_iter(&self) -> BufferIterator<T, Self::Indices> {
+        let indices = FlatIndexGenerator::from(&self.shape, &self.stride);
+        BufferIterator::from(self, indices)
     }
 }

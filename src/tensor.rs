@@ -9,6 +9,9 @@ pub mod iterator;
 pub mod flatten;
 pub mod clone;
 pub mod squeeze;
+pub mod equals;
+
+pub use iterator::*;
 
 use crate::tensor::data_buffer::{DataBuffer, DataOwned, DataView};
 

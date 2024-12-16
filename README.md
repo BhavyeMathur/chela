@@ -4,6 +4,10 @@ A Rust library for linear algebra and machine learning!
 
 ## Changelog
 
+### Dec 16, 2024
+
+- Implemented `PartialEq` for `TensorBase`
+
 ### Dec 14, 2024
 
 - Added a flat Iterator for `Tensor` and `TensorView`
