@@ -31,12 +31,54 @@ impl<T: RawDataType> Tensor<T> {
             ndims: D,
         }
     }
+
+    pub fn full(n: T, shape: Vec<usize>) -> Self {
+        assert!(!shape.is_empty(), "Cannot create a zero-dimension tensor!");
+
+        let vector_ns = vec![n; shape.iter().product()];
+
+        let mut stride = vec![0; shape.len()];
+
+        let ndims = shape.len();
+
+        let mut p = 1;
+        for i in (0..ndims).rev() {
+            stride[i] = p;
+            p *= shape[i];
+        }
+
+        Self {
+            data: DataOwned::new(vector_ns),
+            shape,
+            stride,
+            ndims,
+        }
+    }
+
+    pub fn zeros(shape: Vec<usize>) -> Self
+    where
+        T: RawDataType + From<bool>,
+    {
+        Self::full(false.into(), shape)
+    }
+
+    pub fn ones(shape: Vec<usize>) -> Self
+    where
+        T: RawDataType + From<bool>,
+    {
+        Self::full(true.into(), shape)
+    }
 }
 
 impl<T: RawDataType> TensorView<T> {
-    pub(super) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
+    pub(super) fn from<B>(
+        tensor: &TensorBase<B>,
+        offset: usize,
+        shape: Vec<usize>,
+        stride: Vec<usize>,
+    ) -> Self
     where
-        B: DataBuffer<DType=T>,
+        B: DataBuffer<DType = T>,
     {
         let ndims = shape.len();
 
@@ -46,9 +88,12 @@ impl<T: RawDataType> TensorView<T> {
         // }
         //
         // the following code is equivalent to the above loop
-        let len = shape.iter().zip(stride.iter())
+        let len = shape
+            .iter()
+            .zip(stride.iter())
             .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
-            .sum::<usize>() + 1;
+            .sum::<usize>()
+            + 1;
 
         let data = DataView::from_buffer(&tensor.data, offset, len);
 
