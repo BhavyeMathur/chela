@@ -15,7 +15,7 @@ impl<T: DataBuffer> TensorBase<T> {
     }
 
     pub fn len(&self) -> &usize {
-        if self.shape.len() == 0 {
+        if self.shape.is_empty() {
             return &0;
         }
 

@@ -1,8 +1,8 @@
 // interprets all contiguously stored dimensions as 1 big dimension
 // if the entire array is stored contiguously, this results in just 1 long dimension
-pub(in crate::tensor) fn collapse_contiguous(shape: &Vec<usize>, stride: &Vec<usize>) -> (Vec<usize>, Vec<usize>) {
+pub(in crate::tensor) fn collapse_contiguous(shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
     if stride.last() != Some(&1) {
-        return (shape.clone(), stride.clone());
+        return (shape.to_vec(), stride.to_vec());
     }
 
     let mut stride_if_contiguous = 1;
@@ -17,7 +17,7 @@ pub(in crate::tensor) fn collapse_contiguous(shape: &Vec<usize>, stride: &Vec<us
     }
 
     if stride_if_contiguous == 1 { // none of the dimensions are contiguous
-        return (shape.clone(), stride.clone());
+        return (shape.to_vec(), stride.to_vec());
     }
 
     let mut collapsed_shape = shape[..ndims].to_vec();

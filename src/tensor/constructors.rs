@@ -12,7 +12,7 @@ impl<T: RawDataType> Tensor<T> {
             "Tensor::from() failed, found inhomogeneous dimensions"
         );
 
-        let shape: Vec<usize> = data.shape().into();
+        let shape = data.shape();
 
         // calculates the stride from the tensor's shape
         // shape [5, 3, 2, 1] -> stride [10, 2, 1, 1]
@@ -33,6 +33,8 @@ impl<T: RawDataType> Tensor<T> {
     }
 
     pub fn full(n: T, shape: Vec<usize>) -> Self {
+        assert!(shape.len() > 0, "Cannot create a zero-dimension tensor!");
+
         let vector_ns = vec![n; shape.iter().product()];
 
         let mut stride = vec![0; shape.len()];
@@ -45,27 +47,38 @@ impl<T: RawDataType> Tensor<T> {
             p *= shape[i];
         }
 
-        Self{
+        Self {
             data: DataOwned::new(vector_ns),
             shape,
             stride,
-            ndims
+            ndims,
         }
     }
 
-    pub fn zeros(shape: Vec<usize>) -> Self {
-        Self::full(0, shape)
+    pub fn zeros(shape: Vec<usize>) -> Self
+    where
+        T: RawDataType + From<u8>,
+    {
+        Self::full(0.into(), shape)
     }
 
-    pub fn ones(shape: Vec<usize>) -> Self {
-        Self::full(1, shape)
+    pub fn ones(shape: Vec<usize>) -> Self
+    where
+        T: RawDataType + From<u8>,
+    {
+        Self::full(1.into(), shape)
     }
 }
 
 impl<T: RawDataType> TensorView<T> {
-    pub(super) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
+    pub(super) fn from<B>(
+        tensor: &TensorBase<B>,
+        offset: usize,
+        shape: Vec<usize>,
+        stride: Vec<usize>,
+    ) -> Self
     where
-        B: DataBuffer<DType=T>,
+        B: DataBuffer<DType = T>,
     {
         let ndims = shape.len();
 
@@ -75,9 +88,12 @@ impl<T: RawDataType> TensorView<T> {
         // }
         //
         // the following code is equivalent to the above loop
-        let len = shape.iter().zip(stride.iter())
+        let len = shape
+            .iter()
+            .zip(stride.iter())
             .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
-            .sum::<usize>() + 1;
+            .sum::<usize>()
+            + 1;
 
         let data = DataView::from_buffer(&tensor.data, offset, len);
 

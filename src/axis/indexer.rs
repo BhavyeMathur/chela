@@ -4,9 +4,9 @@ use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToIncl
 use crate::axis::indexer_impl::IndexerImpl;
 
 pub(crate) trait Indexer: IndexerImpl + Clone {
-    fn indexed_shape_and_stride(&self, axis: &Axis, shape: &Vec<usize>, stride: &Vec<usize>) -> (Vec<usize>, Vec<usize>) {
-        let mut shape = shape.clone();
-        let mut stride = stride.clone();
+    fn indexed_shape_and_stride(&self, axis: &Axis, shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
+        let mut shape = shape.to_vec();
+        let mut stride = stride.to_vec();
 
         let axis = axis.0;
         let len = self.len(axis, &shape);

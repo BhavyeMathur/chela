@@ -435,7 +435,123 @@ fn unsqueeze_random_dimension_last_axis() {
 }
 
 #[test]
-fn full_n(){
+fn full_i32(){
     let a = Tensor::full(3, vec![2, 3]);
     assert_eq!(a.shape(), &[2, 3]);
+    assert_eq!(a.stride(), &[3, 1]);
+    let b = a.flatten();
+    let b_len = b.len().clone();
+    for i in 0..b_len {
+        assert_eq!(b[i], 3);
+    }
+}
+
+#[test]
+fn full_f64(){
+    let a = Tensor::full(3.2,vec![4, 6, 2]);
+    assert_eq!(a.shape(), &[4, 6, 2]);
+    let b = a.flatten();
+    let b_len = *b.len();
+    for i in 0..b_len {
+        assert_eq!(b[i], 3.2);
+    }
+}
+
+#[test]
+fn full_bool(){
+    let a: Tensor<bool> = Tensor::full(true,vec![3, 5, 3]);
+    assert_eq!(a.shape(), &[3, 5, 3]);
+    assert_eq!(a.stride(), &[15, 3, 1]);
+    let b = a.flatten();
+    let b_len = *b.len();
+    for i in 0..b_len {
+        assert_eq!(b[i], true);
+    }
+}
+#[test]
+fn ones_u8(){
+    let a: Tensor<u8> = Tensor::ones(vec![3, 5, 3]);
+    assert_eq!(a.shape(), &[3, 5, 3]);
+    assert_eq!(a.stride(), &[15, 3, 1]);
+    let b = a.flatten();
+    let b_len = *b.len();
+    for i in 0..b_len {
+        assert_eq!(b[i], 1u8);
+    }
+}
+
+#[test]
+fn ones_i32(){
+    let a: Tensor<i32> = Tensor::ones(vec![3, 5, 3]);
+    assert_eq!(a.shape(), &[3, 5, 3]);
+    assert_eq!(a.stride(), &[15, 3, 1]);
+    let b = a.flatten();
+    let b_len = *b.len();
+    for i in 0..b_len {
+        assert_eq!(b[i], 1i32);
+    }
+}
+
+#[test]
+fn ones_1d(){
+    let a: Tensor<u8> = Tensor::ones(vec![4]);
+    assert_eq!(a.shape(), &[4]);
+    let a_len = *a.len();
+    for i in 0..a_len {
+        assert_eq!(a[i], 1u8);
+    }
+}
+
+#[test]
+fn ones_f64(){
+    let a: Tensor<f64> = Tensor::ones(vec![4]);
+    assert_eq!(a.shape(), &[4]);
+    let a_len = *a.len();
+    for i in 0..a_len {
+        assert_eq!(a[i], 1f64);
+    }
+}
+
+#[test]
+fn zeroes_u8(){
+    let a: Tensor<u8> = Tensor::zeros(vec![3, 5, 3]);
+    assert_eq!(a.shape(), &[3, 5, 3]);
+    assert_eq!(a.stride(), &[15, 3, 1]);
+    let b = a.flatten();
+    let b_len = *b.len();
+    for i in 0..b_len {
+        assert_eq!(b[i], 0u8);
+    }
+}
+
+#[test]
+fn zeroes_i32(){
+    let a: Tensor<i32> = Tensor::zeros(vec![3, 5, 3]);
+    assert_eq!(a.shape(), &[3, 5, 3]);
+    assert_eq!(a.stride(), &[15, 3, 1]);
+    let b = a.flatten();
+    let b_len = *b.len();
+    for i in 0..b_len {
+        assert_eq!(b[i], 0i32);
+    }
+}
+
+#[test]
+fn zeroes_1d(){
+    let a: Tensor<u8> = Tensor::zeros(vec![4]);
+    assert_eq!(a.shape(), &[4]);
+    let a_len = *a.len();
+    for i in 0..a_len {
+        assert_eq!(a[i], 0u8);
+    }
+}
+
+#[test]
+fn zeroes_f64(){
+    let a: Tensor<f64> = Tensor::zeros(vec![4]);
+    assert_eq!(a.shape(), &[4]);
+    let a_len = *a.len();
+    for i in 0..a_len {
+        assert_eq!(a[i], 0f64);
+    }
 }

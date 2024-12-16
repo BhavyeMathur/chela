@@ -14,10 +14,9 @@ where
             "[] index must equal number of tensor dimensions!"
         );
 
-        let mut i = 0;
-        for dim in 0..D {
-            i += index[dim] * self.stride[dim];
-        }
+        let i: usize = index.iter().zip(self.stride.iter())
+            .map(|(idx, stride)| idx * stride)
+            .sum();
 
         &self.data[i]
     }
