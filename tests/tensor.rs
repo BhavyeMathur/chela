@@ -342,9 +342,9 @@ fn flatten() {
     assert_eq!(b.len(), &18);
     assert_eq!(b.ndims(), 1);
 
-    assert_eq!(b[0], 10);
-    assert_eq!(b[5], 15);
-    assert_eq!(b[17], 27);
+    let correct = Tensor::from([10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27]);
+    assert_eq!(b, correct);
 
     let b = a.slice(s![.., 0]).flatten();
     assert_eq!(b.shape(), &[9]);
@@ -362,8 +362,8 @@ fn flatten() {
     assert_eq!(b.len(), &4);
     assert_eq!(b.ndims(), 1);
 
-    assert_eq!(b[0], 14);
-    assert_eq!(b[3], 21);
+    let correct = Tensor::from([14, 15, 20, 21]);
+    assert_eq!(b, correct);
 }
 
 #[test]
