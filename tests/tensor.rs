@@ -420,7 +420,7 @@ fn unsqueeze_random_dimension_first_axis() {
 
 #[test]
 fn unsqueeze_random_dimension_axis_1() {
-    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let a = Tensor::from([[1, 2, 3], [4, 5, 6]]);
     let b = a.unsqueeze(Axis(1));
     assert_eq!(b.shape(), &[2, 1, 3]);
     assert_eq!(b.stride(), &[3, 3, 1]);
@@ -428,8 +428,14 @@ fn unsqueeze_random_dimension_axis_1() {
 
 #[test]
 fn unsqueeze_random_dimension_last_axis() {
-    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let a = Tensor::from([[1, 2, 3], [4, 5, 6]]);
     let b = a.unsqueeze(Axis(2));
     assert_eq!(b.shape(), &[2, 3, 1]);
     assert_eq!(b.stride(), &[3, 1, 1]);
+}
+
+#[test]
+fn full_n(){
+    let a = Tensor::full(3, vec![2, 3]);
+    assert_eq!(a.shape(), &[2, 3]);
 }
