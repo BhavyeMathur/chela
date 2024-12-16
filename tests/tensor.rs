@@ -442,7 +442,7 @@ fn full_i32(){
     let b = a.flatten();
     let b_len = b.len().clone();
     for i in 0..b_len {
-        assert_eq!(b[i], 3);
+        assert_eq!(b[i], 3i32);
     }
 }
 
@@ -453,7 +453,7 @@ fn full_f64(){
     let b = a.flatten();
     let b_len = *b.len();
     for i in 0..b_len {
-        assert_eq!(b[i], 3.2);
+        assert_eq!(b[i], 3.2f64);
     }
 }
 
@@ -468,6 +468,7 @@ fn full_bool(){
         assert_eq!(b[i], true);
     }
 }
+
 #[test]
 fn ones_u8(){
     let a: Tensor<u8> = Tensor::ones(vec![3, 5, 3]);
@@ -513,6 +514,18 @@ fn ones_f64(){
 }
 
 #[test]
+fn ones_bool(){
+    let a: Tensor<bool> = Tensor::ones(vec![3, 5, 3]);
+    assert_eq!(a.shape(), &[3, 5, 3]);
+    assert_eq!(a.stride(), &[15, 3, 1]);
+    let b = a.flatten();
+    let b_len = *b.len();
+    for i in 0..b_len {
+        assert_eq!(b[i], true);
+    }
+}
+
+#[test]
 fn zeroes_u8(){
     let a: Tensor<u8> = Tensor::zeros(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
@@ -553,5 +566,17 @@ fn zeroes_f64(){
     let a_len = *a.len();
     for i in 0..a_len {
         assert_eq!(a[i], 0f64);
+    }
+}
+
+#[test]
+fn zeroes_bool(){
+    let a: Tensor<bool> = Tensor::zeros(vec![3, 5, 3]);
+    assert_eq!(a.shape(), &[3, 5, 3]);
+    assert_eq!(a.stride(), &[15, 3, 1]);
+    let b = a.flatten();
+    let b_len = *b.len();
+    for i in 0..b_len {
+        assert_eq!(b[i], false);
     }
 }

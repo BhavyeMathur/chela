@@ -57,16 +57,16 @@ impl<T: RawDataType> Tensor<T> {
 
     pub fn zeros(shape: Vec<usize>) -> Self
     where
-        T: RawDataType + From<u8>,
+        T: RawDataType + From<bool>,
     {
-        Self::full(0.into(), shape)
+        Self::full(false.into(), shape)
     }
 
     pub fn ones(shape: Vec<usize>) -> Self
     where
-        T: RawDataType + From<u8>,
+        T: RawDataType + From<bool>,
     {
-        Self::full(1.into(), shape)
+        Self::full(true.into(), shape)
     }
 }
 
