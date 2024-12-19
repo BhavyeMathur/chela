@@ -31,6 +31,15 @@ impl<T: RawDataType> Tensor<T> {
             ndims: D,
         }
     }
+
+    pub fn scalar(n: T) -> Self {
+        Self {
+            data: DataOwned::from(vec![n]),
+            shape: vec![],
+            stride: vec![],
+            ndims: 0,
+        }
+    }
 }
 
 impl<T: RawDataType> TensorView<T> {
