@@ -1,3 +1,4 @@
+use std::mem::ManuallyDrop;
 use crate::tensor::data_buffer::{DataBuffer, DataOwned};
 use crate::tensor::dtype::RawDataType;
 use std::ops::Index;
@@ -12,11 +13,20 @@ pub struct DataView<T: RawDataType> {
 impl<T: RawDataType> DataView<T> {
     pub(in crate::tensor) fn from_buffer<B>(value: &B, offset: usize, len: usize) -> Self
     where
-        B: DataBuffer<DType=T>,
+        B: DataBuffer<DType = T>,
     {
         assert!(offset + len <= value.len());
         Self {
             ptr: unsafe { value.ptr().offset(offset as isize) },
+            len,
+        }
+    }
+
+    pub(in crate::tensor) fn from_vec_ref(vec: Vec<T>, offset: usize, len: usize) -> Self {
+        assert!(offset + len <= vec.len());
+        let mut data = ManuallyDrop::new(vec);
+        Self {
+            ptr: NonNull::new(data.as_mut_ptr()).unwrap(),
             len,
         }
     }
