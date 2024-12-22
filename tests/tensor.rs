@@ -442,27 +442,27 @@ fn iterate() {
     assert_eq!(a.iter().next().unwrap(), Tensor::from([[1, 2, 3], [4, 5, 6]]));
     assert_eq!(a.iter().last().unwrap(), Tensor::from([[7, 8, 9], [10, 11, 12]]));
 
-    assert_eq!(a.iter_along(Axis(1)).count(), 2);
+    assert_eq!(a.iter_along(1).count(), 2);
     assert_eq!(a.iter_along(Axis(1)).next().unwrap(), Tensor::from([[1, 2, 3], [7, 8, 9]]));
     assert_eq!(a.iter_along(Axis(1)).last().unwrap(), Tensor::from([[4, 5, 6], [10, 11, 12]]));
 
-    assert_eq!(a.iter_along(Axis(2)).count(), 3);
+    assert_eq!(a.iter_along(2).count(), 3);
     assert_eq!(a.iter_along(Axis(2)).next().unwrap(), Tensor::from([[1, 4], [7, 10]]));
     assert_eq!(a.iter_along(Axis(2)).last().unwrap(), Tensor::from([[3, 6], [9, 12]]));
 
     assert_eq!(a.nditer([0, 1]).count(), 4);
     assert_eq!(a.nditer([0, 1]).next().unwrap(), Tensor::from([1, 2, 3]));
-    assert_eq!(a.nditer([0, 1]).last().unwrap(), Tensor::from([10, 11, 12]));
+    assert_eq!(a.nditer(vec![0, 1]).last().unwrap(), Tensor::from([10, 11, 12]));
 
-    assert_eq!(a.nditer(vec![0, 2]).count(), 6);
-    assert_eq!(a.nditer(vec![0, 2]).next().unwrap(), Tensor::from([1, 4]));
+    assert_eq!(a.nditer([0, 2]).count(), 6);
+    assert_eq!(a.nditer([0, 2]).next().unwrap(), Tensor::from([1, 4]));
     assert_eq!(a.nditer(vec![0, 2]).last().unwrap(), Tensor::from([9, 12]));
 
-    assert_eq!(a.nditer(vec![1, 2]).count(), 6);
-    assert_eq!(a.nditer(vec![1, 2]).next().unwrap(), Tensor::from([1, 7]));
+    assert_eq!(a.nditer([1, 2]).count(), 6);
+    assert_eq!(a.nditer([1, 2]).next().unwrap(), Tensor::from([1, 7]));
     assert_eq!(a.nditer(vec![1, 2]).last().unwrap(), Tensor::from([6, 12]));
 
-    assert_eq!(a.nditer(vec![0, 1, 2]).count(), 12);
-    assert_eq!(a.nditer(vec![0, 1, 2]).next().unwrap(), Tensor::scalar(1));
+    assert_eq!(a.nditer([0, 1, 2]).count(), 12);
+    assert_eq!(a.nditer([0, 1, 2]).next().unwrap(), Tensor::scalar(1));
     assert_eq!(a.nditer(vec![0, 1, 2]).last().unwrap(), Tensor::scalar(12));
 }
