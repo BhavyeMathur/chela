@@ -22,9 +22,10 @@ where
         TensorView::from(self, offset, shape, stride)
     }
 
-    pub fn slice<S, const N: usize>(&self, index: [S; N]) -> TensorView<T>
+    pub fn slice<S, I>(&self, index: I) -> TensorView<T>
     where
         S: Indexer,
+        I: IntoIterator<Item=S>,
     {
         // repeatedly calls the slice_along() method for each element in the index
         // we keep a track of which axis to slice along using the axis variable
@@ -35,7 +36,7 @@ where
         let mut ndims = self.ndims;
         let mut result: TensorView<T> = self.into();
 
-        for idx in index.iter() {
+        for idx in index {
             result = result.slice_along(Axis(axis), idx.clone());
 
             if result.ndims() == ndims {
