@@ -32,7 +32,10 @@ impl<T: RawDataType> Tensor<T> {
         }
     }
 
-    pub fn scalar(n: T) -> Self {
+    pub fn scalar(n: T) -> Self
+    where
+        Vec<T>: Flatten<T> + Shape,
+    {
         Self {
             data: DataOwned::from(vec![n]),
             shape: vec![],
