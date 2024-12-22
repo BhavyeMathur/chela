@@ -319,7 +319,6 @@ fn flat_iter() {
     assert_eq!(slice, [10, 11, 12, 16, 17, 18, 22, 23, 24]);
 
     let b = a.slice(s![1]);
-    println!("{:?}", b);
     let slice: Vec<_> = b.flat_iter().collect();
     assert_eq!(slice, [16, 17, 18, 19, 20, 21]);
 
