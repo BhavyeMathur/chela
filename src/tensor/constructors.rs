@@ -32,6 +32,43 @@ impl<T: RawDataType> Tensor<T> {
         }
     }
 
+    pub fn full(n: T, shape: Vec<usize>) -> Self {
+        assert!(!shape.is_empty(), "Cannot create a zero-dimension tensor!");
+
+        let vector_ns = vec![n; shape.iter().product()];
+
+        let mut stride = vec![0; shape.len()];
+
+        let ndims = shape.len();
+
+        let mut p = 1;
+        for i in (0..ndims).rev() {
+            stride[i] = p;
+            p *= shape[i];
+        }
+
+        Self {
+            data: DataOwned::new(vector_ns),
+            shape,
+            stride,
+            ndims,
+        }
+    }
+
+    pub fn zeros(shape: Vec<usize>) -> Self
+    where
+        T: RawDataType + From<bool>,
+    {
+        Self::full(false.into(), shape)
+    }
+
+    pub fn ones(shape: Vec<usize>) -> Self
+    where
+        T: RawDataType + From<bool>,
+    {
+        Self::full(true.into(), shape)
+    }
+
     pub fn scalar(n: T) -> Self
     where
         Vec<T>: Flatten<T> + Shape,
