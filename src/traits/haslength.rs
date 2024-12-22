@@ -4,7 +4,7 @@ pub trait HasLength {
 
 impl<T> HasLength for Vec<T> {
     fn len(&self) -> usize {
-        Vec::len(&self)
+        Vec::len(self)
     }
 }
 impl<T, const N: usize> HasLength for [T; N] {

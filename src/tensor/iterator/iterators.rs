@@ -29,7 +29,7 @@ impl<T: RawDataType> FlatIterator<T> for TensorView<T> {
 
 impl<B, T> TensorBase<B>
 where
-    B: DataBuffer<crate::tensor::data_buffer::buffer::DType=T>,
+    B: DataBuffer<DType=T>,
     T: RawDataType,
 {
     pub fn iter(&self) -> TensorIterator<T> {

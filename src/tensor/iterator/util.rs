@@ -1,6 +1,6 @@
 use crate::traits::haslength::HasLength;
 
-pub(super) fn split_by_indices<T, I>(data: &Vec<T>, indices: I) -> (Vec<T>, Vec<T>)
+pub(super) fn split_by_indices<T, I>(data: &[T], indices: I) -> (Vec<T>, Vec<T>)
 where
     T: Copy,
     I: HasLength + IntoIterator<Item=usize>,
