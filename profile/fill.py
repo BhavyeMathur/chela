@@ -24,4 +24,5 @@ class TensorFill(TimingSuite):
 
 
 if __name__ == "__main__":
-    print(TensorFill.profile_each([1000, 10000, 100000, 1000000, 10000000]))
+    results = TensorFill.profile_each([1000, 10000, 100000, 1000000, 10000000])
+    print(results)

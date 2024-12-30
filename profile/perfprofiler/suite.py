@@ -23,17 +23,14 @@ class TimingSuite(metaclass=TimingSuiteMeta):
         results = []
 
         for i, args in enumerate(args_array):
-            print(f"{i}. {args=}")
-
             if isinstance(args, dict):
-                result = cls.profile(**args, n=n)
+                result = cls.profile(**args, n=n, verbose=False)
             elif isinstance(args, Iterable):
-                result = cls.profile(*args, n=n)
+                result = cls.profile(*args, n=n, verbose=False)
             else:
-                result = cls.profile(args, n=n)
+                result = cls.profile(args, n=n, verbose=False)
 
             results.append(result)
-            print()
 
         return merge_dicts(results)
 

@@ -2,14 +2,14 @@ from typing import Callable
 from collections import defaultdict
 import time
 
-import numpy as np
+from .result import Result
 
 profile_methods = defaultdict(dict)
 
 
 # noinspection PyDecorator
 @classmethod
-def profile(cls, *args, n: int = 10, **kwargs):
+def profile(cls, *args, n: int = 10, verbose: bool = True, **kwargs):
     total_time = {label: [] for label in cls.perf_methods.keys()}
 
     for _ in range(n):
@@ -22,11 +22,13 @@ def profile(cls, *args, n: int = 10, **kwargs):
 
             total_time[label].append(end - start)
 
+    results = {}
     for label, times in total_time.items():
-        total_time[label] = np.mean(times) / 1e9
-        print(f"{label} took {total_time[label]} seconds to execute.")
+        results[label] = Result(times)
+        if verbose:
+            print(f"{label} took {results[label]} seconds to execute.")
 
-    return total_time
+    return results
 
 
 def measure_performance(label: str) -> Callable:
