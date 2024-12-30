@@ -5,7 +5,7 @@
 use crate::recursive_trait_base_cases;
 use crate::traits::shape::Shape;
 
-pub trait Homogenous {
+pub(crate) trait Homogenous {
     fn check_homogenous(&self) -> bool;
 }
 

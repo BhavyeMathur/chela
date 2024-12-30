@@ -10,7 +10,7 @@ use std::fmt::Debug;
 
 use std::ptr::copy_nonoverlapping;
 
-pub trait Flatten<A: RawDataType> {
+pub(crate) trait Flatten<A: RawDataType> {
     fn flatten(self) -> Vec<A>;
 }
 

@@ -4,7 +4,7 @@ use crate::tensor::{Tensor, TensorBase, TensorView};
 use crate::traits::flatten::Flatten;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
-
+use crate::traits::to_vec::ToVec;
 
 // calculates the stride from the tensor's shape
 // shape [5, 3, 2, 1] -> stride [10, 2, 1, 1]
@@ -39,7 +39,8 @@ impl<T: RawDataType> Tensor<T> {
         }
     }
 
-    pub fn full(n: T, shape: Vec<usize>) -> Self {
+    pub fn full(n: T, shape: impl ToVec<usize>) -> Self {
+        let shape = shape.to_vec();
         assert!(!shape.is_empty(), "Cannot create a zero-dimension tensor!");
 
         let vector_ns = vec![n; shape.iter().product()];
@@ -54,14 +55,14 @@ impl<T: RawDataType> Tensor<T> {
         }
     }
 
-    pub fn zeros(shape: Vec<usize>) -> Self
+    pub fn zeros(shape: impl ToVec<usize>) -> Self
     where
         T: RawDataType + From<bool>,
     {
         Self::full(false.into(), shape)
     }
 
-    pub fn ones(shape: Vec<usize>) -> Self
+    pub fn ones(shape: impl ToVec<usize>) -> Self
     where
         T: RawDataType + From<bool>,
     {
