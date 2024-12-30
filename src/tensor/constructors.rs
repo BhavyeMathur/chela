@@ -68,17 +68,24 @@ impl<T: RawDataType> Tensor<T> {
     {
         Self::full(true.into(), shape)
     }
+
+    pub fn scalar(n: T) -> Self
+    where
+        Vec<T>: Flatten<T> + Shape,
+    {
+        Self {
+            data: DataOwned::from(vec![n]),
+            shape: vec![],
+            stride: vec![],
+            ndims: 0,
+        }
+    }
 }
 
 impl<T: RawDataType> TensorView<T> {
-    pub(super) fn from<B>(
-        tensor: &TensorBase<B>,
-        offset: usize,
-        shape: Vec<usize>,
-        stride: Vec<usize>,
-    ) -> Self
+    pub(super) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
     where
-        B: DataBuffer<DType = T>,
+        B: DataBuffer<DType=T>,
     {
         let ndims = shape.len();
 
@@ -88,12 +95,9 @@ impl<T: RawDataType> TensorView<T> {
         // }
         //
         // the following code is equivalent to the above loop
-        let len = shape
-            .iter()
-            .zip(stride.iter())
+        let len = shape.iter().zip(stride.iter())
             .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
-            .sum::<usize>()
-            + 1;
+            .sum::<usize>() + 1;
 
         let data = DataView::from_buffer(&tensor.data, offset, len);
 

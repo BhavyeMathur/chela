@@ -74,3 +74,17 @@ where
         }
     }
 }
+
+impl<T> TensorView<T>
+where
+    T: RawDataType,
+{
+    pub fn copy_view(&self) -> TensorView<T> {
+        TensorView {
+            data: self.data.clone(),
+            shape: self.shape.clone(),
+            stride: self.stride.clone(),
+            ndims: self.ndims,
+        }
+    }
+}

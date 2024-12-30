@@ -1,6 +1,6 @@
 use crate::data_buffer::DataBuffer;
 use crate::dtype::RawDataType;
-use crate::iterator::flat_iterator::FlatIterator;
+use crate::iterator::FlatIterator;
 use crate::TensorBase;
 
 impl<B1, T1, B2, T2> PartialEq<TensorBase<B1>> for TensorBase<B2>
@@ -14,7 +14,7 @@ where
 {
     fn eq(&self, other: &TensorBase<B1>) -> bool {
         if self.shape != other.shape {
-            false;
+            return false;
         }
         self.flat_iter().zip(other.flat_iter()).all(|(a, b)| a == b.into())
     }

@@ -11,6 +11,10 @@ pub struct DataView<T: RawDataType> {
 }
 
 impl<T: RawDataType> DataView<T> {
+    pub(in crate::tensor) unsafe fn add_offset(&mut self, offset: isize) {
+        self.ptr = self.ptr().offset(offset);
+    }
+
     pub(in crate::tensor) fn from_buffer<B>(value: &B, offset: usize, len: usize) -> Self
     where
         B: DataBuffer<DType = T>,

@@ -200,7 +200,10 @@ fn slice_along_nd() {
 
 #[test]
 fn slice_homogenous() {
-    let a = Tensor::from([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]);
+    let a = Tensor::from([
+        [[1, 2, 3], [4, 5, 6]],
+        [[7, 8, 9], [10, 11, 12]],
+    ]);
 
     let slice = a.slice([1, 1]);
 
@@ -309,17 +312,13 @@ fn flat_iter() {
     ]);
 
     let slice: Vec<_> = a.flat_iter().collect();
-    assert_eq!(
-        slice,
-        [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
-    );
+    assert_eq!(slice, [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]);
 
     let b = a.slice(s![.., 0]);
     let slice: Vec<_> = b.flat_iter().collect();
     assert_eq!(slice, [10, 11, 12, 16, 17, 18, 22, 23, 24]);
 
     let b = a.slice(s![1]);
-    println!("{:?}", b);
     let slice: Vec<_> = b.flat_iter().collect();
     assert_eq!(slice, [16, 17, 18, 19, 20, 21]);
 
@@ -342,9 +341,8 @@ fn flatten() {
     assert_eq!(b.len(), &18);
     assert_eq!(b.ndims(), 1);
 
-    let correct = Tensor::from([
-        10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
-    ]);
+    let correct = Tensor::from([10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27]);
     assert_eq!(b, correct);
 
     let b = a.slice(s![.., 0]).flatten();
@@ -369,7 +367,9 @@ fn flatten() {
 
 #[test]
 fn squeeze_first_dimension() {
-    let a = Tensor::from([[[[1, 2, 3], [4, 5, 6]]]]);
+    let a = Tensor::from([
+        [[[1, 2, 3], [4, 5, 6]]],
+    ]);
     let b = a.squeeze();
     assert_eq!(b.shape(), &[2, 3]);
     assert_eq!(b.stride(), &[3, 1]);
@@ -377,7 +377,9 @@ fn squeeze_first_dimension() {
 
 #[test]
 fn squeeze_multiple_dimensions() {
-    let a = Tensor::from([[[[[1, 2, 3]], [[4, 5, 6]]]]]);
+    let a = Tensor::from([
+        [[[[1, 2, 3]], [[4, 5, 6]]]],
+    ]);
     let b = a.squeeze();
     assert_eq!(b.shape(), &[2, 3]);
     assert_eq!(b.stride(), &[3, 1]);
@@ -432,7 +434,7 @@ fn unsqueeze_random_dimension_last_axis() {
 }
 
 #[test]
-fn full_i32() {
+fn full_i32(){
     let a = Tensor::full(3, vec![2, 3]);
     assert_eq!(a.shape(), &[2, 3]);
     assert_eq!(a.stride(), &[3, 1]);
@@ -444,8 +446,8 @@ fn full_i32() {
 }
 
 #[test]
-fn full_f64() {
-    let a = Tensor::full(3.2, vec![4, 6, 2]);
+fn full_f64(){
+    let a = Tensor::full(3.2,vec![4, 6, 2]);
     assert_eq!(a.shape(), &[4, 6, 2]);
     let b = a.flatten();
     let b_len = *b.len();
@@ -455,8 +457,8 @@ fn full_f64() {
 }
 
 #[test]
-fn full_bool() {
-    let a: Tensor<bool> = Tensor::full(true, vec![3, 5, 3]);
+fn full_bool(){
+    let a: Tensor<bool> = Tensor::full(true,vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
     let b = a.flatten();
@@ -467,7 +469,7 @@ fn full_bool() {
 }
 
 #[test]
-fn ones_u8() {
+fn ones_u8(){
     let a: Tensor<u8> = Tensor::ones(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
@@ -479,7 +481,7 @@ fn ones_u8() {
 }
 
 #[test]
-fn ones_i32() {
+fn ones_i32(){
     let a: Tensor<i32> = Tensor::ones(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
@@ -491,7 +493,7 @@ fn ones_i32() {
 }
 
 #[test]
-fn ones_1d() {
+fn ones_1d(){
     let a: Tensor<u8> = Tensor::ones(vec![4]);
     assert_eq!(a.shape(), &[4]);
     let a_len = *a.len();
@@ -501,7 +503,7 @@ fn ones_1d() {
 }
 
 #[test]
-fn ones_f64() {
+fn ones_f64(){
     let a: Tensor<f64> = Tensor::ones(vec![4]);
     assert_eq!(a.shape(), &[4]);
     let a_len = *a.len();
@@ -511,7 +513,7 @@ fn ones_f64() {
 }
 
 #[test]
-fn ones_bool() {
+fn ones_bool(){
     let a: Tensor<bool> = Tensor::ones(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
@@ -523,7 +525,7 @@ fn ones_bool() {
 }
 
 #[test]
-fn zeroes_u8() {
+fn zeroes_u8(){
     let a: Tensor<u8> = Tensor::zeros(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
@@ -535,7 +537,7 @@ fn zeroes_u8() {
 }
 
 #[test]
-fn zeroes_i32() {
+fn zeroes_i32(){
     let a: Tensor<i32> = Tensor::zeros(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
@@ -547,7 +549,7 @@ fn zeroes_i32() {
 }
 
 #[test]
-fn zeroes_1d() {
+fn zeroes_1d(){
     let a: Tensor<u8> = Tensor::zeros(vec![4]);
     assert_eq!(a.shape(), &[4]);
     let a_len = *a.len();
@@ -557,7 +559,7 @@ fn zeroes_1d() {
 }
 
 #[test]
-fn zeroes_f64() {
+fn zeroes_f64(){
     let a: Tensor<f64> = Tensor::zeros(vec![4]);
     assert_eq!(a.shape(), &[4]);
     let a_len = *a.len();
@@ -567,7 +569,7 @@ fn zeroes_f64() {
 }
 
 #[test]
-fn zeroes_bool() {
+fn zeroes_bool(){
     let a: Tensor<bool> = Tensor::zeros(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
@@ -577,166 +579,35 @@ fn zeroes_bool() {
         assert_eq!(b[i], false);
     }
 }
-
 #[test]
-fn basic_iteration() {
-    let a = Tensor::from([[1, 2, 3], [4, 5, 6]]);
-    // println!("{:?}", a.shape());
-    for row in a.iter(Axis(0)) {
-        print!("{:?} ", row[0]);
-        print!("{:?} ", row[1]);
-        println!("{:?}", row[2]);
-    }
-}
+fn iterate() {
+    let a = Tensor::from([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]);
 
-#[test]
-fn single_dimension_iteration() {
-    let a = Tensor::from([1, 2, 3, 4, 5, 6]);
-    // println!("{:?}", a.shape());
-    let v_iter: Vec<_> = a.iter(Axis(0)).collect();
-    println!("{:?}", v_iter);
-}
+    assert_eq!(a.iter().count(), 2);
+    assert_eq!(a.iter().next().unwrap(), Tensor::from([[1, 2, 3], [4, 5, 6]]));
+    assert_eq!(a.iter().last().unwrap(), Tensor::from([[7, 8, 9], [10, 11, 12]]));
 
-#[test]
-fn three_dimension_iteration() {
-    let a = Tensor::from([
-        [[10, 11, 12], [13, 14, 15]],
-        [[16, 17, 18], [19, 20, 21]],
-        [[22, 23, 24], [25, 26, 27]],
-    ]);
+    assert_eq!(a.iter_along(1).count(), 2);
+    assert_eq!(a.iter_along(Axis(1)).next().unwrap(), Tensor::from([[1, 2, 3], [7, 8, 9]]));
+    assert_eq!(a.iter_along(Axis(1)).last().unwrap(), Tensor::from([[4, 5, 6], [10, 11, 12]]));
 
-    // a.shape() = [3, 2, 3]
-    // a.stride() = [6, 3, 1]
+    assert_eq!(a.iter_along(2).count(), 3);
+    assert_eq!(a.iter_along(Axis(2)).next().unwrap(), Tensor::from([[1, 4], [7, 10]]));
+    assert_eq!(a.iter_along(Axis(2)).last().unwrap(), Tensor::from([[3, 6], [9, 12]]));
 
-    // for t in a.iter(Axis(0)) {
-    //     print!("{:?} ", t[[0, 0]]);
-    //     print!("{:?} ", t[[0, 1]]);
-    //     println!("{:?} ", t[[0, 2]]);
-    //
-    //     print!("{:?} ", t[[1, 0]]);
-    //     print!("{:?} ", t[[1, 1]]);
-    //     println!("{:?} ", t[[1, 2]]);
-    //
-    //     println!();
-    // }
+    assert_eq!(a.nditer([0, 1]).count(), 4);
+    assert_eq!(a.nditer([0, 1]).next().unwrap(), Tensor::from([1, 2, 3]));
+    assert_eq!(a.nditer(vec![0, 1]).last().unwrap(), Tensor::from([10, 11, 12]));
 
-    // for t in a.iter(Axis(1)){
-    //     print!("{:?} ", t[[0, 0]]);
-    //     print!("{:?} ", t[[0, 1]]);
-    //     println!("{:?} ", t[[0, 2]]);
-    //
-    //     print!("{:?} ", t[[1, 0]]);
-    //     print!("{:?} ", t[[1, 1]]);
-    //     println!("{:?} ", t[[1, 2]]);
-    //
-    //     print!("{:?} ", t[[2, 0]]);
-    //     print!("{:?} ", t[[2, 1]]);
-    //     println!("{:?} ", t[[2, 2]]);
-    //     println!();
-    // }
+    assert_eq!(a.nditer([0, 2]).count(), 6);
+    assert_eq!(a.nditer([0, 2]).next().unwrap(), Tensor::from([1, 4]));
+    assert_eq!(a.nditer(vec![0, 2]).last().unwrap(), Tensor::from([9, 12]));
 
-    for t in a.iter(Axis(2)){
-        println!("{:?} ", t.shape());
+    assert_eq!(a.nditer([1, 2]).count(), 6);
+    assert_eq!(a.nditer([1, 2]).next().unwrap(), Tensor::from([1, 7]));
+    assert_eq!(a.nditer(vec![1, 2]).last().unwrap(), Tensor::from([6, 12]));
 
-        print!("{:?} ", t[[0, 0]]);
-        println!("{:?} ", t[[0, 1]]);
-
-        print!("{:?} ", t[[1, 0]]);
-        println!("{:?} ", t[[1, 1]]);
-
-        print!("{:?} ", t[[2, 0]]);
-        println!("{:?} ", t[[2, 1]]);
-        println!();
-    }
-}
-
-#[test]
-fn four_dimension_iteration() {
-    let a = [
-        [
-            [[1, 2, 3], [4, 5, 6]],
-            [[7, 8, 9], [10, 11, 12]],
-            [[13, 14, 15], [16, 17, 18]],
-            [[19, 20, 21], [22, 23, 24]],
-        ],
-        [
-            [[25, 26, 27], [28, 29, 30]],
-            [[31, 32, 33], [34, 35, 36]],
-            [[37, 38, 39], [40, 41, 42]],
-            [[43, 44, 45], [46, 47, 48]],
-        ],
-        [
-            [[49, 50, 51], [52, 53, 54]],
-            [[55, 56, 57], [58, 59, 60]],
-            [[61, 62, 63], [64, 65, 66]],
-            [[67, 68, 69], [70, 71, 72]],
-        ],
-    ];
-
-    let tensor = Tensor::from(a);
-
-    println!("{:?}", tensor.shape());
-    println!("{:?}", tensor.stride());
-
-    for t in tensor.iter(Axis(0)){
-        print!("{:?} ", t[[0, 0, 0]]);
-        print!("{:?} ", t[[0, 0, 1]]);
-        print!("{:?} ", t[[0, 0, 2]]);
-
-        print!("{:?} ", t[[0, 1, 0]]);
-        print!("{:?} ", t[[0, 1, 1]]);
-        print!("{:?} ", t[[0, 1, 2]]);
-
-        print!("{:?} ", t[[1, 0, 0]]);
-        print!("{:?} ", t[[1, 0, 1]]);
-        print!("{:?} ", t[[1, 0, 2]]);
-
-        print!("{:?} ", t[[1, 1, 0]]);
-        print!("{:?} ", t[[1, 1, 1]]);
-        print!("{:?} ", t[[1, 1, 2]]);
-
-        print!("{:?} ", t[[2, 0, 0]]);
-        print!("{:?} ", t[[2, 0, 1]]);
-        print!("{:?} ", t[[2, 0, 2]]);
-
-        print!("{:?} ", t[[2, 1, 0]]);
-        print!("{:?} ", t[[2, 1, 1]]);
-        print!("{:?} ", t[[2, 1, 2]]);
-
-        print!("{:?} ", t[[3, 0, 0]]);
-        print!("{:?} ", t[[3, 0, 1]]);
-        print!("{:?} ", t[[3, 0, 2]]);
-
-        print!("{:?} ", t[[3, 1, 0]]);
-        print!("{:?} ", t[[3, 1, 1]]);
-        print!("{:?} ", t[[3, 1, 2]]);
-
-        println!();
-
-    }
-
-    // for t in tensor.iter(Axis(1)) {
-    //     print!("{:?} ", t[[0, 0, 0]]);
-    //     print!("{:?} ", t[[0, 0, 1]]);
-    //     print!("{:?} ", t[[0, 0, 2]]);
-    //     print!("{:?} ", t[[0, 1, 0]]);
-    //     print!("{:?} ", t[[0, 1, 1]]);
-    //     print!("{:?} ", t[[0, 1, 2]]);
-    //
-    //     print!("{:?} ", t[[1, 0, 0]]);
-    //     print!("{:?} ", t[[1, 0, 1]]);
-    //     print!("{:?} ", t[[1, 0, 2]]);
-    //     print!("{:?} ", t[[1, 1, 0]]);
-    //     print!("{:?} ", t[[1, 1, 1]]);
-    //     print!("{:?} ", t[[1, 1, 2]]);
-    //
-    //     print!("{:?} ", t[[2, 0, 0]]);
-    //     print!("{:?} ", t[[2, 0, 1]]);
-    //     print!("{:?} ", t[[2, 0, 2]]);
-    //     print!("{:?} ", t[[2, 1, 0]]);
-    //     print!("{:?} ", t[[2, 1, 1]]);
-    //     print!("{:?} ", t[[2, 1, 2]]);
-    //
-    //     println!();
-    // }
+    assert_eq!(a.nditer([0, 1, 2]).count(), 12);
+    assert_eq!(a.nditer([0, 1, 2]).next().unwrap(), Tensor::scalar(1));
+    assert_eq!(a.nditer(vec![0, 1, 2]).last().unwrap(), Tensor::scalar(12));
 }
