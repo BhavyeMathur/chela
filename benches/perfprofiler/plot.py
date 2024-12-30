@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter, LogFormatter
+from matplotlib.ticker import FuncFormatter
 
 from .result import Result
 
