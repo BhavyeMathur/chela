@@ -13,6 +13,7 @@ where
     }
 }
 
+#[cfg(target_vendor = "apple")]
 #[cfg(test)]
 mod tests {
     use crate::{FlatIterator, Tensor};

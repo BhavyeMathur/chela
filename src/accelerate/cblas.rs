@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use std::ffi::{c_double, c_float, c_int};
 
 #[cfg(target_vendor = "apple")]
