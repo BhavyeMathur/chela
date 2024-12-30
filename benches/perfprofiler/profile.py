@@ -9,7 +9,7 @@ profile_methods = defaultdict(dict)
 
 # noinspection PyDecorator
 @classmethod
-def profile(cls, *args, n: int = 10, verbose: bool = True, **kwargs):
+def profile(cls, *args, n: int = 100, verbose: bool = True, **kwargs) -> dict[str, Result]:
     total_time = {label: [] for label in cls.perf_methods.keys()}
 
     for _ in range(n):

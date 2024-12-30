@@ -1,8 +1,11 @@
 from typing import Iterable
 
+# from tqdm import tqdm
+
 # noinspection PyProtectedMember
 from .profile import profile, profile_methods
 from .util import merge_dicts
+from .result import Result
 
 
 class TimingSuiteMeta(type):
@@ -15,11 +18,11 @@ class TimingSuiteMeta(type):
 
 
 class TimingSuite(metaclass=TimingSuiteMeta):
-    def profile(*args, **kwargs):
+    def profile(*args, **kwargs) -> dict[str, Result]:
         raise NotImplementedError()  # implemented by TimingSuiteMeta
 
     @classmethod
-    def profile_each(cls, args_array, n: int = 10):
+    def profile_each(cls, args_array, n: int = 100) -> dict[str, list[Result]]:
         results = []
 
         for i, args in enumerate(args_array):
