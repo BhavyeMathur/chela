@@ -2,6 +2,7 @@ pub(super) mod clone;
 pub(super) mod data_owned;
 pub(super) mod data_view;
 pub(super) mod buffer;
+pub(super) mod fill;
 
 pub(super) use crate::data_buffer::buffer::DataBuffer;
 pub(super) use crate::data_buffer::data_owned::DataOwned;
