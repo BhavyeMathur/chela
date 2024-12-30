@@ -8,8 +8,12 @@ where
     B: DataBuffer<DType=T> + Fill<T>,
     T: RawDataType,
 {
-    pub fn fill(&self, value: T) {
+    pub fn fill(&mut self, value: T) {
         self.data.fill(value)
+    }
+
+    pub fn fill_naive(&mut self, value: T) {
+        self.data.fill_naive(value)
     }
 }
 
@@ -20,7 +24,7 @@ mod tests {
 
     #[test]
     fn test_fill_f32() {
-        let a: Tensor<f32> = Tensor::zeros([3, 5, 3]);
+        let mut a: Tensor<f32> = Tensor::zeros([3, 5, 3]);
 
         assert!(a.flat_iter().all(|x| x == 0.0));
         a.fill(25.0);
@@ -29,7 +33,7 @@ mod tests {
 
     #[test]
     fn test_fill_f64() {
-        let a: Tensor<f64> = Tensor::zeros([15]);
+        let mut a: Tensor<f64> = Tensor::zeros([15]);
 
         assert!(a.flat_iter().all(|x| x == 0.0));
         a.fill(20.0);

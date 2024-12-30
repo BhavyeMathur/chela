@@ -1,3 +1,3 @@
-from .suite import TimingSuite
-from .profile import measure_performance
-from .plot import plot_results
+from .suite import *
+from .profile import *
+from .plot import *

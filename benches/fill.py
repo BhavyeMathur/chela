@@ -6,6 +6,8 @@ from perfprofiler import *
 
 class TensorFill(TimingSuite):
     def __init__(self, n):
+        self.n = n
+
         self.ndarray = np.zeros(n, dtype="float32")
         self.tensor_cpu = torch.zeros(n, dtype=torch.float32)
         self.tensor_mps = torch.zeros(n, device="mps", dtype=torch.float32)
@@ -24,8 +26,16 @@ class TensorFill(TimingSuite):
     # def run(self):
     #     self.tensor_mps.fill_(5)
 
+    @measure_rust_performance("Chela CPU (Accelerate)", target="fill")
+    def run(self, executable):
+        return self.run_rust(executable, self.n)
+
+    @measure_rust_performance("Chela CPU (Naïve)", target="fill_naive")
+    def run(self, executable):
+        return self.run_rust(executable, self.n)
+
 
 if __name__ == "__main__":
-    sizes = 10 ** np.arange(1, 7)
-    results = TensorFill.profile_each(sizes, n=30)
+    sizes = [128, 256, 499, 512, 1023, 1024, 2048]
+    results = TensorFill.profile_each(sizes, n=50)
     plot_results(sizes, results)
