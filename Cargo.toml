@@ -3,6 +3,14 @@ name = "chela"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "fill"
+path = "benches/fill.rs"
+
+[[bin]]
+name = "fill_naive"
+path = "benches/fill_naive.rs"
+
 [dependencies]
 
 [lints.rust]
