@@ -1,6 +1,6 @@
 use crate::tensor::dtype::RawDataType;
 
-pub trait Nested<const D: usize> {}
+pub(crate) trait Nested<const D: usize> {}
 
 impl<T> Nested<1> for Vec<T> where T: RawDataType {}
 impl<T> Nested<2> for Vec<T> where T: Nested<1> {}

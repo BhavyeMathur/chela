@@ -1,4 +1,4 @@
-pub trait HasLength {
+pub(crate) trait HasLength {
     fn len(&self) -> usize;
 }
 

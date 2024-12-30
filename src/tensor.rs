@@ -6,6 +6,7 @@ pub mod index_impl;
 pub mod shape;
 pub mod slice;
 pub mod iterator;
+pub mod fill;
 pub mod flatten;
 pub mod clone;
 pub mod squeeze;
