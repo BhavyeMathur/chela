@@ -11,10 +11,6 @@ where
     pub fn fill(&mut self, value: T) {
         self.data.fill(value)
     }
-
-    pub fn fill_naive(&mut self, value: T) {
-        self.data.fill_naive(value)
-    }
 }
 
 #[cfg(target_vendor = "apple")]
