@@ -12,6 +12,7 @@ name = "fill_naive"
 path = "benches/fill_naive.rs"
 
 [dependencies]
+cpu-time = "1.0.0"
 
 [lints.rust]
 private_bounds = "allow"

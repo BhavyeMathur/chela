@@ -1,10 +1,7 @@
+use crate::accelerate::cblas::{catlas_dset, catlas_sset};
 use crate::data_buffer::{DataBuffer, DataOwned};
 use crate::dtype::RawDataType;
 use std::ffi::c_int;
-
-#[cfg(target_vendor = "apple")]
-use crate::accelerate::cblas::catlas_dset;
-use crate::accelerate::cblas::catlas_sset;
 
 pub(in crate::tensor) trait Fill<T>
 where
@@ -43,11 +40,12 @@ impl Fill<f64> for DataOwned<f64> {
 
     fn fill_naive(&mut self, value: f64) {
         let mut ptr = self.mut_ptr();
+        let end_ptr = unsafe { ptr.add(self.len) };
 
-        for _ in 0..self.len {
+        while ptr != end_ptr {
             unsafe {
-                ptr = ptr.add(1);
                 std::ptr::write(ptr, value);
+                ptr = ptr.add(1);
             }
         }
     }

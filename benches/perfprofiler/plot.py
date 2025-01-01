@@ -25,7 +25,7 @@ def plot_results(x, results: dict[str, list[Result]]) -> None:
         ax.plot(x, result, label=label, color=color)
 
     ax.yaxis.set_major_formatter(FuncFormatter(lambda val, _: f"{val:.3f} ms"))
-    # plt.xscale("symlog")
+    plt.xscale("symlog")
     # plt.yscale("symlog")
     plt.legend()
 

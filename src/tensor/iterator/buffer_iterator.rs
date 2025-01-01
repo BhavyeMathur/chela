@@ -2,7 +2,6 @@ use crate::data_buffer::DataBuffer;
 use crate::dtype::RawDataType;
 use crate::TensorBase;
 
-#[non_exhaustive]
 pub struct BufferIterator<T, I>
 where
     T: RawDataType,
