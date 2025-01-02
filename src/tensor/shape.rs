@@ -25,4 +25,8 @@ impl<T: DataBuffer> TensorBase<T> {
     pub fn size(&self) -> usize {
         self.shape.iter().product()
     }
+
+    pub fn is_contiguous(&self) -> bool {
+        self.stride.len() == 0 || self.stride.last() == Some(&1)
+    }
 }

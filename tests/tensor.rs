@@ -531,6 +531,7 @@ fn zeroes_bool() {
     assert_eq!(a.stride(), &[15, 3, 1]);
     assert!(a.flat_iter().all(|x| x == false));
 }
+
 #[test]
 fn iterate() {
     let a = Tensor::from([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]);
@@ -563,3 +564,5 @@ fn iterate() {
     assert_eq!(a.nditer([0, 1, 2]).next().unwrap(), Tensor::scalar(1));
     assert_eq!(a.nditer(vec![0, 1, 2]).last().unwrap(), Tensor::scalar(12));
 }
+
+// TODO tests for Tensor::fill
