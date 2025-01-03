@@ -3,10 +3,15 @@ use crate::iterator::flat_iterator::FlatIterator;
 use crate::tensor_iterator::NdIterator;
 use crate::traits::haslength::HasLength;
 use crate::{AxisType, Tensor};
+use crate::buffer_iterator::BufferIterator;
 
 impl<T: RawDataType> Tensor<T> {
     pub fn flatiter(&self) -> FlatIterator<T> {
         FlatIterator::from(self)
+    }
+
+    pub fn flatiter_ptr(&self) -> BufferIterator<T> {
+        BufferIterator::from(self)
     }
 }
 

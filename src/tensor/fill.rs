@@ -14,7 +14,9 @@ impl<T: RawDataType> Tensor<T> {
     }
 
     fn fill_non_contiguous(&mut self, value: T) {
-        todo!()
+        for ptr in self.flatiter_ptr() {
+            unsafe { std::ptr::write(ptr, value); }
+        }
     }
 
     // TODO we can probably make further optimisations in cases where the tensor isn't contiguous,
