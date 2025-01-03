@@ -29,6 +29,19 @@ pub(in crate::tensor) fn collapse_contiguous(shape: &[usize], stride: &[usize]) 
     (collapsed_shape, collapsed_stride)
 }
 
+pub(in crate::tensor) fn is_contiguous(shape: &[usize], stride: &[usize]) -> bool {
+    let mut stride_if_contiguous = 1;
+
+    for (&axis_length, &actual_stride) in shape.iter().zip(stride.iter()).rev() {
+        if stride_if_contiguous != actual_stride {
+            return false;
+        }
+        stride_if_contiguous *= axis_length;
+    }
+
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::collapse_contiguous;

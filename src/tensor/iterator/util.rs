@@ -1,5 +1,6 @@
 use crate::traits::haslength::HasLength;
 
+// returns a pair of vectors: one indexed by indices and the other with the remaining elements
 pub(super) fn split_by_indices<T, I>(data: &[T], indices: I) -> (Vec<T>, Vec<T>)
 where
     T: Copy,

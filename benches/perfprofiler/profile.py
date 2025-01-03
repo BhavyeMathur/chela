@@ -18,9 +18,9 @@ def profile(cls, *args, n: int = 100, verbose: bool = True, **kwargs) -> dict[st
         suite_obj = cls(*args, **kwargs)
 
         for label, function in cls.perf_methods.items():
-            start = time.perf_counter_ns()
+            start = time.process_time_ns()
             function(suite_obj)
-            end = time.perf_counter_ns()
+            end = time.process_time_ns()
 
             total_time[label].append(end - start)
 

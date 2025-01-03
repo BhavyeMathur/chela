@@ -1,32 +1,35 @@
-use crate::data_buffer::DataBuffer;
 use crate::dtype::RawDataType;
 use crate::iterator::util::split_by_indices;
 use crate::traits::haslength::HasLength;
-use crate::{TensorBase, TensorView};
+use crate::Tensor;
 
 #[non_exhaustive]
-pub struct TensorIterator<T>
+pub struct NdIterator<T>
 where
     T: RawDataType,
 {
-    result: TensorView<T>,
+    result: Tensor<T>,
 
     shape: Vec<usize>,
     stride: Vec<usize>,
-    ndims: usize,
 
     indices: Vec<usize>, // current index along each dimension
     iterator_index: usize,
     size: usize,
 }
 
-impl<T> TensorIterator<T>
+impl<T: RawDataType> Tensor<T> {
+    unsafe fn offset_ptr(&mut self, offset: isize) {
+        self.ptr = self.ptr.offset(offset);
+    }
+}
+
+impl<T> NdIterator<T>
 where
     T: RawDataType,
 {
-    pub(super) fn from<B, I>(tensor: &TensorBase<B>, axes: I) -> Self
+    pub(super) fn from<I>(tensor: &Tensor<T>, axes: I) -> Self
     where
-        B: DataBuffer<DType=T>,
         I: IntoIterator<Item=usize> + HasLength + Clone,
     {
         let ndims = axes.len();
@@ -35,10 +38,9 @@ where
         let size = shape.iter().product();
 
         Self {
-            result: TensorView::from(tensor, 0, output_shape, output_stride),
+            result: unsafe { tensor.reshaped_view(output_shape, output_stride) },
             shape,
             stride,
-            ndims,
             indices: vec![0; ndims],
             iterator_index: 0,
             size,
@@ -46,11 +48,11 @@ where
     }
 }
 
-impl<T> Iterator for TensorIterator<T>
+impl<T> Iterator for NdIterator<T>
 where
     T: RawDataType,
 {
-    type Item = TensorView<T>;
+    type Item = Tensor<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.iterator_index == self.size {
@@ -60,14 +62,14 @@ where
         let return_value = self.result.copy_view();
         self.iterator_index += 1;
 
-        for i in (0..self.ndims).rev() {
+        for i in (0..self.shape.len()).rev() {
             if self.indices[i] != self.shape[i] {
                 self.indices[i] += 1;
-                unsafe { self.result.data.add_offset(self.stride[i] as isize); }
+                unsafe { self.result.offset_ptr(self.stride[i] as isize); }
                 break;
             }
 
-            unsafe { self.result.data.add_offset(-((self.stride[i] * (self.shape[i] - 1)) as isize)); }
+            unsafe { self.result.offset_ptr(-((self.stride[i] * (self.shape[i] - 1)) as isize)); }
             self.indices[i] = 0;
         }
 
