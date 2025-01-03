@@ -5,7 +5,6 @@ pub struct FlatIndexGenerator
 {
     shape: Vec<usize>,
     stride: Vec<usize>,
-    ndims: usize,
 
     size: usize,
     iterator_index: usize,
@@ -23,7 +22,6 @@ impl FlatIndexGenerator {
         Self {
             shape,
             stride,
-            ndims,
             size,
             iterator_index: 0,
             indices: vec![0; ndims],
@@ -42,7 +40,7 @@ impl Iterator for FlatIndexGenerator {
 
         let return_index = self.flat_index as isize;
 
-        for i in (0..self.ndims).rev() {
+        for i in (0..self.shape.len()).rev() {
             self.indices[i] += 1;
 
             if self.indices[i] < self.shape[i] {

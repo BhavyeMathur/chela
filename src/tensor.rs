@@ -1,28 +1,30 @@
 pub mod constructors;
-pub mod data_buffer;
 pub mod dtype;
 
 pub mod index_impl;
-pub mod shape;
+pub mod methods;
 pub mod slice;
 pub mod iterator;
 pub mod fill;
-pub mod flatten;
+pub mod reshape;
 pub mod clone;
-pub mod squeeze;
 pub mod equals;
+mod flags;
+
+use crate::dtype::RawDataType;
 
 pub use iterator::*;
 
-use crate::tensor::data_buffer::{DataBuffer, DataOwned, DataView};
+use crate::tensor::flags::TensorFlags;
+use std::ptr::NonNull;
 
 #[derive(Debug)]
-pub struct TensorBase<T: DataBuffer> {
-    data: T,
+pub struct Tensor<T: RawDataType> {
+    ptr: NonNull<T>,
+    len: usize,
+    capacity: usize,
+
     shape: Vec<usize>,
     stride: Vec<usize>,
-    ndims: usize,
+    flags: TensorFlags,
 }
-
-pub type Tensor<T> = TensorBase<DataOwned<T>>;
-pub type TensorView<T> = TensorBase<DataView<T>>;

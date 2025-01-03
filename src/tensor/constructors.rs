@@ -1,10 +1,12 @@
-use crate::data_buffer::{DataBuffer, DataOwned, DataView};
 use crate::tensor::dtype::RawDataType;
-use crate::tensor::{Tensor, TensorBase, TensorView};
+use crate::tensor::flags::TensorFlags;
+use crate::tensor::Tensor;
 use crate::traits::flatten::Flatten;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
 use crate::traits::to_vec::ToVec;
+use std::mem::ManuallyDrop;
+use std::ptr::NonNull;
 
 // calculates the stride from the tensor's shape
 // shape [5, 3, 2, 1] -> stride [10, 2, 1, 1]
@@ -22,6 +24,28 @@ fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
 }
 
 impl<T: RawDataType> Tensor<T> {
+    /// Safety: ensure data is non-empty and shape & stride matches data buffer
+    pub(super) unsafe fn from_owned_buffer(shape: Vec<usize>, stride: Vec<usize>, data: Vec<T>) -> Self {
+        // take control of the data so that Rust doesn't drop it once the vector goes out of scope
+        let mut data = ManuallyDrop::new(data);
+
+        Self {
+            ptr: NonNull::new_unchecked(data.as_mut_ptr()),
+            len: data.len(),
+            capacity: data.capacity(),
+
+            shape,
+            stride,
+            flags: TensorFlags::Owned | TensorFlags::Contiguous,
+        }
+    }
+
+    /// Safety: ensure data is non-empty and shape matches data buffer
+    pub(super) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>, data: Vec<T>) -> Self {
+        let stride = stride_from_shape(&shape);
+        Self::from_owned_buffer(shape, stride, data)
+    }
+
     pub fn from<const D: usize>(data: impl Flatten<T> + Shape + Nested<{ D }>) -> Self {
         assert!(
             data.check_homogenous(),
@@ -29,94 +53,52 @@ impl<T: RawDataType> Tensor<T> {
         );
 
         let shape = data.shape();
-        let stride = stride_from_shape(&shape);
+        let data = data.flatten();
 
-        Self {
-            data: DataOwned::from(data),
-            shape,
-            stride,
-            ndims: D,
-        }
+        assert!(
+            !data.is_empty(),
+            "Tensor::from() failed, cannot create data buffer from empty data"
+        );
+
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, data) }
     }
 
     pub fn full(n: T, shape: impl ToVec<usize>) -> Self {
         let shape = shape.to_vec();
-        assert!(!shape.is_empty(), "Cannot create a zero-dimension tensor!");
 
-        let vector_ns = vec![n; shape.iter().product()];
-        let ndims = shape.len();
-        let stride = stride_from_shape(&shape);
+        let data = vec![n; shape.iter().product()];
+        assert!(!data.is_empty(), "Cannot create an empty tensor!");
 
-        Self {
-            data: DataOwned::new(vector_ns),
-            shape,
-            stride,
-            ndims,
-        }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, data) }
     }
 
     pub fn zeros(shape: impl ToVec<usize>) -> Self
     where
-        T: RawDataType + From<bool>,
+        T: From<bool>,
     {
         Self::full(false.into(), shape)
     }
 
     pub fn ones(shape: impl ToVec<usize>) -> Self
     where
-        T: RawDataType + From<bool>,
+        T: From<bool>,
     {
         Self::full(true.into(), shape)
     }
 
-    pub fn scalar(n: T) -> Self
-    where
-        Vec<T>: Flatten<T> + Shape,
-    {
-        Self {
-            data: DataOwned::from(vec![n]),
-            shape: vec![],
-            stride: vec![],
-            ndims: 0,
-        }
+    pub fn scalar(n: T) -> Self {
+        Tensor::full(n, [])
     }
 }
 
-impl<T: RawDataType> TensorView<T> {
-    pub(super) fn from<B>(tensor: &TensorBase<B>, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Self
-    where
-        B: DataBuffer<DType=T>,
-    {
-        let ndims = shape.len();
-
-        // let mut len = 1;
-        // for i in 0..ndims {
-        //     len += stride[i] * (shape[i] - 1);
-        // }
-        //
-        // the following code is equivalent to the above loop
-        let len = shape.iter().zip(stride.iter())
-            .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
-            .sum::<usize>() + 1;
-
-        let data = DataView::from_buffer(&tensor.data, offset, len);
-
-        TensorView {
-            data,
-            shape,
-            stride,
-            ndims,
+impl<T: RawDataType> Drop for Tensor<T> {
+    fn drop(&mut self) {
+        if self.flags.contains(TensorFlags::Owned) {
+            // drops the data
+            unsafe { Vec::from_raw_parts(self.ptr.as_ptr(), self.len, self.capacity) };
         }
-    }
-}
 
-impl<B: DataBuffer> From<&TensorBase<B>> for TensorView<B::DType> {
-    fn from(value: &TensorBase<B>) -> Self {
-        Self {
-            data: value.data.to_view(),
-            shape: value.shape.clone(),
-            stride: value.stride.clone(),
-            ndims: value.ndims,
-        }
+        self.len = 0;
+        self.capacity = 0;
     }
 }

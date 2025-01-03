@@ -1,28 +1,40 @@
 use crate::axis::indexer::Indexer;
 
-use crate::tensor::TensorView;
-
 use crate::axis::Axis;
-use crate::data_buffer::DataBuffer;
 use crate::dtype::RawDataType;
-use crate::TensorBase;
+use crate::iterator::collapse_contiguous::is_contiguous;
+use crate::tensor::flags::TensorFlags;
+use crate::Tensor;
 
-impl<B, T> TensorBase<B>
-where
-    B: DataBuffer<DType=T>,
-    T: RawDataType,
-{
-    pub fn slice_along<S>(&self, axis: Axis, index: S) -> TensorView<T>
+
+impl<T: RawDataType> Tensor<T> {
+    pub fn slice_along<S>(&self, axis: Axis, index: S) -> Tensor<T>
     where
         S: Indexer,
     {
         let (shape, stride) = index.indexed_shape_and_stride(&axis, &self.shape, &self.stride);
         let offset = self.stride[axis.0] * index.index_of_first_element();
 
-        TensorView::from(self, offset, shape, stride)
+        let mut flags = self.flags - TensorFlags::Owned;
+        if is_contiguous(&shape, &stride) {
+            flags |= TensorFlags::Contiguous;
+        }
+        else {
+            flags -= TensorFlags::Contiguous;
+        }
+
+        Tensor {
+            ptr: unsafe { self.ptr.add(offset) },
+            len: self.len,
+            capacity: self.capacity,
+
+            shape,
+            stride,
+            flags,
+        }
     }
 
-    pub fn slice<S, I>(&self, index: I) -> TensorView<T>
+    pub fn slice<S, I>(&self, index: I) -> Tensor<T>
     where
         S: Indexer,
         I: IntoIterator<Item=S>,
@@ -33,8 +45,8 @@ where
         // otherwise the axis isn't incremented because the previous dimension has collapsed
 
         let mut axis = 0;
-        let mut ndims = self.ndims;
-        let mut result: TensorView<T> = self.into();
+        let mut ndims = self.ndims();
+        let mut result = self.copy_view();
 
         for idx in index {
             result = result.slice_along(Axis(axis), idx.clone());

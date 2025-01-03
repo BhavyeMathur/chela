@@ -1,37 +1,22 @@
-use crate::data_buffer::DataBuffer;
 use crate::dtype::RawDataType;
-use crate::TensorBase;
+use crate::flat_index_generator::FlatIndexGenerator;
+use crate::Tensor;
 
-pub struct BufferIterator<T, I>
-where
-    T: RawDataType,
-    I: Iterator<Item=isize>,
-{
+pub struct BufferIterator<T: RawDataType> {
     ptr: *const T,
-    indices: I,
+    indices: FlatIndexGenerator,
 }
 
-impl<T, I> BufferIterator<T, I>
-where
-    T: RawDataType,
-    I: Iterator<Item=isize>,
-{
-    pub(super) fn from<B>(tensor: &TensorBase<B>, indices: I) -> Self
-    where
-        B: DataBuffer<DType=T>,
-    {
+impl<T: RawDataType> BufferIterator<T> {
+    pub(super) fn from(tensor: &Tensor<T>, indices: FlatIndexGenerator) -> Self {
         Self {
-            ptr: tensor.data.const_ptr(),
+            ptr: tensor.ptr.as_ptr(),
             indices,
         }
     }
 }
 
-impl<T, I> Iterator for BufferIterator<T, I>
-where
-    T: RawDataType,
-    I: Iterator<Item=isize>,
-{
+impl<T: RawDataType> Iterator for BufferIterator<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {

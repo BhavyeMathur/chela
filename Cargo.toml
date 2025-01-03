@@ -9,6 +9,7 @@ path = "benches/fill_f32.rs"
 
 [dependencies]
 cpu-time = "1.0.0"
+bitflags = "2.6.0"
 
 [lints.rust]
 private_bounds = "allow"
