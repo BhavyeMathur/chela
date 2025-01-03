@@ -57,7 +57,7 @@ impl<T: RawDataType> Tensor<T> {
         let mut dst = data.as_mut_ptr();
 
         for i in FlatIndexGenerator::from(&shape, &stride) {
-            copy_nonoverlapping(src.offset(i), dst, contiguous_stride);
+            copy_nonoverlapping(src.add(i), dst, contiguous_stride);
             dst = dst.add(contiguous_stride);
         }
 

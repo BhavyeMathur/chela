@@ -31,14 +31,14 @@ impl FlatIndexGenerator {
 }
 
 impl Iterator for FlatIndexGenerator {
-    type Item = isize;
+    type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.iterator_index == self.size {
             return None;
         }
 
-        let return_index = self.flat_index as isize;
+        let return_index = self.flat_index;
 
         for i in (0..self.shape.len()).rev() {
             self.indices[i] += 1;

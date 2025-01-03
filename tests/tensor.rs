@@ -290,14 +290,14 @@ fn clone_contiguous() {
     ]);
 
     let view = a.slice([..]);
-    view.clone();
+    let _ = view.clone();
 
     assert_eq!(view[[0, 0, 0]], 10);
     assert_eq!(view[[2, 1, 2]], 27);
 
     let a = Tensor::from(vec![5; 10]);
     let view = a.slice([..]);
-    view.clone();
+    let _ = view.clone();
 
     assert_eq!(view[0], 5);
     assert_eq!(view[9], 5);
