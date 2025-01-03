@@ -15,18 +15,27 @@ impl<T: RawDataType> Tensor<T> {
         let (shape, stride) = index.indexed_shape_and_stride(&axis, &self.shape, &self.stride);
         let offset = self.stride[axis.0] * index.index_of_first_element();
 
+        // let mut len = 1;
+        // for i in 0..ndims {
+        //     len += stride[i] * (shape[i] - 1);
+        // }
+        //
+        // the following code is equivalent to the above loop
+        let len = shape.iter().zip(stride.iter())
+            .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
+            .sum::<usize>() + 1;
+
         let mut flags = self.flags - TensorFlags::Owned;
         if is_contiguous(&shape, &stride) {
             flags |= TensorFlags::Contiguous;
-        }
-        else {
+        } else {
             flags -= TensorFlags::Contiguous;
         }
 
         Tensor {
             ptr: unsafe { self.ptr.add(offset) },
-            len: self.len,
-            capacity: self.capacity,
+            len,
+            capacity: len,
 
             shape,
             stride,
