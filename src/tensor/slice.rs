@@ -55,7 +55,7 @@ impl<T: RawDataType> Tensor<T> {
 
         let mut axis = 0;
         let mut ndims = self.ndims();
-        let mut result = self.copy_view();
+        let mut result = self.view();
 
         for idx in index {
             result = result.slice_along(Axis(axis), idx.clone());

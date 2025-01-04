@@ -59,7 +59,7 @@ where
             return None;
         }
 
-        let return_value = self.result.copy_view();
+        let return_value = self.result.view();
         self.iterator_index += 1;
 
         for i in (0..self.shape.len()).rev() {

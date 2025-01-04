@@ -15,7 +15,7 @@ impl<T: RawDataType> Tensor<T> {
         }
     }
 
-    pub(super) fn copy_view(&self) -> Tensor<T> {
+    pub fn view(&self) -> Tensor<T> {
         unsafe { self.reshaped_view(self.shape.clone(), self.stride.clone()) }
     }
 
