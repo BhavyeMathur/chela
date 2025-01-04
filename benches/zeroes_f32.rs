@@ -1,14 +1,12 @@
 use chela::*;
 use std::env;
-use std::time::Instant;
 
+use cpu_time::ProcessTime;
 
 fn profile(size: usize) -> u128 {
-    let mut tensor = Tensor::zeros(size);
-
-    let now = Instant::now();
-    tensor.fill_naive(5_f32);
-    now.elapsed().as_nanos()
+    let start = ProcessTime::now();
+    let mut tensor: Tensor<f32> = Tensor::zeros(size);
+    start.elapsed().as_nanos()
 }
 
 fn main() {

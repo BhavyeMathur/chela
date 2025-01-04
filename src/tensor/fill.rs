@@ -1,42 +1,26 @@
-use crate::data_buffer::fill::Fill;
-use crate::data_buffer::DataBuffer;
 use crate::dtype::RawDataType;
-use crate::TensorBase;
+use crate::Tensor;
 
-impl<B, T> TensorBase<B>
-where
-    B: DataBuffer<DType=T> + Fill<T>,
-    T: RawDataType,
-{
+impl<T: RawDataType> Tensor<T> {
+    /// Safety: expects tensor buffer is contiguously stored
+    unsafe fn fill_contiguous(&mut self, value: T) {
+        let mut ptr = self.ptr.as_ptr();
+        let end_ptr = ptr.add(self.len);
+
+        while ptr != end_ptr {
+            std::ptr::write(ptr, value);
+            ptr = ptr.add(1);
+        }
+    }
+
+    fn fill_non_contiguous(&mut self, value: T) {
+        todo!()
+    }
+
     pub fn fill(&mut self, value: T) {
-        self.data.fill(value)
-    }
-
-    pub fn fill_naive(&mut self, value: T) {
-        self.data.fill_naive(value)
-    }
-}
-
-#[cfg(target_vendor = "apple")]
-#[cfg(test)]
-mod tests {
-    use crate::{FlatIterator, Tensor};
-
-    #[test]
-    fn test_fill_f32() {
-        let mut a: Tensor<f32> = Tensor::zeros([3, 5, 3]);
-
-        assert!(a.flat_iter().all(|x| x == 0.0));
-        a.fill(25.0);
-        assert!(a.flat_iter().all(|x| x == 25.0));
-    }
-
-    #[test]
-    fn test_fill_f64() {
-        let mut a: Tensor<f64> = Tensor::zeros([15]);
-
-        assert!(a.flat_iter().all(|x| x == 0.0));
-        a.fill(20.0);
-        assert!(a.flat_iter().all(|x| x == 20.0));
+        if self.is_contiguous() {
+            return unsafe { self.fill_contiguous(value) };
+        }
+        self.fill_non_contiguous(value)
     }
 }

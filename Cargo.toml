@@ -4,14 +4,20 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "fill"
-path = "benches/fill.rs"
+name = "fill_f32"
+path = "benches/fill_f32.rs"
 
 [[bin]]
-name = "fill_naive"
-path = "benches/fill_naive.rs"
+name = "zeroes_f32"
+path = "benches/zeroes_f32.rs"
+
+[[bin]]
+name = "flat_iter_f32"
+path = "benches/flat_iter_f32.rs"
 
 [dependencies]
+cpu-time = "1.0.0"
+bitflags = "2.6.0"
 
 [lints.rust]
 private_bounds = "allow"

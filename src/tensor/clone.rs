@@ -1,90 +1,67 @@
-use crate::data_buffer::{DataBuffer, DataOwned};
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::collapse_contiguous;
 use crate::iterator::flat_index_generator::FlatIndexGenerator;
-use crate::{Tensor, TensorBase, TensorView};
+use crate::Tensor;
 use std::ptr::copy_nonoverlapping;
 
-pub(super) trait TensorClone<T: RawDataType> {
-    fn copy_data(&self) -> DataOwned<T>;
-}
-
-impl<T: RawDataType> TensorClone<T> for Tensor<T> {
-    fn copy_data(&self) -> DataOwned<T> {
-        self.data.clone()
+impl<T: RawDataType> Clone for Tensor<T> {
+    fn clone(&self) -> Self {
+        unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data()) }
     }
 }
 
-impl<T: RawDataType> TensorClone<T> for TensorView<T> {
-    fn copy_data(&self) -> DataOwned<T> {
+
+impl<T: RawDataType> Tensor<T> {
+    pub(super) fn clone_data(&self) -> Vec<T> {
+        if self.is_contiguous() {
+            return unsafe { self.clone_data_contiguous() };
+        }
+        unsafe { self.clone_data_non_contiguous() }
+    }
+
+    /// Safety: expects tensor buffer is contiguously stored
+    unsafe fn clone_data_contiguous(&self) -> Vec<T> {
+        let mut data = Vec::with_capacity(self.len);
+
+        copy_nonoverlapping(self.ptr.as_ptr(), data.as_mut_ptr(), self.len);
+        data.set_len(self.len);
+        data
+    }
+
+    /// Safety: expects tensor buffer is not contiguously stored
+    unsafe fn clone_data_non_contiguous(&self) -> Vec<T> {
+        let size = self.size();
+        let mut data = Vec::with_capacity(size);
+
         let (mut shape, mut stride) = collapse_contiguous(&self.shape, &self.stride);
 
-        match stride.last_mut() {
-            Some(&mut mut contiguous_stride) => {
-                // if elements along the last axis are located contiguously,
-                // we can collapse the last dimension and copy contiguous_stride elements at once
-                // collapse_contiguous() call before guarantees only the last dimension (if any) is contiguous
-                if contiguous_stride == 1 {
-                    contiguous_stride = shape.pop().unwrap();
-                    stride.pop();
-                }
-                // if elements along the last axis aren't located contiguously,
-                // they must correspond to a TensorView with a step-size along the last axis of > 1
-                // this is equivalent to 1 contiguous element along the last axis
-                else {
-                    contiguous_stride = 1;
-                }
+        // safe to unwrap because if stride has no elements, this would be a scalar tensor
+        // however, scalar tensors are contiguously stored so this method wouldn't be called
+        let &mut mut contiguous_stride = stride.last_mut().unwrap();
 
-                let size = self.size();
-                let mut data = Vec::with_capacity(size);
-
-                let src = self.data.const_ptr();
-                let mut dst = data.as_mut_ptr();
-
-                for i in FlatIndexGenerator::from(&shape, &stride) {
-                    unsafe {
-                        copy_nonoverlapping(src.offset(i), dst, contiguous_stride);
-                        dst = dst.add(contiguous_stride);
-                    }
-                }
-
-                unsafe { data.set_len(size); }
-                DataOwned::new(data)
-            }
-            None => {
-                DataOwned::new(vec![self.data[0]])  // zero-dimensional tensor
-            }
+        // if elements along the last axis are located contiguously,
+        // we can collapse the last dimension and copy contiguous_stride elements at once
+        if contiguous_stride == 1 {
+            contiguous_stride = shape.pop().unwrap();
+            stride.pop();
         }
-    }
-}
 
-
-impl<B, T> TensorBase<B>
-where
-    B: DataBuffer<DType=T>,
-    T: RawDataType,
-    TensorBase<B>: TensorClone<T>,
-{
-    pub fn clone(&self) -> Tensor<B::DType> {
-        Tensor {
-            data: self.copy_data(),
-            shape: self.shape.clone(),
-            stride: self.stride.clone(),
-            ndims: self.ndims,
+        // if elements along the last axis aren't located contiguously,
+        // they must correspond to a Tensor view with a step-size along the last axis of > 1
+        // this is equivalent to 1 contiguous element along the last axis
+        else {
+            contiguous_stride = 1;
         }
-    }
-}
 
-impl<T> TensorView<T>
-where
-    T: RawDataType,
-{
-    pub fn copy_view(&self) -> TensorView<T> {
-        TensorView {
-            data: self.data.clone(),
-            shape: self.shape.clone(),
-            stride: self.stride.clone(),
-            ndims: self.ndims,
+        let src = self.ptr.as_ptr() as *const T;
+        let mut dst = data.as_mut_ptr();
+
+        for i in FlatIndexGenerator::from(&shape, &stride) {
+            copy_nonoverlapping(src.offset(i), dst, contiguous_stride);
+            dst = dst.add(contiguous_stride);
         }
+
+        data.set_len(size);
+        data
     }
 }
