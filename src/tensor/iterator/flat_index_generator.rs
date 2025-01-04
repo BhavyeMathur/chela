@@ -1,4 +1,4 @@
-use crate::iterator::collapse_contiguous::collapse_contiguous;
+use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride};
 
 #[non_exhaustive]
 pub struct FlatIndexGenerator
@@ -15,7 +15,7 @@ pub struct FlatIndexGenerator
 
 impl FlatIndexGenerator {
     pub(in crate::tensor) fn from(shape: &[usize], stride: &[usize]) -> Self {
-        let (shape, stride) = collapse_contiguous(shape, stride);
+        let (shape, stride) = collapse_to_uniform_stride(shape, stride);
         let ndims = shape.len();
         let size = shape.iter().product();
 
