@@ -1,5 +1,5 @@
 use crate::dtype::RawDataType;
-use crate::iterator::collapse_contiguous::{collapse_contiguous, collapse_to_uniform_stride};
+use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride};
 use crate::iterator::flat_index_generator::FlatIndexGenerator;
 use crate::Tensor;
 use std::ptr::copy_nonoverlapping;

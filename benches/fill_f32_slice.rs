@@ -15,7 +15,7 @@ fn profile(size: usize) -> u128 {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let size = args[1].parse::<usize>().unwrap();
+    let size = if args.len() < 2 { 65536 } else { args[1].parse().unwrap() };
 
     println!("{}", profile(size));
 }

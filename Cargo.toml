@@ -18,3 +18,7 @@ bitflags = "2.6.0"
 [lints.rust]
 private_bounds = "allow"
 dead_code = "allow"
+
+[profile.release]
+debug = true
+strip = false

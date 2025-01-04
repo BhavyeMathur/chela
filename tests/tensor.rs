@@ -585,17 +585,17 @@ fn test_fill_f64() {
 
 #[test]
 fn test_fill_slice() {
-    let mut a: Tensor<i32> = Tensor::zeros([3, 5]);
+    let a: Tensor<i32> = Tensor::zeros([3, 5]);
     let correct = Tensor::from([[0, 5, 0, 0, 0], [0, 5, 0, 0, 0], [0, 5, 0, 0, 0]]);
     a.slice(s![.., 1]).fill(5);
     assert_eq!(a, correct);
 
-    let mut a: Tensor<u32> = Tensor::zeros([3, 5]);
+    let a: Tensor<u32> = Tensor::zeros([3, 5]);
     let correct: Tensor<u32> = Tensor::from([[0, 5, 5, 5, 0], [0, 5, 5, 5, 0], [0, 5, 5, 5, 0]]);
     a.slice(s![.., 1..4]).fill(5);
     assert_eq!(a, correct);
 
-    let mut a: Tensor<bool> = Tensor::zeros([3, 5]);
+    let a: Tensor<bool> = Tensor::zeros([3, 5]);
     let correct: Tensor<bool> = Tensor::from(
         [[false, false, false, false, false],
             [true, true, true, true, true],
