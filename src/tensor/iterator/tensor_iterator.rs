@@ -4,11 +4,8 @@ use crate::traits::haslength::HasLength;
 use crate::Tensor;
 
 #[non_exhaustive]
-pub struct NdIterator<T>
-where
-    T: RawDataType,
-{
-    result: Tensor<T>,
+pub struct NdIterator<'a, T: RawDataType> {
+    result: Tensor<'a, T>,
 
     shape: Vec<usize>,
     stride: Vec<usize>,
@@ -18,17 +15,14 @@ where
     size: usize,
 }
 
-impl<T: RawDataType> Tensor<T> {
+impl<T: RawDataType> Tensor<'_, T> {
     unsafe fn offset_ptr(&mut self, offset: isize) {
         self.ptr = self.ptr.offset(offset);
     }
 }
 
-impl<T> NdIterator<T>
-where
-    T: RawDataType,
-{
-    pub(super) fn from<I>(tensor: &Tensor<T>, axes: I) -> Self
+impl<'a, T: RawDataType> NdIterator<'a, T> {
+    pub(super) fn from<I>(tensor: &'a Tensor<T>, axes: I) -> Self
     where
         I: IntoIterator<Item=usize> + HasLength + Clone,
     {
@@ -48,13 +42,12 @@ where
     }
 }
 
-impl<T> Iterator for NdIterator<T>
-where
-    T: RawDataType,
-{
-    type Item = Tensor<T>;
+impl<'a, T: RawDataType> Iterator for NdIterator<'a, T> {
+    type Item = Tensor<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        return None;
+
         if self.iterator_index == self.size {
             return None;
         }

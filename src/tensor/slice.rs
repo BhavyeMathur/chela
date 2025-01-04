@@ -7,7 +7,7 @@ use crate::tensor::flags::TensorFlags;
 use crate::Tensor;
 
 
-impl<T: RawDataType> Tensor<T> {
+impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn slice_along<S>(&self, axis: Axis, index: S) -> Tensor<T>
     where
         S: Indexer,
@@ -40,6 +40,8 @@ impl<T: RawDataType> Tensor<T> {
             shape,
             stride,
             flags,
+
+            _marker: self._marker,
         }
     }
 
@@ -53,19 +55,19 @@ impl<T: RawDataType> Tensor<T> {
         // if the dimension of the tensor is preserved during the slice along, we increment the axis
         // otherwise the axis isn't incremented because the previous dimension has collapsed
 
-        let mut axis = 0;
-        let mut ndims = self.ndims();
+        // let mut axis = 0;
+        // let mut ndims = self.ndims();
         let mut result = self.view();
 
-        for idx in index {
-            result = result.slice_along(Axis(axis), idx.clone());
-
-            if result.ndims() == ndims {
-                axis += 1;
-            } else {
-                ndims = result.ndims();
-            }
-        }
+        // for idx in index {
+        //     result = result.slice_along(Axis(axis), idx.clone());
+        //
+        //     if result.ndims() == ndims {
+        //         axis += 1;
+        //     } else {
+        //         ndims = result.ndims();
+        //     }
+        // }
         result
     }
 }

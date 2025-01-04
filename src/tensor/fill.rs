@@ -20,7 +20,7 @@ unsafe fn fill_shape_and_stride<T: Copy>(mut start: *mut T, value: T, shape: &[u
     }
 }
 
-impl<T: RawDataType> Tensor<T> {
+impl<T: RawDataType> Tensor<'_, T> {
     pub fn fill(&mut self, value: T) {
         if self.is_contiguous() {
             return unsafe { fill_strided(self.ptr.as_ptr(), value, 1, self.len); };

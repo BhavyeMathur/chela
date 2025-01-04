@@ -4,14 +4,11 @@ use crate::iterator::flat_index_generator::FlatIndexGenerator;
 use crate::Tensor;
 use std::ptr::copy_nonoverlapping;
 
-impl<T: RawDataType> Clone for Tensor<T> {
-    fn clone(&self) -> Self {
+impl<'a, T: RawDataType> Tensor<'a, T> {
+    pub fn clone<'b>(&'a self) -> Tensor<'b, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data()) }
     }
-}
 
-
-impl<T: RawDataType> Tensor<T> {
     pub(super) fn clone_data(&self) -> Vec<T> {
         if self.is_contiguous() {
             return unsafe { self.clone_data_contiguous() };

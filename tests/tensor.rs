@@ -603,3 +603,15 @@ fn test_fill_slice() {
     a.slice(s![1, ..]).fill(true);
     assert_eq!(a, correct);
 }
+
+#[test]
+fn test_compile_fail() {
+    let mut a;
+
+    {
+        let b = Tensor::zeros(10);
+        a = b.view();
+    }
+
+    a.fill(5);
+}

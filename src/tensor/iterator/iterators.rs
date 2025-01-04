@@ -5,7 +5,7 @@ use crate::traits::haslength::HasLength;
 use crate::{AxisType, Tensor};
 use crate::buffer_iterator::BufferIterator;
 
-impl<T: RawDataType> Tensor<T> {
+impl<T: RawDataType> Tensor<'_, T> {
     pub fn flatiter(&self) -> FlatIterator<T> {
         FlatIterator::from(self)
     }
@@ -15,7 +15,7 @@ impl<T: RawDataType> Tensor<T> {
     }
 }
 
-impl<T: RawDataType> Tensor<T> {
+impl<T: RawDataType> Tensor<'_, T> {
     pub fn iter(&self) -> NdIterator<T> {
         NdIterator::from(self, [0])
     }
