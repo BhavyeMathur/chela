@@ -27,10 +27,7 @@ impl Indexer for Index {
     }
 
     fn collapse_dimension(&self) -> bool {
-        match self {
-            Index::Usize(_) => true,
-            _ => false,
-        }
+        matches!(self, Index::Usize(_))
     }
 }
 

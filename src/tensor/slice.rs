@@ -9,7 +9,7 @@ use crate::Tensor;
 fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
     flags -= TensorFlags::Owned;
 
-    if is_contiguous(&shape, &stride) {
+    if is_contiguous(shape, stride) {
         flags | TensorFlags::Contiguous
     } else {
         flags - TensorFlags::Contiguous
@@ -30,7 +30,7 @@ fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {
 
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn slice_along<S: Indexer>(&self, axis: Axis, index: S) -> Tensor<T> {
+    pub fn slice_along<S: Indexer>(&'a self, axis: Axis, index: S) -> Tensor<'a, T> {
         let axis = axis.0;
 
         let mut new_shape = self.shape.clone();
@@ -61,7 +61,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
     }
 
-    pub fn slice<S, I>(&self, index: I) -> Tensor<T>
+    pub fn slice<S, I>(&'a self, index: I) -> Tensor<'a, T>
     where
         S: Indexer,
         I: IntoIterator<Item=S>,
