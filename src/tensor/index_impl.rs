@@ -2,7 +2,7 @@ use crate::dtype::RawDataType;
 use crate::Tensor;
 use std::ops::Index;
 
-impl<T: RawDataType, const D: usize> Index<[usize; D]> for Tensor<T> {
+impl<T: RawDataType, const D: usize> Index<[usize; D]> for Tensor<'_, T> {
     type Output = T;
 
     fn index(&self, index: [usize; D]) -> &Self::Output {
@@ -17,7 +17,7 @@ impl<T: RawDataType, const D: usize> Index<[usize; D]> for Tensor<T> {
     }
 }
 
-impl<T: RawDataType> Index<usize> for Tensor<T> {
+impl<T: RawDataType> Index<usize> for Tensor<'_, T> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {

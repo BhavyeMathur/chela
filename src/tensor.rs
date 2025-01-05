@@ -1,3 +1,6 @@
+use std::marker::PhantomData;
+use std::ptr::NonNull;
+
 pub mod constructors;
 pub mod dtype;
 
@@ -12,14 +15,12 @@ pub mod equals;
 mod flags;
 
 use crate::dtype::RawDataType;
+use crate::tensor::flags::TensorFlags;
 
 pub use iterator::*;
 
-use crate::tensor::flags::TensorFlags;
-use std::ptr::NonNull;
-
 #[derive(Debug)]
-pub struct Tensor<T: RawDataType> {
+pub struct Tensor<'a, T: RawDataType> {
     ptr: NonNull<T>,
     len: usize,
     capacity: usize,
@@ -27,4 +28,6 @@ pub struct Tensor<T: RawDataType> {
     shape: Vec<usize>,
     stride: Vec<usize>,
     flags: TensorFlags,
+
+    _marker: PhantomData<&'a T>,
 }

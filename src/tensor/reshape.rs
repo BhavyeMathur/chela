@@ -2,7 +2,11 @@ use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 use crate::{Axis, Tensor};
 
-impl<T: RawDataType> Tensor<T> {
+impl<'a, T: RawDataType> Tensor<'a, T> {
+    pub fn flatten<'b>(&self) -> Tensor<'b, T> {
+        unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data()) }
+    }
+
     pub(super) unsafe fn reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
         Tensor {
             ptr: self.ptr,
@@ -12,18 +16,16 @@ impl<T: RawDataType> Tensor<T> {
             shape,
             stride,
             flags: self.flags - TensorFlags::Owned,
+
+            _marker: self._marker,
         }
     }
 
-    pub(super) fn copy_view(&self) -> Tensor<T> {
+    pub fn view(&'a self) -> Tensor<'a, T> {
         unsafe { self.reshaped_view(self.shape.clone(), self.stride.clone()) }
     }
 
-    pub fn flatten(&self) -> Tensor<T> {
-        unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data()) }
-    }
-
-    pub fn squeeze(&self) -> Tensor<T> {
+    pub fn squeeze(&'a self) -> Tensor<'a, T> {
         let mut shape = self.shape.clone();
         let mut stride = self.stride.clone();
 
@@ -34,7 +36,7 @@ impl<T: RawDataType> Tensor<T> {
         unsafe { self.reshaped_view(shape, stride) }
     }
 
-    pub fn unsqueeze(&self, axis: Axis) -> Tensor<T> {
+    pub fn unsqueeze(&'a self, axis: Axis) -> Tensor<'a, T> {
         let axis = axis.0;
         assert!(axis <= self.ndims(), "Tensor::unsqueeze(), axis out of bounds");
 

@@ -1,19 +1,21 @@
 use crate::dtype::RawDataType;
-use crate::iterator::buffer_iterator::BufferIterator;
-use crate::iterator::flat_index_generator::FlatIndexGenerator;
+use crate::iterator::flat_iterator::FlatIterator;
 use crate::tensor_iterator::NdIterator;
 use crate::traits::haslength::HasLength;
 use crate::{AxisType, Tensor};
+use crate::buffer_iterator::BufferIterator;
 
+impl<T: RawDataType> Tensor<'_, T> {
+    pub fn flatiter(&self) -> FlatIterator<T> {
+        FlatIterator::from(self)
+    }
 
-impl<T: RawDataType> Tensor<T> {
-    pub fn flatiter(&self) -> BufferIterator<T> {
-        let indices = FlatIndexGenerator::from(&self.shape, &self.stride);
-        BufferIterator::from(self, indices)
+    pub fn flatiter_ptr(&self) -> BufferIterator<T> {
+        BufferIterator::from(self)
     }
 }
 
-impl<T: RawDataType> Tensor<T> {
+impl<T: RawDataType> Tensor<'_, T> {
     pub fn iter(&self) -> NdIterator<T> {
         NdIterator::from(self, [0])
     }

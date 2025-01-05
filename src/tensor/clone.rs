@@ -1,17 +1,14 @@
 use crate::dtype::RawDataType;
-use crate::iterator::collapse_contiguous::collapse_contiguous;
+use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride};
 use crate::iterator::flat_index_generator::FlatIndexGenerator;
 use crate::Tensor;
 use std::ptr::copy_nonoverlapping;
 
-impl<T: RawDataType> Clone for Tensor<T> {
-    fn clone(&self) -> Self {
+impl<'a, T: RawDataType> Tensor<'a, T> {
+    pub fn clone<'b>(&'a self) -> Tensor<'b, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data()) }
     }
-}
 
-
-impl<T: RawDataType> Tensor<T> {
     pub(super) fn clone_data(&self) -> Vec<T> {
         if self.is_contiguous() {
             return unsafe { self.clone_data_contiguous() };
@@ -33,7 +30,7 @@ impl<T: RawDataType> Tensor<T> {
         let size = self.size();
         let mut data = Vec::with_capacity(size);
 
-        let (mut shape, mut stride) = collapse_contiguous(&self.shape, &self.stride);
+        let (mut shape, mut stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
 
         // safe to unwrap because if stride has no elements, this would be a scalar tensor
         // however, scalar tensors are contiguously stored so this method wouldn't be called
@@ -57,7 +54,7 @@ impl<T: RawDataType> Tensor<T> {
         let mut dst = data.as_mut_ptr();
 
         for i in FlatIndexGenerator::from(&shape, &stride) {
-            copy_nonoverlapping(src.offset(i), dst, contiguous_stride);
+            copy_nonoverlapping(src.add(i), dst, contiguous_stride);
             dst = dst.add(contiguous_stride);
         }
 

@@ -7,6 +7,10 @@ edition = "2021"
 name = "fill_f32"
 path = "benches/fill_f32.rs"
 
+[[bin]]
+name = "fill_f32_slice"
+path = "benches/fill_f32_slice.rs"
+
 [dependencies]
 cpu-time = "1.0.0"
 bitflags = "2.6.0"
@@ -14,3 +18,7 @@ bitflags = "2.6.0"
 [lints.rust]
 private_bounds = "allow"
 dead_code = "allow"
+
+[profile.release]
+debug = true
+strip = false

@@ -1,7 +1,7 @@
 use crate::dtype::RawDataType;
 use crate::Tensor;
 
-impl<T1, T2> PartialEq<Tensor<T1>> for Tensor<T2>
+impl<T1, T2> PartialEq<Tensor<'_, T1>> for Tensor<'_, T2>
 where
     T1: RawDataType,
     T2: RawDataType + From<T1>,

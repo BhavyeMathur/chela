@@ -2,7 +2,7 @@ use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 use crate::Tensor;
 
-impl<T: RawDataType> Tensor<T> {
+impl<T: RawDataType> Tensor<'_, T> {
     #[inline]
     pub fn shape(&self) -> &[usize] {
         &self.shape
