@@ -1,5 +1,6 @@
 use crate::dtype::RawDataType;
 use crate::iterator::util::split_by_indices;
+use crate::tensor::flags::TensorFlags;
 use crate::traits::haslength::HasLength;
 use crate::Tensor;
 
@@ -46,13 +47,11 @@ impl<'a, T: RawDataType> Iterator for NdIterator<'a, T> {
     type Item = Tensor<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        return None;
-
         if self.iterator_index == self.size {
             return None;
         }
 
-        let return_value = self.result.view();
+        let return_value = unsafe { self.result.lifetime_cast() };
         self.iterator_index += 1;
 
         for i in (0..self.shape.len()).rev() {
@@ -67,5 +66,23 @@ impl<'a, T: RawDataType> Iterator for NdIterator<'a, T> {
         }
 
         Some(return_value)
+    }
+}
+
+impl<'a, T: RawDataType> Tensor<'a, T> {
+    /// Creates a view of the tensor with arbitrary lifetime
+    /// Safety: ensure returned tensor actually has a valid lifetime!
+    unsafe fn lifetime_cast<'b>(&'a self) -> Tensor<'b, T> {
+        Tensor {
+            ptr: self.ptr,
+            len: self.len,
+            capacity: self.capacity,
+
+            shape: self.shape.clone(),
+            stride: self.stride.clone(),
+            flags: self.flags - TensorFlags::Owned,
+
+            _marker: Default::default(),
+        }
     }
 }
