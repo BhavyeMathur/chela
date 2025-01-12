@@ -59,5 +59,4 @@ def measure_rust_performance(label: str, target: str) -> Callable:
 
     return decorator
 
-
 __all__ = ["measure_performance", "measure_rust_performance"]
