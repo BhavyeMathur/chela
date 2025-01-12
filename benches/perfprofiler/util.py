@@ -15,6 +15,10 @@ def compile_rust(target: str) -> str:
     out = out.split(b"\n")[-3]
     return json.loads(out)["executable"]
 
+def compile_cpp(target: str) -> str:
+    out = subprocess.check_output(f"")
+    out = out.split(b"\n")[-3]
+    return json.loads(out)["executable"]
 
 def get_method_class(method) -> str:
     return method.__qualname__.split(".")[0]

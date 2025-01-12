@@ -8,12 +8,9 @@ name = "fill_f32"
 path = "benches/fill_f32.rs"
 
 [[bin]]
-name = "zeroes_f32"
-path = "benches/zeroes_f32.rs"
+name = "ones_f32"
+path = "benches/ones_f32.rs"
 
-[[bin]]
-name = "flat_iter_f32"
-path = "benches/flat_iter_f32.rs"
 
 [dependencies]
 cpu-time = "1.0.0"

@@ -27,6 +27,10 @@ class TimingSuite(metaclass=TimingSuiteMeta):
         value = subprocess.check_output(f"{executable} {''.join(map(str, argv))}", shell=True)
         return int(value)
 
+    def run_cpp(self, executable, *argv) -> float:
+        value = subprocess.check_output(f"{executable} {''.join(map(str, argv))}", shell=True)
+        return int(value)
+
     def profile(*args, **kwargs) -> dict[str, Result]:
         raise NotImplementedError()  # implemented by TimingSuiteMeta
 
