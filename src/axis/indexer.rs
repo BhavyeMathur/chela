@@ -1,32 +1,21 @@
-use crate::Axis;
-
-use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use crate::axis::indexer_impl::IndexerImpl;
+use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 pub(crate) trait Indexer: IndexerImpl + Clone {
-    fn indexed_shape_and_stride(&self, axis: &Axis, shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
-        let mut shape = shape.to_vec();
-        let mut stride = stride.to_vec();
-
-        let axis = axis.0;
-        let len = self.len(axis, &shape);
-
-        if len == 0 {
-            shape.remove(axis);
-            stride.remove(axis);
-        } else {
-            shape[axis] = len;
-        }
-
-        (shape, stride)
-    }
-
     fn index_of_first_element(&self) -> usize;
+
+    fn collapse_dimension(&self) -> bool {
+        false
+    }
 }
 
 impl Indexer for usize {
     fn index_of_first_element(&self) -> usize {
         *self
+    }
+
+    fn collapse_dimension(&self) -> bool {
+        true
     }
 }
 impl Indexer for Range<usize> {

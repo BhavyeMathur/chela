@@ -23,7 +23,7 @@ fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
     stride
 }
 
-impl<T: RawDataType> Tensor<T> {
+impl<T: RawDataType> Tensor<'_, T> {
     /// Safety: ensure data is non-empty and shape & stride matches data buffer
     pub(super) unsafe fn from_owned_buffer(shape: Vec<usize>, stride: Vec<usize>, data: Vec<T>) -> Self {
         // take control of the data so that Rust doesn't drop it once the vector goes out of scope
@@ -37,6 +37,8 @@ impl<T: RawDataType> Tensor<T> {
             shape,
             stride,
             flags: TensorFlags::Owned | TensorFlags::Contiguous,
+
+            _marker: Default::default(),
         }
     }
 
@@ -91,7 +93,7 @@ impl<T: RawDataType> Tensor<T> {
     }
 }
 
-impl<T: RawDataType> Drop for Tensor<T> {
+impl<T: RawDataType> Drop for Tensor<'_, T> {
     fn drop(&mut self) {
         if self.flags.contains(TensorFlags::Owned) {
             // drops the data

@@ -8,6 +8,10 @@ name = "fill_f32"
 path = "benches/fill_f32.rs"
 
 [[bin]]
+name = "fill_f32_slice"
+path = "benches/fill_f32_slice.rs"
+
+[[bin]]
 name = "ones_f32"
 path = "benches/ones_f32.rs"
 
@@ -19,3 +23,7 @@ bitflags = "2.6.0"
 [lints.rust]
 private_bounds = "allow"
 dead_code = "allow"
+
+[profile.release]
+debug = true
+strip = false

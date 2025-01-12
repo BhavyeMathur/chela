@@ -1,6 +1,6 @@
 use crate::axis::indexer::Indexer;
-use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use crate::axis::indexer_impl::IndexerImpl;
+use std::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 #[derive(Clone)]
 pub enum Index {
@@ -25,18 +25,22 @@ impl Indexer for Index {
             Index::RangeToInclusive(index) => index.index_of_first_element(),
         }
     }
+
+    fn collapse_dimension(&self) -> bool {
+        matches!(self, Index::Usize(_))
+    }
 }
 
 impl IndexerImpl for Index {
-    fn len(&self, axis: usize, shape: &[usize]) -> usize {
+    fn indexed_length(&self, len: usize) -> usize {
         match self {
-            Index::Usize(index) => IndexerImpl::len(index, axis, shape),
-            Index::Range(index) => IndexerImpl::len(index, axis, shape),
-            Index::RangeFrom(index) => IndexerImpl::len(index, axis, shape),
-            Index::RangeFull(index) => IndexerImpl::len(index, axis, shape),
-            Index::RangeInclusive(index) => IndexerImpl::len(index, axis, shape),
-            Index::RangeTo(index) => IndexerImpl::len(index, axis, shape),
-            Index::RangeToInclusive(index) => IndexerImpl::len(index, axis, shape),
+            Index::Usize(index) => IndexerImpl::indexed_length(index, len),
+            Index::Range(index) => IndexerImpl::indexed_length(index, len),
+            Index::RangeFrom(index) => IndexerImpl::indexed_length(index, len),
+            Index::RangeFull(index) => IndexerImpl::indexed_length(index, len),
+            Index::RangeInclusive(index) => IndexerImpl::indexed_length(index, len),
+            Index::RangeTo(index) => IndexerImpl::indexed_length(index, len),
+            Index::RangeToInclusive(index) => IndexerImpl::indexed_length(index, len),
         }
     }
 }
