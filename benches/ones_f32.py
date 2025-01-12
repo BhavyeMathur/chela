@@ -9,11 +9,11 @@ class TensorOnes(TimingSuite):
 
     @measure_performance("NumPy")
     def run(self):
-        self.ndarray = np.zeros(self.n, dtype="float32")
+        np.ones(self.n, dtype="float32")
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        self.tensor_cpu = torch.zeros(self.n, dtype=torch.float32)
+        torch.ones(self.n, dtype=torch.float32)
 
     @measure_rust_performance("Chela CPU", target="ones_f32")
     def run(self, executable):
