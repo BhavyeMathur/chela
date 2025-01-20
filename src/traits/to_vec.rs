@@ -1,3 +1,6 @@
+use crate::axes_traits::AxisType;
+use crate::Axis;
+
 pub(crate) trait ToVec<T> {
     fn to_vec(self) -> Vec<T>;
 }
@@ -5,6 +8,12 @@ pub(crate) trait ToVec<T> {
 impl ToVec<usize> for usize {
     fn to_vec(self) -> Vec<usize> {
         vec![self]
+    }
+}
+
+impl ToVec<usize> for Axis {
+    fn to_vec(self) -> Vec<usize> {
+        vec![self.usize()]
     }
 }
 
