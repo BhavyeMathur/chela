@@ -12,6 +12,8 @@ pub mod fill;
 pub mod reshape;
 pub mod clone;
 pub mod equals;
+pub mod broadcast;
+
 mod flags;
 mod ufuncs;
 
