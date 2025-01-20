@@ -13,6 +13,7 @@ pub mod reshape;
 pub mod clone;
 pub mod equals;
 mod flags;
+mod ufuncs;
 
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
