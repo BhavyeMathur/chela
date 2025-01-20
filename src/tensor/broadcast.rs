@@ -51,13 +51,13 @@ fn broadcast_shape(shape: &[usize], to: impl ToVec<usize>) -> Vec<usize> {
 
 fn broadcast_stride(stride: &[usize], broadcast_shape: &[usize], original_shape: &[usize]) -> Vec<usize> {
     let ndims = broadcast_shape.len();
-    let original_first_axis = ndims - original_shape.len();
 
-    if original_first_axis < 0 {
+    if ndims < original_shape.len() {
         panic!("cannot broadcast to fewer dimensions")
     }
 
     let mut broadcast_stride = Vec::with_capacity(ndims);
+    let original_first_axis = ndims - original_shape.len();
 
     for _ in 0..original_first_axis {
         broadcast_stride.push(0);  // new dimensions get a zero stride

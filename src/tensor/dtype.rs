@@ -1,4 +1,4 @@
-use num::{FromPrimitive, ToPrimitive};
+use num::ToPrimitive;
 use std::ops::Div;
 
 pub trait RawDataType: Clone + Copy + PartialEq {}
@@ -21,8 +21,8 @@ impl RawDataType for f64 {}
 
 impl RawDataType for bool {}
 
-pub trait NumericDataType: RawDataType + std::iter::Sum + std::iter::Product + Div<Output=Self> + ToPrimitive {
-    type AsFloatType: num::Float + NumericDataType + FromPrimitive + From<f32>;
+pub trait NumericDataType: RawDataType + std::iter::Sum + std::iter::Product + Div<Output=Self> + ToPrimitive + PartialOrd {
+    type AsFloatType: NumericDataType + From<f32>;
 
     fn to_float(&self) -> Self::AsFloatType {
         self.to_f32().unwrap().into()

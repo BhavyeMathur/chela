@@ -30,20 +30,46 @@ impl<T: RawDataType> Tensor<'_, T> {
 }
 
 impl<T: NumericDataType> Tensor<'_, T> {
-    pub fn sum<D: RawDataType + From<T>>(&self, axes: impl ToVec<usize>) -> Tensor<D> {
+    pub fn sum(&self) -> Tensor<T> {
+        self.sum_along([])
+    }
+
+    pub fn product(&self) -> Tensor<T> {
+        self.product_along([])
+    }
+
+    pub fn mean(&self) -> Tensor<T::AsFloatType> {
+        self.mean_along([])
+    }
+
+    pub fn max(&self) -> Tensor<T> {
+        self.max_along([])
+    }
+
+    pub fn min(&self) -> Tensor<T> {
+        self.min_along([])
+    }
+
+    pub fn sum_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
         self.reduce(|x| x.flatiter().sum::<T>().into(), axes)
     }
 
-    pub fn product<D: RawDataType + From<T>>(&self, axes: impl ToVec<usize>) -> Tensor<D> {
+    pub fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
         self.reduce(|x| x.flatiter().product::<T>().into(), axes)
     }
-}
 
-impl<T: NumericDataType> Tensor<'_, T> {
-    pub fn mean(&self, axes: impl ToVec<usize>) -> Tensor<T::AsFloatType> {
+    pub fn mean_along(&self, axes: impl ToVec<usize>) -> Tensor<T::AsFloatType> {
         let axes = axes.to_vec();
         let den = self.slice(axes.clone()).size().to_float().into();
 
         self.reduce(|x| x.flatiter().sum::<T>().to_float() / den, axes)
+    }
+
+    pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce(|x| x.flatiter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap(), axes)
+    }
+
+    pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce(|x| x.flatiter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap(), axes)
     }
 }
