@@ -33,30 +33,20 @@ fn pad_dimensions(shape: &[usize], stride: &[usize], ndims: usize) -> (Vec<usize
 
 fn broadcast_shape(shape: &[usize], to: impl ToVec<usize>) -> Vec<usize> {
     let to = to.to_vec();
-    let ndims = to.len();
 
-    if ndims < shape.len() {
+    if to.len() < shape.len() {
         panic!("cannot broadcast to fewer dimensions")
     }
 
-    // TODO we can just copy shape and return that since broadcast_shape == shape at the end
-    // just need to check that the broadcasting is compatible
+    let last_ndims = &to[to.len() - shape.len()..];
 
-    let mut broadcast_shape = pad(shape, 1, ndims - shape.len());
-
-    for axis in 0..ndims {
-        if to[axis] == broadcast_shape[axis] {
-            continue;
-        }
-
-        if broadcast_shape[axis] != 1 {
+    for axis in 0..shape.len() {
+        if shape[axis] != 1 && shape[axis] != last_ndims[axis] {
             panic!("broadcast is not compatible with the desired shape");
         }
-
-        broadcast_shape[axis] = to[axis];
     }
 
-    broadcast_shape
+    to
 }
 
 fn broadcast_stride(stride: &[usize], broadcast_shape: &[usize], original_shape: &[usize]) -> Vec<usize> {

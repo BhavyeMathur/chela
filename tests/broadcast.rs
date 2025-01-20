@@ -26,10 +26,25 @@ fn test_broadcast_matrix_to_higher_dims() {
 
 #[test]
 #[should_panic]
-fn test_broadcast_incompatible_shapes() {
+fn test_broadcast_incompatible_shapes1() {
     let tensor = Tensor::from([1, 2, 3]);
     tensor.broadcast_to([3, 5]);
 }
+
+#[test]
+#[should_panic]
+fn test_broadcast_incompatible_shapes2() {
+    let tensor: Tensor<f32> = Tensor::ones([3, 3]);
+    tensor.broadcast_to([1, 3]);
+}
+
+#[test]
+#[should_panic]
+fn test_broadcast_incompatible_shapes3() {
+    let tensor: Tensor<bool> = Tensor::ones([1, 1, 3]);
+    tensor.broadcast_to([1, 3]);
+}
+
 
 #[test]
 fn test_broadcast_identity() {
