@@ -36,3 +36,20 @@ fn test_reduce_multiply() {
     let output: Tensor<i32> = tensor.product([]);
     assert_eq!(output, correct);
 }
+
+#[test]
+fn test_reduce_mean() {
+    let tensor = Tensor::from([[1, 3], [2, 4], [3, 5]]);
+
+    let correct = Tensor::from([2.0f32, 3.0, 4.0]);
+    let output = tensor.mean(0);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([[1.0f32, 3.0], [2.0, 4.0], [3.0, 5.0]]);
+    let output = tensor.mean([0, 1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(3.0f32);
+    let output = tensor.mean([]);
+    assert_eq!(output, correct);
+}

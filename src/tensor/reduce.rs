@@ -1,10 +1,10 @@
-use num::cast::AsPrimitive;
-use crate::dtype::RawDataType;
+use crate::dtype::{NumericDataType, RawDataType};
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
 
+
 impl<T: RawDataType> Tensor<'_, T> {
-    pub fn reduce<D: RawDataType>(&self, func: fn(Tensor<T>) -> D, axes: impl ToVec<usize>) -> Tensor<D> {
+    pub fn reduce<D: RawDataType>(&self, func: impl Fn(Tensor<T>) -> D, axes: impl ToVec<usize>) -> Tensor<D> {
         let axes = axes.to_vec();
 
         let mut shape_mask = vec![false; self.ndims()];
@@ -29,20 +29,21 @@ impl<T: RawDataType> Tensor<'_, T> {
     }
 }
 
-impl<T: RawDataType + std::iter::Sum> Tensor<'_, T> {
-    pub fn sum(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|x| x.flatiter().sum(), axes)
+impl<T: NumericDataType> Tensor<'_, T> {
+    pub fn sum<D: RawDataType + From<T>>(&self, axes: impl ToVec<usize>) -> Tensor<D> {
+        self.reduce(|x| x.flatiter().sum::<T>().into(), axes)
     }
 
-    // pub fn mean<D: num::Float + RawDataType + From<T>>(&self, axes: impl ToVec<usize>) -> Tensor<D> {
-    //     let axes = axes.to_vec();
-    //     let len = self.slice(axes.clone()).size();
-    //     self.reduce(|x| x.flatiter().sum::<T>().into() / len, axes)
-    // }
+    pub fn product<D: RawDataType + From<T>>(&self, axes: impl ToVec<usize>) -> Tensor<D> {
+        self.reduce(|x| x.flatiter().product::<T>().into(), axes)
+    }
 }
 
-impl<T: RawDataType + std::iter::Product> Tensor<'_, T> {
-    pub fn product(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|x| x.flatiter().product(), axes)
+impl<T: NumericDataType> Tensor<'_, T> {
+    pub fn mean(&self, axes: impl ToVec<usize>) -> Tensor<T::AsFloatType> {
+        let axes = axes.to_vec();
+        let den = self.slice(axes.clone()).size().to_float().into();
+
+        self.reduce(|x| x.flatiter().sum::<T>().to_float() / den, axes)
     }
 }
