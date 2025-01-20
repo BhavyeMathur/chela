@@ -13,6 +13,7 @@ pub mod reshape;
 pub mod clone;
 pub mod equals;
 pub mod broadcast;
+pub mod reduce;
 
 mod flags;
 
