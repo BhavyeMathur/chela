@@ -39,7 +39,8 @@ fn broadcast_shape(shape: &[usize], to: impl ToVec<usize>) -> Vec<usize> {
         panic!("cannot broadcast to fewer dimensions")
     }
 
-    // TODO we can just copy shape and return that since broadcast_shape == shape at the end
+
+    // TODO we can just copy shape and return that since broadcast_shape == to at the end
     // just need to check that the broadcasting is compatible
 
     let mut broadcast_shape = pad(shape, 1, ndims - shape.len());
