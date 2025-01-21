@@ -1,8 +1,8 @@
 use crate::dtype::RawDataType;
 use crate::iterator::flat_iterator::FlatIterator;
 use crate::tensor_iterator::NdIterator;
-use crate::traits::haslength::HasLength;
-use crate::{AxisType, Tensor};
+use crate::Tensor;
+use crate::axes_traits::{AxesType, AxisType};
 use crate::buffer_iterator::BufferIterator;
 
 impl<T: RawDataType> Tensor<'_, T> {
@@ -24,7 +24,7 @@ impl<T: RawDataType> Tensor<'_, T> {
         NdIterator::from(self, [axis.usize()])
     }
 
-    pub fn nditer(&self, axes: impl IntoIterator<Item=usize> + HasLength + Clone) -> NdIterator<T> {
+    pub fn nditer(&self, axes: impl AxesType) -> NdIterator<T> {
         NdIterator::from(self, axes)
     }
 }
