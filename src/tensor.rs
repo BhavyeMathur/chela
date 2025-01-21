@@ -14,6 +14,7 @@ pub mod clone;
 pub mod equals;
 pub mod broadcast;
 pub mod reduce;
+pub mod binary_ops;
 
 mod flags;
 

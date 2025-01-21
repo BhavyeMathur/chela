@@ -1,11 +1,8 @@
 use crate::dtype::RawDataType;
-use crate::traits::to_vec::ToVec;
 use crate::Tensor;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn broadcast_to(&'a self, shape: impl ToVec<usize>) -> Tensor<'a, T> {
-        let shape = shape.to_vec();
-
+    pub fn broadcast_to(&'a self, shape: &[usize]) -> Tensor<'a, T> {
         let broadcast_shape = broadcast_shape(&self.shape, shape);
         let broadcast_stride = broadcast_stride(&self.stride, &broadcast_shape, &self.shape);
 
@@ -31,7 +28,7 @@ fn pad_dimensions(shape: &[usize], stride: &[usize], ndims: usize) -> (Vec<usize
     (shape, stride)
 }
 
-fn broadcast_shape(shape: &[usize], to: impl ToVec<usize>) -> Vec<usize> {
+fn broadcast_shape(shape: &[usize], to: &[usize]) -> Vec<usize> {
     let to = to.to_vec();
 
     if to.len() < shape.len() {
@@ -80,7 +77,7 @@ fn broadcast_stride(stride: &[usize], broadcast_shape: &[usize], original_shape:
 
 // TODO tests for broadcast_stride()
 
-fn broadcast_shapes(first: &[usize], second: &[usize]) -> Vec<usize> {
+pub(super) fn broadcast_shapes(first: &[usize], second: &[usize]) -> Vec<usize> {
     let mut shape1;
     let mut shape2;
 
