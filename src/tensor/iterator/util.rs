@@ -13,6 +13,10 @@ where
     let mut remaining = Vec::with_capacity(max_index - indices.len());
 
     for index in indices {
+        if bitset[index] {
+            panic!("duplicate index encountered");
+        }
+        
         bitset[index] = true;
     }
 
