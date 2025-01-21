@@ -5,7 +5,6 @@ use crate::traits::flatten::Flatten;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
 use crate::traits::to_vec::ToVec;
-use std::cmp::Ord;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
 
