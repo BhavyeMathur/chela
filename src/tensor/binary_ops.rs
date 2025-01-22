@@ -1,8 +1,8 @@
 use crate::broadcast::broadcast_shapes;
 use crate::dtype::RawDataType;
+use crate::tensor::flags::TensorFlags;
 use crate::Tensor;
-use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
-
+use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign};
 
 macro_rules! define_binary_op {
     ( $trait_: ident, $operator: tt, $method: ident ) => {
@@ -62,6 +62,30 @@ macro_rules! define_binary_op {
     };
 }
 
+macro_rules! define_binary_iop {
+    ( $trait_: ident, $operator: tt, $method: ident ) => {
+    impl<T: RawDataType + $trait_ + 'static> $trait_<Tensor<'_, T>> for Tensor<'_, T> {
+        fn $method(&mut self, rhs: Tensor<'_, T>) {
+            *self $operator &rhs
+        }
+    }
+
+    impl<T: RawDataType + $trait_ + 'static> $trait_<&Tensor<'_, T>> for Tensor<'_, T> {
+        fn $method(&mut self, rhs: &Tensor<'_, T>) {
+            if !self.flags.contains(TensorFlags::Writeable) {
+                panic!("Tensor is readonly");
+            }
+
+            let rhs = rhs.broadcast_to(&self.shape);
+
+            for (lhs, rhs) in self.flatiter_ptr().zip(rhs.flatiter()) {
+                unsafe { *lhs $operator rhs; }
+            }
+        }
+    }
+    };
+}
+
 define_binary_op!(Add, +, add);
 define_binary_op!(Sub, -, sub);
 define_binary_op!(Mul, *, mul);
@@ -71,3 +95,13 @@ define_binary_op!(BitAnd, &, bitand);
 define_binary_op!(BitOr, |, bitor);
 define_binary_op!(Shl, <<, shl);
 define_binary_op!(Shr, >>, shr);
+
+define_binary_iop!(AddAssign, +=, add_assign);
+define_binary_iop!(SubAssign, -=, sub_assign);
+define_binary_iop!(MulAssign, *=, mul_assign);
+define_binary_iop!(DivAssign, /=, div_assign);
+define_binary_iop!(RemAssign, %=, rem_assign);
+define_binary_iop!(BitAndAssign, &=, bitand_assign);
+define_binary_iop!(BitOrAssign, |=, bitor_assign);
+define_binary_iop!(ShlAssign, <<=, shl_assign);
+define_binary_iop!(ShrAssign, >>=, shr_assign);

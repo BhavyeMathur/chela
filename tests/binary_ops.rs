@@ -1,14 +1,6 @@
 use chela::*;
 
 #[test]
-#[should_panic]
-fn test_broadcast_panic() {
-    let tensor1 = Tensor::from([[1, 2], [3, 4], [5, 6]]);
-    let tensor2 = Tensor::from([2, 4, 6]);
-    let _ = tensor1 + tensor2;
-}
-
-#[test]
 fn test_add() {
     let tensor1 = Tensor::from([[1, 1], [2, 2], [3, 3]]);
     let tensor2 = Tensor::from([[1, 2], [3, 4], [5, 6]]);
@@ -188,4 +180,58 @@ fn test_shr() {
     let output = tensor1 >> tensor2;
 
     assert_eq!(output, correct);
+}
+
+#[test]
+fn test_iadd() {
+    let mut tensor1 = Tensor::from([[1, 2], [3, 4], [5, 6]]);
+    let tensor2 = Tensor::from([2, 4]);
+
+    let correct = Tensor::from([[3, 6], [5, 8], [7, 10]]);
+    tensor1 += &tensor2;
+    assert_eq!(tensor1, correct);
+
+    let correct = Tensor::from([[5, 10], [7, 12], [9, 14]]);
+    tensor1 += tensor2;
+    assert_eq!(tensor1, correct);
+}
+
+#[test]
+fn test_isub() {
+    let mut tensor1 = Tensor::from([[1, 2], [3, 4], [5, 6]]);
+    let tensor2 = Tensor::from([2, 4]);
+
+    let correct = Tensor::from([[-1, -2], [1, 0], [3, 2]]);
+    tensor1 -= &tensor2;
+    assert_eq!(tensor1, correct);
+
+    let correct = Tensor::from([[-3, -6], [-1, -4], [1, -2]]);
+    tensor1 -= tensor2;
+    assert_eq!(tensor1, correct);
+}
+
+#[test]
+#[should_panic]
+fn test_broadcast_panic() {
+    let tensor1 = Tensor::from([[1, 2], [3, 4], [5, 6]]);
+    let tensor2 = Tensor::from([2, 4, 6]);
+    let _ = tensor1 + tensor2;
+}
+
+#[test]
+#[should_panic]
+fn test_iadd_panic() {
+    let mut tensor1 = Tensor::from([2, 4, 6]);
+    let tensor2 = Tensor::from([[1, 2], [3, 4], [5, 6]]);
+    tensor1 += &tensor2;
+}
+
+#[test]
+#[should_panic]
+fn test_viewonly_panic() {
+    let tensor1 = Tensor::from([2, 4, 6]);
+    let mut tensor1 = tensor1.broadcast_to(&[3, 3]);
+
+    let tensor2 = Tensor::from([[1, 2, 3], [3, 4, 5], [5, 6, 7]]);
+    tensor1 += &tensor2;
 }
