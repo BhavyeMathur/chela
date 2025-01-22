@@ -6,7 +6,7 @@ from perfprofiler import *
 class TensorSum(TimingSuite):
     def __init__(self, n):
         self.n = n
-        self.ndarray: np.ndarray = np.ones(n, dtype="float32")
+        self.ndarray: np.ndarray = np.random.rand(n).astype(np.float32)
         self.tensor_cpu = torch.rand(n, dtype=torch.float32)
 
     @measure_performance("NumPy")

@@ -1,17 +1,14 @@
-use std::ops::Range;
-use num::{Float, Num, ToPrimitive};
-use rand::distributions::{Distribution, Uniform};
-use rand::thread_rng;
-use rand_distr::Normal;
-use crate::dtype::RawDataType;
-use crate::Tensor;
+use crate::dtype::{BoundedRange, RawDataType};
 use crate::traits::to_vec::ToVec;
+use crate::Tensor;
+use num::{Float, Num};
+use rand::distributions::Distribution;
+use rand::{thread_rng, Rng};
+use rand_distr::Normal;
+use crate::index::Index::Range;
 
-impl<T: RawDataType> Tensor<'_, T> {
-    pub fn randn(shape: impl ToVec<usize>) -> Self
-    where
-        T: Float
-    {
+impl<T: RawDataType + Float> Tensor<'_, T> {
+    pub fn randn(shape: impl ToVec<usize>) -> Self {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
         let n = shape.iter().product();
@@ -25,21 +22,32 @@ impl<T: RawDataType> Tensor<'_, T> {
 
         unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers) }
     }
+}
 
-    pub fn rand(range: Range<T>, shape: impl ToVec<usize>) -> Self
-    where
-        T: Num + rand::distributions::uniform::SampleUniform + ToPrimitive
-    {
+impl<T: RawDataType + PartialOrd + Num + rand::distributions::uniform::SampleUniform>
+    Tensor<'_, T>
+{
+    pub fn rand<R: BoundedRange<T>>(range: R, shape: impl ToVec<usize>) -> Self {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
         let n = shape.iter().product();
 
-        let uniform = Uniform::new_inclusive(range.start, range.end);
+        let start = *range.start_bound();
+        let end = *range.end_bound();
 
-        // Generate n random numbers from a standard normal distribution
-        let random_numbers: Vec<T> = (0..n)
-            .map(|_| T::from(uniform.sample(&mut rng))) // Generate normal random number and cast it to T
-            .collect();
+        let mut random_numbers;
+
+        if range.is_inclusive(){
+            random_numbers = (0..n)
+                .map(|_| T::from(rng.gen_range(start..=end))) // Generate normal random number and cast it to T
+                .collect();
+        }
+
+        else {
+            random_numbers = (0..n)
+                .map(|_| T::from(rng.gen_range(start..end))) // Generate normal random number and cast it to T
+                .collect();
+        }
 
         unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers) }
     }

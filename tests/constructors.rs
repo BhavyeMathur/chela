@@ -101,7 +101,6 @@ fn zeroes_bool() {
 fn random_normal_f32(){
     let a: Tensor<f32> = Tensor::randn(vec![3, 5, 3]);
     let x: Vec<_> = a.flatiter().collect();
-    // println!("{:?}", x);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert!(!a.is_view());
 }
@@ -110,7 +109,6 @@ fn random_normal_f32(){
 fn random_normal_f64(){
     let a: Tensor<f64> = Tensor::randn(vec![3, 5, 3]);
     let x: Vec<_> = a.flatiter().collect();
-    println!("{:?}", x);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert!(!a.is_view());
 }
@@ -118,8 +116,7 @@ fn random_normal_f64(){
 #[test]
 fn random_uniform_i32(){
     let a = Tensor::rand(4..20, vec![2, 3]);
-    let x: Vec<_> = a.flatiter().collect();
-    // println!("{:?}", x);
+    let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3]);
     assert!(!a.is_view());
 }
@@ -127,8 +124,7 @@ fn random_uniform_i32(){
 #[test]
 fn random_uniform_f64(){
     let a = Tensor::rand(4f64..20f64, vec![2, 3]);
-    let x: Vec<_> = a.flatiter().collect();
-    // println!("{:?}", x);
+    let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3]);
     assert!(!a.is_view());
 }
@@ -136,8 +132,22 @@ fn random_uniform_f64(){
 #[test]
 fn random_uniform_f32(){
     let a = Tensor::rand(4f32..10f32, vec![2, 3, 6]);
+    let _: Vec<_> = a.flatiter().collect();
+    assert_eq!(a.shape(), &[2, 3, 6]);
+    assert!(!a.is_view());
+}
+
+#[test]
+fn random_uniform_i32_exclusive(){
+    let a = Tensor::rand(4..10, vec![2, 3, 6]);
     let x: Vec<_> = a.flatiter().collect();
-    // println!("{:?}", x);
+    assert_eq!(a.shape(), &[2, 3, 6]);
+    assert!(!a.is_view());
+}
+#[test]
+fn random_uniform_i32_inclusive(){
+    let a = Tensor::rand(4..=10, vec![2, 3, 6]);
+    let x: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3, 6]);
     assert!(!a.is_view());
 }

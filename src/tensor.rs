@@ -16,7 +16,7 @@ pub mod broadcast;
 pub mod reduce;
 
 mod flags;
-mod random;
+pub mod random;
 
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;

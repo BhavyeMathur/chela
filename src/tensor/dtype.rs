@@ -1,5 +1,5 @@
-use num::{FromPrimitive, ToPrimitive};
-use std::ops::Div;
+use num::ToPrimitive;
+use std::ops::{Div, Range, RangeInclusive};
 
 pub trait RawDataType: Clone + Copy + PartialEq {}
 
@@ -21,27 +21,86 @@ impl RawDataType for f64 {}
 
 impl RawDataType for bool {}
 
-pub trait NumericDataType: RawDataType + std::iter::Sum + std::iter::Product + Div<Output=Self> + ToPrimitive {
-    type AsFloatType: num::Float + NumericDataType + FromPrimitive + From<f32>;
+pub trait NumericDataType:
+    RawDataType + std::iter::Sum + std::iter::Product + Div<Output = Self> + ToPrimitive + PartialOrd
+{
+    type AsFloatType: NumericDataType + From<f32>;
 
     fn to_float(&self) -> Self::AsFloatType {
         self.to_f32().unwrap().into()
     }
 }
 
-impl NumericDataType for u8 { type AsFloatType = f32; }
-impl NumericDataType for u16 { type AsFloatType = f32; }
-impl NumericDataType for u32 { type AsFloatType = f32; }
-impl NumericDataType for u64 { type AsFloatType = f32; }
-impl NumericDataType for u128 { type AsFloatType = f32; }
+impl NumericDataType for u8 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for u16 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for u32 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for u64 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for u128 {
+    type AsFloatType = f32;
+}
 
-impl NumericDataType for usize { type AsFloatType = f32; }
+impl NumericDataType for usize {
+    type AsFloatType = f32;
+}
 
-impl NumericDataType for i8 { type AsFloatType = f32; }
-impl NumericDataType for i16 { type AsFloatType = f32; }
-impl NumericDataType for i32 { type AsFloatType = f32; }
-impl NumericDataType for i64 { type AsFloatType = f32; }
-impl NumericDataType for i128 { type AsFloatType = f32; }
+impl NumericDataType for i8 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for i16 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for i32 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for i64 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for i128 {
+    type AsFloatType = f32;
+}
 
-impl NumericDataType for f32 { type AsFloatType = f32; }
-impl NumericDataType for f64 { type AsFloatType = f64; }
+impl NumericDataType for f32 {
+    type AsFloatType = f32;
+}
+impl NumericDataType for f64 {
+    type AsFloatType = f64;
+}
+
+pub trait BoundedRange<T> {
+    fn start_bound(&self) -> &T;
+    fn end_bound(&self) -> &T;
+    fn is_inclusive(&self) -> bool;
+}
+
+impl<T> BoundedRange<T> for Range<T> {
+    fn start_bound(&self) -> &T {
+        &self.start
+    }
+    fn end_bound(&self) -> &T {
+        &self.end
+    }
+
+    fn is_inclusive(&self) -> bool {
+        false
+    }
+}
+
+impl<T> BoundedRange<T> for RangeInclusive<T> {
+    fn start_bound(&self) -> &T {
+        self.start()
+    }
+    fn end_bound(&self) -> &T {
+        self.end()
+    }
+    fn is_inclusive(&self) -> bool {
+        true
+    }
+}
