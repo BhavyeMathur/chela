@@ -101,3 +101,91 @@ fn test_add_references() {
     assert_eq!(tensor1, tensor1);
     assert_eq!(output, correct);
 }
+
+#[test]
+fn test_subtract() {
+    let tensor1 = Tensor::from([[1, 1], [2, 2], [3, 3]]);
+    let tensor2 = Tensor::from([2, 4]);
+
+    let correct = Tensor::from([[-1, -3], [0, -2], [1, -1]]);
+    let output = tensor1 - tensor2;
+
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_multiply() {
+    let tensor1 = Tensor::from([[1, 1], [2, 2], [3, 3]]);
+    let tensor2 = Tensor::from([2, 4]);
+
+    let correct = Tensor::from([[2, 4], [4, 8], [6, 12]]);
+    let output = tensor1 * tensor2;
+
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_divide() {
+    let tensor1 = Tensor::from([[1.0, 1.0], [2.0, 2.0], [6.0, 8.0]]);
+    let tensor2 = Tensor::from([2.0, 4.0]);
+
+    let correct = Tensor::from([[0.5, 0.25], [1.0, 0.5], [3.0, 2.0]]);
+    let output = tensor1 / tensor2;
+
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_remainder() {
+    let tensor1 = Tensor::from([[1, 3], [2, 2], [3, 7]]);
+    let tensor2 = Tensor::from([2, 4]);
+
+    let correct = Tensor::from([[1, 3], [0, 2], [1, 3]]);
+    let output = tensor1 % tensor2;
+
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_bitand() {
+    let tensor1 = Tensor::from([[1, 3], [2, 2], [3, 7]]);
+    let tensor2 = Tensor::from([1, 2]);
+
+    let correct = Tensor::from([[1, 2], [0, 2], [1, 2]]);
+    let output = tensor1 & tensor2;
+
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_bitor() {
+    let tensor1 = Tensor::from([[1, 3], [2, 2], [3, 7]]);
+    let tensor2 = Tensor::from([1, 2]);
+
+    let correct = Tensor::from([[1, 3], [3, 2], [3, 7]]);
+    let output = tensor1 | tensor2;
+
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_shl() {
+    let tensor1 = Tensor::from([[1, 2], [4, 8], [16, 32]]);
+    let tensor2 = Tensor::from([1, 2]);
+
+    let correct = Tensor::from([[2, 8], [8, 32], [32, 128]]);
+    let output = tensor1 << tensor2;
+
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_shr() {
+    let tensor1 = Tensor::from([[2, 4], [8, 16], [32, 64]]);
+    let tensor2 = Tensor::from([1, 2]);
+
+    let correct = Tensor::from([[1, 1], [4, 4], [16, 16]]);
+    let output = tensor1 >> tensor2;
+
+    assert_eq!(output, correct);
+}
