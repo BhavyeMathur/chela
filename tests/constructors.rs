@@ -108,7 +108,7 @@ fn random_normal_f32(){
 #[test]
 fn random_normal_f64(){
     let a: Tensor<f64> = Tensor::randn(vec![3, 5, 3]);
-    let x: Vec<_> = a.flatiter().collect();
+    let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert!(!a.is_view());
 }
@@ -140,14 +140,14 @@ fn random_uniform_f32(){
 #[test]
 fn random_uniform_i32_exclusive(){
     let a = Tensor::rand(4..10, vec![2, 3, 6]);
-    let x: Vec<_> = a.flatiter().collect();
+    let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3, 6]);
     assert!(!a.is_view());
 }
 #[test]
 fn random_uniform_i32_inclusive(){
     let a = Tensor::rand(4..=10, vec![2, 3, 6]);
-    let x: Vec<_> = a.flatiter().collect();
+    let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3, 6]);
     assert!(!a.is_view());
 }
