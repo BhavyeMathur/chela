@@ -33,7 +33,7 @@ impl<'a, T: RawDataType> NdIterator<'a, T> {
         let size = shape.iter().product();
 
         Self {
-            result: unsafe { tensor.reshaped_view(output_shape, output_stride) },
+            result: unsafe { tensor.mut_reshaped_view(output_shape, output_stride) },
             shape,
             stride,
             indices: vec![0; ndims],

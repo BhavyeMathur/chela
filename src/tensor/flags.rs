@@ -6,5 +6,6 @@ bitflags! {
     pub struct TensorFlags: u8 {
         const Owned = 0b00000001;
         const Contiguous = 0b00000010;
+        const Writeable = 0b00000100;
     }
 }

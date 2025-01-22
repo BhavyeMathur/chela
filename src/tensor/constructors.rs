@@ -36,7 +36,7 @@ impl<T: RawDataType> Tensor<'_, T> {
 
             shape,
             stride,
-            flags: TensorFlags::Owned | TensorFlags::Contiguous,
+            flags: TensorFlags::Owned | TensorFlags::Contiguous | TensorFlags::Writeable,
 
             _marker: Default::default(),
         }
