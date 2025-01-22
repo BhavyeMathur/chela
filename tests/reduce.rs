@@ -1,6 +1,13 @@
 use chela::*;
 
 #[test]
+#[should_panic]
+fn test_reduce_panic() {
+    let tensor = Tensor::from([[1, 1], [2, 2], [3, 3]]);
+    tensor.sum_along([0, 0]);
+}
+
+#[test]
 fn test_reduce_sum() {
     let tensor = Tensor::from([[1, 1], [2, 2], [3, 3]]);
 

@@ -1,7 +1,8 @@
+use std::fmt::Display;
 use num::ToPrimitive;
 use std::ops::{Div, Range, RangeInclusive};
 
-pub trait RawDataType: Clone + Copy + PartialEq {}
+pub trait RawDataType: Clone + Copy + PartialEq + Display {}
 
 impl RawDataType for u8 {}
 impl RawDataType for u16 {}

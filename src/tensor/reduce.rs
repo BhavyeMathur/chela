@@ -7,17 +7,9 @@ impl<T: RawDataType> Tensor<'_, T> {
     pub fn reduce<D: RawDataType>(&self, func: impl Fn(Tensor<T>) -> D, axes: impl ToVec<usize>) -> Tensor<D> {
         let axes = axes.to_vec();
 
-        let mut shape_mask = vec![false; self.ndims()];
-        for i in 0..axes.len() {
-            shape_mask[axes[i]] = true;
-        }
-
-        let mut reduced_shape = Vec::with_capacity(self.ndims() - axes.len());
-
-        for i in 0..self.shape.len() {
-            if shape_mask[i] {
-                reduced_shape.push(self.shape[i]);
-            }
+        let mut reduced_shape = Vec::with_capacity(axes.len());
+        for &axis in axes.iter() {
+            reduced_shape.push(self.shape[axis]);
         }
 
         let mut output = Vec::with_capacity(reduced_shape.iter().product());
@@ -60,9 +52,14 @@ impl<T: NumericDataType> Tensor<'_, T> {
 
     pub fn mean_along(&self, axes: impl ToVec<usize>) -> Tensor<T::AsFloatType> {
         let axes = axes.to_vec();
-        let den = self.slice(axes.clone()).size().to_float().into();
+        
+        let mut n = self.size().to_float();
+        for &axis in axes.iter() {
+            n /= self.shape[axis] as f32;
+        }
+        let n: T::AsFloatType = n.into();
 
-        self.reduce(|x| x.flatiter().sum::<T>().to_float() / den, axes)
+        self.reduce(|x| x.flatiter().sum::<T>().to_float() / n, axes)
     }
 
     pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
