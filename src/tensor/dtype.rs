@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use num::ToPrimitive;
+use std::fmt::Display;
 use std::ops::{Div, Range, RangeInclusive};
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display {}
@@ -73,35 +73,4 @@ impl NumericDataType for f32 {
 }
 impl NumericDataType for f64 {
     type AsFloatType = f64;
-}
-
-pub trait BoundedRange<T> {
-    fn start_bound(&self) -> &T;
-    fn end_bound(&self) -> &T;
-    fn is_inclusive(&self) -> bool;
-}
-
-impl<T> BoundedRange<T> for Range<T> {
-    fn start_bound(&self) -> &T {
-        &self.start
-    }
-    fn end_bound(&self) -> &T {
-        &self.end
-    }
-
-    fn is_inclusive(&self) -> bool {
-        false
-    }
-}
-
-impl<T> BoundedRange<T> for RangeInclusive<T> {
-    fn start_bound(&self) -> &T {
-        self.start()
-    }
-    fn end_bound(&self) -> &T {
-        self.end()
-    }
-    fn is_inclusive(&self) -> bool {
-        true
-    }
 }
