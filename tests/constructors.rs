@@ -1,4 +1,5 @@
 use chela::*;
+
 #[test]
 fn full_i32() {
     let a = Tensor::full(3, [2, 3]);
@@ -99,15 +100,14 @@ fn zeroes_bool() {
 }
 
 #[test]
-fn random_normal_f32(){
+fn random_normal_f32() {
     let a: Tensor<f32> = Tensor::randn(vec![3, 5, 3]);
-    let x: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert!(!a.is_view());
 }
 
 #[test]
-fn random_normal_f64(){
+fn random_normal_f64() {
     let a: Tensor<f64> = Tensor::randn(vec![3, 5, 3]);
     let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[3, 5, 3]);
@@ -115,7 +115,7 @@ fn random_normal_f64(){
 }
 
 #[test]
-fn random_uniform_f64(){
+fn random_uniform_f64() {
     let a: Tensor<f64> = Tensor::rand(vec![2, 3]);
     let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3]);
@@ -123,7 +123,7 @@ fn random_uniform_f64(){
 }
 
 #[test]
-fn random_uniform_f32(){
+fn random_uniform_f32() {
     let a: Tensor<f32> = Tensor::rand(vec![2, 3, 6]);
     let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3, 6]);
