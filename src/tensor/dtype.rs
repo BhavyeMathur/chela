@@ -1,6 +1,6 @@
 use num::ToPrimitive;
 use std::fmt::Display;
-use std::ops::{Div, Range, RangeInclusive};
+use std::ops::Div;
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display {}
 
