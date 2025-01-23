@@ -2,7 +2,7 @@ use crate::dtype::RawDataType;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
 use num::Float;
-use rand::distributions::{Distribution, Uniform};
+use rand::distributions::{Distribution, Uniform, uniform::SampleUniform};
 use rand::thread_rng;
 use rand_distr::Normal;
 
@@ -22,9 +22,7 @@ impl<T: RawDataType + Float> Tensor<'_, T> {
     }
 }
 
-impl<T: RawDataType + Float + rand::distributions::uniform::SampleUniform>
-    Tensor<'_, T>
-{
+impl<T: RawDataType + SampleUniform> Tensor<'_, T> {
     pub fn rand(shape: impl ToVec<usize>) -> Self {
         let mut rng = thread_rng();
         let shape = shape.to_vec();

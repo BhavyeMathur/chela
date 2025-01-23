@@ -23,7 +23,7 @@ impl RawDataType for f64 {}
 impl RawDataType for bool {}
 
 pub trait NumericDataType:
-    RawDataType + std::iter::Sum + std::iter::Product + Div<Output = Self> + ToPrimitive + PartialOrd
+RawDataType + std::iter::Sum + std::iter::Product + Div<Output=Self> + ToPrimitive + PartialOrd
 {
     type AsFloatType: NumericDataType + From<f32>;
 
@@ -35,15 +35,19 @@ pub trait NumericDataType:
 impl NumericDataType for u8 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for u16 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for u32 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for u64 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for u128 {
     type AsFloatType = f32;
 }
@@ -55,15 +59,19 @@ impl NumericDataType for usize {
 impl NumericDataType for i8 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for i16 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for i32 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for i64 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for i128 {
     type AsFloatType = f32;
 }
@@ -71,6 +79,7 @@ impl NumericDataType for i128 {
 impl NumericDataType for f32 {
     type AsFloatType = f32;
 }
+
 impl NumericDataType for f64 {
     type AsFloatType = f64;
 }
