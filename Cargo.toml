@@ -15,10 +15,13 @@ path = "benches/fill_f32_slice.rs"
 name = "ones_f32"
 path = "benches/ones_f32.rs"
 
+
 [dependencies]
 cpu-time = "1.0.0"
 bitflags = "2.6.0"
 num = "0.4.3"
+rand = "0.8.5"
+rand_distr = "0.4"
 
 [lints.rust]
 private_bounds = "allow"
