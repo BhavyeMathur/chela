@@ -1,3 +1,4 @@
+use std::ops::Range;
 use crate::axes_traits::AxisType;
 use crate::Axis;
 
@@ -24,5 +25,11 @@ impl<T> ToVec<T> for Vec<T> {
 impl<T, const N: usize> ToVec<T> for [T; N] {
     fn to_vec(self) -> Vec<T> {
         Vec::from(self)
+    }
+}
+
+impl ToVec<usize> for Range<usize> {
+    fn to_vec(self) -> Vec<usize> {
+        self.collect()
     }
 }
