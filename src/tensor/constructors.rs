@@ -25,7 +25,11 @@ fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
 
 impl<T: RawDataType> Tensor<'_, T> {
     /// Safety: ensure data is non-empty and shape & stride matches data buffer
-    pub(super) unsafe fn from_owned_buffer(shape: Vec<usize>, stride: Vec<usize>, data: Vec<T>) -> Self {
+    pub(super) unsafe fn from_owned_buffer(
+        shape: Vec<usize>,
+        stride: Vec<usize>,
+        data: Vec<T>,
+    ) -> Self {
         // take control of the data so that Rust doesn't drop it once the vector goes out of scope
         let mut data = ManuallyDrop::new(data);
 
