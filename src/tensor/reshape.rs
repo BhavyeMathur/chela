@@ -1,17 +1,20 @@
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 use crate::{Axis, Tensor};
+use crate::slice::update_flags_with_contiguity;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn flatten<'b>(&self) -> Tensor<'b, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data()) }
     }
 
-    pub(super) unsafe fn reshaped_view_with_flags(&self, shape: Vec<usize>, stride: Vec<usize>, flags: TensorFlags) -> Tensor<T> {
+    pub(super) unsafe fn reshaped_view_with_flags(&self, shape: Vec<usize>, stride: Vec<usize>, mut flags: TensorFlags) -> Tensor<T> {
+        flags = update_flags_with_contiguity(flags, &shape, &stride);
+
         Tensor {
             ptr: self.ptr,
-            len: self.len,
-            capacity: self.capacity,
+            len: shape.iter().product(),
+            capacity: 0,
 
             shape,
             stride,

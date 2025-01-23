@@ -6,7 +6,7 @@ use crate::iterator::collapse_contiguous::is_contiguous;
 use crate::tensor::flags::TensorFlags;
 use crate::Tensor;
 
-fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
+pub(super) fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
     flags -= TensorFlags::Owned;
 
     if is_contiguous(shape, stride) {

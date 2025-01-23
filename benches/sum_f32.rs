@@ -5,10 +5,10 @@ use cpu_time::ProcessTime;
 
 
 fn profile(size: usize) -> u128 {
-    let mut tensor = Tensor::rand(size);
+    let mut tensor: Tensor<f32> = Tensor::rand(size);
 
     let start = ProcessTime::now();
-    tensor.sum_along(Axis(0));
+    tensor.sum();
     start.elapsed().as_nanos()
 }
 
