@@ -19,6 +19,14 @@ path = "benches/ones_f32.rs"
 name = "sum_f32"
 path = "benches/sum_f32.rs"
 
+[[bin]]
+name = "sum_f32_slice"
+path = "benches/sum_f32_slice.rs"
+
+[[bin]]
+name = "sum_f32_slice2"
+path = "benches/sum_f32_slice2.rs"
+
 
 [dependencies]
 cpu-time = "1.0.0"
