@@ -83,6 +83,17 @@ pub(in crate::tensor) fn collapse_to_uniform_stride(shape: &[usize], stride: &[u
     (new_shape, new_stride)
 }
 
+
+pub(in crate::tensor) fn has_uniform_stride(shape: &[usize], stride: &[usize]) -> Option<usize> {
+    let (_, new_stride) = collapse_to_uniform_stride(shape, stride);
+
+    if new_stride.len() == 1 {
+        return Some(new_stride[0]);
+    }
+    None
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::collapse_contiguous;
