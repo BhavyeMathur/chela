@@ -5,7 +5,7 @@ use cpu_time::ProcessTime;
 
 
 fn profile(size: usize) -> u128 {
-    let mut tensor: Tensor<f32> = Tensor::rand(size);
+    let tensor: Tensor<f32> = Tensor::rand(size);
 
     let start = ProcessTime::now();
     tensor.sum();

@@ -1,39 +1,62 @@
+use std::collections::VecDeque;
 use crate::dtype::{NumericDataType, RawDataType};
+use crate::flat_index_generator::FlatIndexGenerator;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
 
 
-impl<T: RawDataType> Tensor<'_, T> {
-    pub fn reduce<D: RawDataType>(&self, func: impl Fn(Tensor<T>) -> D, axes: impl ToVec<usize>) -> Tensor<D> {
-        let axes = axes.to_vec();
+fn reduced_shape_and_stride(axes: &[usize], shape: &[usize]) -> (Vec<usize>, Vec<usize>) {
+    let ndims = shape.len();
+    let mut axis_mask = vec![false; ndims];
 
-        let mut axis_mask = vec![true; self.ndims()];
-        for &axis in axes.iter() {
-            if !axis_mask[axis] {
-                panic!("duplicate axes specified");
-            }
-            axis_mask[axis] = false;
+    for &axis in axes.iter() {
+        if axis_mask[axis] {
+            panic!("duplicate axes specified");
         }
-
-        let mut axes = Vec::with_capacity(self.ndims() - axes.len());
-        for i in 0..self.ndims() {
-            if axis_mask[i] {
-                axes.push(i);
-            }
-        }
-
-        let mut reduced_shape = Vec::with_capacity(axes.len());
-        for &axis in axes.iter() {
-            reduced_shape.push(self.shape[axis]);
-        }
-
-        let mut output = Vec::with_capacity(reduced_shape.iter().product());
-        for slice in self.nditer(axes) {
-            output.push(func(slice));
-        }
-
-        unsafe { Tensor::from_contiguous_owned_buffer(reduced_shape, output) }
+        axis_mask[axis] = true;
     }
+
+    let mut new_stride = VecDeque::with_capacity(ndims);
+    let mut new_shape = VecDeque::with_capacity(ndims - axes.len());
+
+    let mut stride = 1;
+    for axis in (0..ndims).rev() {
+        if axis_mask[axis] {
+            new_stride.push_front(0);
+        } else {
+            new_stride.push_front(stride);
+            new_shape.push_front(shape[axis]);
+            stride *= shape[axis];
+        }
+    }
+
+    (Vec::from(new_shape), Vec::from(new_stride))
+}
+
+
+impl<T: RawDataType> Tensor<'_, T> {
+    pub fn reduce(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>) -> Tensor<T> {
+        let (new_shape, new_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
+
+        let mut output = vec![Default::default(); new_shape.iter().product()];
+
+        let mut dst_indices = FlatIndexGenerator::from(&self.shape, &new_stride);
+        let mut dst: *mut T = output.as_mut_ptr();
+
+        for el in self.flatiter() {
+            unsafe {
+                let dst_i = dst_indices.next().unwrap();
+                let dst_ptr = dst.add(dst_i);
+                *dst_ptr = func(el, *dst_ptr);
+            }
+        }
+
+        unsafe { Tensor::from_contiguous_owned_buffer(new_shape, output) }
+    }
+}
+
+fn reduce_sum<T: NumericDataType>(value: T, accumulator: T) -> T {
+    accumulator + value
 }
 
 impl<T: NumericDataType> Tensor<'_, T> {
@@ -45,43 +68,89 @@ impl<T: NumericDataType> Tensor<'_, T> {
         self.product_along(0..self.ndims())
     }
 
-    pub fn mean(&self) -> Tensor<T::AsFloatType> {
-        self.mean_along(0..self.ndims())
-    }
-
-    pub fn max(&self) -> Tensor<T> {
-        self.max_along(0..self.ndims())
-    }
-
-    pub fn min(&self) -> Tensor<T> {
-        self.min_along(0..self.ndims())
-    }
+    // pub fn mean(&self) -> Tensor<T::AsFloatType> {
+    //     self.mean_along(0..self.ndims())
+    // }
+    //
+    // pub fn max(&self) -> Tensor<T> {
+    //     self.max_along(0..self.ndims())
+    // }
+    //
+    // pub fn min(&self) -> Tensor<T> {
+    //     self.min_along(0..self.ndims())
+    // }
 
     pub fn sum_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|x| x.flatiter().sum::<T>().into(), axes)
+        self.reduce(|val, acc| val + acc, axes)
     }
 
     pub fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|x| x.flatiter().product::<T>().into(), axes)
+        self.reduce(|val, acc| val * acc, axes)
     }
 
-    pub fn mean_along(&self, axes: impl ToVec<usize>) -> Tensor<T::AsFloatType> {
-        let axes = axes.to_vec();
+    // pub fn mean_along(&self, axes: impl ToVec<usize>) -> Tensor<T::AsFloatType> {
+    //     let axes = axes.to_vec();
+    //
+    //     let mut n = 1;
+    //     for &axis in axes.iter() {
+    //         n *= self.shape[axis];
+    //     }
+    //     let n: T::AsFloatType = (n as f32).into();
+    //
+    //     self.reduce(|val, acc| val + acc, axes)
+    // }
+    //
+    // pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+    //     self.reduce(|val, acc| max(val, acc), axes)
+    // }
+    //
+    // pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+    //     self.reduce(|val, acc| min(val, acc), axes)
+    // }
+}
 
-        let mut n = 1;
-        for &axis in axes.iter() {
-            n *= self.shape[axis];
-        }
-        let n: T::AsFloatType = (n as f32).into();
+#[cfg(test)]
+mod tests {
+    use crate::reduce::reduced_shape_and_stride;
 
-        self.reduce(|x| x.flatiter().sum::<T>().to_float() / n, axes)
-    }
+    #[test]
+    fn test_reduce_shape_and_stride() {
+        let shape = vec![4, 2, 3];
 
-    pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|x| x.flatiter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap(), axes)
-    }
+        let correct_shape = vec![2, 3];
+        let correct_stride = vec![0, 3, 1];
+        let (new_shape, new_stride) = reduced_shape_and_stride(&vec![0], &shape);
+        assert_eq!(new_shape, correct_shape);
+        assert_eq!(new_stride, correct_stride);
 
-    pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|x| x.flatiter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap(), axes)
+        let correct_shape = vec![4, 3];
+        let correct_stride = vec![3, 0, 1];
+        let (new_shape, new_stride) = reduced_shape_and_stride(&vec![1], &shape);
+        assert_eq!(new_shape, correct_shape);
+        assert_eq!(new_stride, correct_stride);
+
+        let correct_shape = vec![4, 2];
+        let correct_stride = vec![2, 1, 0];
+        let (new_shape, new_stride) = reduced_shape_and_stride(&vec![2], &shape);
+        assert_eq!(new_shape, correct_shape);
+        assert_eq!(new_stride, correct_stride);
+
+        let correct_shape = vec![3];
+        let correct_stride = vec![0, 0, 1];
+        let (new_shape, new_stride) = reduced_shape_and_stride(&vec![0, 1], &shape);
+        assert_eq!(new_shape, correct_shape);
+        assert_eq!(new_stride, correct_stride);
+
+        let correct_shape = vec![2];
+        let correct_stride = vec![0, 1, 0];
+        let (new_shape, new_stride) = reduced_shape_and_stride(&vec![0, 2], &shape);
+        assert_eq!(new_shape, correct_shape);
+        assert_eq!(new_stride, correct_stride);
+
+        let correct_shape = vec![4];
+        let correct_stride = vec![1, 0, 0];
+        let (new_shape, new_stride) = reduced_shape_and_stride(&vec![1, 2], &shape);
+        assert_eq!(new_shape, correct_shape);
+        assert_eq!(new_stride, correct_stride);
     }
 }
