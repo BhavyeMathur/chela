@@ -11,13 +11,13 @@ class TensorSum(TimingSuite):
 
     @measure_performance("NumPy")
     def run(self):
-        np.sum(self.ndarray, axis=0)
+        self.ndarray.sum(axis=0)
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        torch.sum(self.tensor_cpu, 0)
+        self.tensor_cpu.sum(dim=0)
 
-    @measure_rust_performance("Chela CPU", target="ones_f32")
+    @measure_rust_performance("Chela CPU", target="sum_f32")
     def run(self, executable):
         return self.run_rust(executable, self.n)
 

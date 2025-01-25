@@ -3,12 +3,12 @@ use std::env;
 
 use cpu_time::ProcessTime;
 
-
 fn profile(size: usize) -> u128 {
-    let mut tensor: Tensor<f32> = Tensor::rand(size);
+    let tensor1: Tensor<f32> = Tensor::rand(size);
+    let tensor2: Tensor<f32> = Tensor::rand(size);
 
     let start = ProcessTime::now();
-    tensor.sum_along([]);
+    let _ = tensor1 + tensor2;
     start.elapsed().as_nanos()
 }
 

@@ -504,3 +504,10 @@ fn test_fill_slice() {
     a.slice(s![1, ..]).fill(true);
     assert_eq!(a, correct);
 }
+
+#[test]
+fn test() {
+    let a: Tensor<f32> = Tensor::rand(10);
+    let out = a.sum_along(Axis(0));
+    println!("{:?}", out);
+}
