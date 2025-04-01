@@ -66,7 +66,23 @@ impl<T: RawDataType> Tensor<'_, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(out_shape, output) }
     }
 
+    unsafe fn reduce_contiguous(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
+        let mut output = default;
+
+        let mut src: *mut T = self.ptr.as_ptr();
+        for _ in 0..self.len {
+            output = func(*src, output);
+            src = src.add(1);
+        }
+
+        Tensor::scalar(output)
+    }
+
     pub fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
+        if self.is_contiguous() {
+            return unsafe { self.reduce_contiguous(func, default) };
+        }
+
         let mut output = default;
 
         for el in self.flatiter() {
