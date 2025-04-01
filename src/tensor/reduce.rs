@@ -46,7 +46,7 @@ fn reduced_shape_and_stride(axes: &[usize], shape: &[usize]) -> (Vec<usize>, Vec
 
 
 impl<T: RawDataType> Tensor<'_, T> {
-    pub fn reduce(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T> {
+    pub fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T> {
         let (out_shape, map_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
         let (map_shape, map_stride) = collapse_to_uniform_stride(&self.shape, &map_stride);
 
@@ -65,36 +65,60 @@ impl<T: RawDataType> Tensor<'_, T> {
 
         unsafe { Tensor::from_contiguous_owned_buffer(out_shape, output) }
     }
+
+    pub fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
+        let mut output = default;
+
+        for el in self.flatiter() {
+            output = func(el, output);
+        }
+
+        Tensor::scalar(output)
+    }
 }
 
 fn reduce_sum<T: NumericDataType>(value: T, accumulator: T) -> T {
     accumulator + value
 }
 
-impl<T: NumericDataType + From<bool>> Tensor<'_, T> {
-    pub fn sum(&self) -> Tensor<T> {
-        self.sum_along(0..self.ndims())
-    }
+fn reduce_product<T: NumericDataType>(value: T, accumulator: T) -> T {
+    accumulator * value
+}
 
-    pub fn product(&self) -> Tensor<T> {
-        self.product_along(0..self.ndims())
+fn reduce_min<T: NumericDataType + Ord>(value: T, accumulator: T) -> T {
+    min(accumulator, value)
+}
+
+fn reduce_max<T: NumericDataType + Ord>(value: T, accumulator: T) -> T {
+    max(accumulator, value)
+}
+
+impl<T: NumericDataType + num::Zero> Tensor<'_, T> {
+    pub fn sum(&self) -> Tensor<T> {
+        self.reduce(reduce_sum, T::zero())
     }
 
     pub fn sum_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|val, acc| val + acc, axes, false.into())
-    }
-
-    pub fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|val, acc| val * acc, axes, true.into())
+        self.reduce_along(reduce_sum, axes, T::zero())
     }
 }
 
-impl<T: NumericDataType + From<bool>> Tensor<'_, T>
+impl<T: NumericDataType + num::One> Tensor<'_, T> {
+    pub fn product(&self) -> Tensor<T> {
+        self.reduce(reduce_product, T::one())
+    }
+
+    pub fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce_along(reduce_product, axes, T::one())
+    }
+}
+
+impl<T: NumericDataType + num::Zero> Tensor<'_, T>
 where
         for<'a> Tensor<'a, T>: Div<T::AsFloatType>,
 {
     pub fn mean(&self) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
-        self.mean_along(0..self.ndims())
+        self.reduce(reduce_sum, T::zero()) / (self.size() as f32).into()
     }
 
     pub fn mean_along(&self, axes: impl ToVec<usize>) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
@@ -106,25 +130,25 @@ where
         }
         let n: T::AsFloatType = (n as f32).into();
 
-        self.reduce(|val, acc| val + acc, axes, false.into()) / n
+        self.reduce_along(reduce_sum, axes, T::zero()) / n
     }
 }
 
 impl<T: NumericDataType + num::Bounded + Ord> Tensor<'_, T> {
     pub fn max(&self) -> Tensor<T> {
-        self.max_along(0..self.ndims())
+        self.reduce(reduce_max, T::min_value())
     }
 
     pub fn min(&self) -> Tensor<T> {
-        self.min_along(0..self.ndims())
+        self.reduce(reduce_min, T::max_value())
     }
 
     pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|val, acc| max(val, acc), axes, T::min_value())
+        self.reduce_along(reduce_max, axes, T::min_value())
     }
 
     pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|val, acc| min(val, acc), axes, T::max_value())
+        self.reduce_along(reduce_min, axes, T::max_value())
     }
 }
 

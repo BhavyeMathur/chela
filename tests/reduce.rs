@@ -87,6 +87,7 @@ fn test_reduce_max() {
     assert_eq!(output, correct);
 }
 
+// TODO
 // #[test]
 // fn test_reduce_min_f32() {
 //     let tensor = Tensor::from([[1.0f32, 3.0], [2.0, 4.0], [3.0, 5.0]]);

@@ -22,6 +22,6 @@ class TensorSum(TimingSuite):
         return self.run_rust(executable, self.n)
 
 if __name__ == "__main__":
-    sizes = [2 ** n for n in range(9, 25)]
+    sizes = [2 ** n for n in range(9, 24)]
     results = TensorSum.profile_each(sizes, n=10)
     plot_results(sizes, results, "tensor.sum() CPU time vs length")
