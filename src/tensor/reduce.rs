@@ -1,10 +1,20 @@
 use std::collections::VecDeque;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
+use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
 
 
+// returns a tuple (output_shape, map_stride)
+// output_shape is simply the shape of the output tensor after the reduction operation
+//
+// map_stride maps a flat iteration over the input tensor to iteration over the output tensor.
+// for example, if the reduce operation is addition,
+// the reduce() function iterates through the input tensor element-by-element
+// map_stride tells reduce() how to iterate over the output tensor
+// to add each element to the correct location.
+// it should now make sense why map_stride contains 0s on every reduced axis
 fn reduced_shape_and_stride(axes: &[usize], shape: &[usize]) -> (Vec<usize>, Vec<usize>) {
     let ndims = shape.len();
     let mut axis_mask = vec![false; ndims];
@@ -36,12 +46,13 @@ fn reduced_shape_and_stride(axes: &[usize], shape: &[usize]) -> (Vec<usize>, Vec
 
 impl<T: RawDataType> Tensor<'_, T> {
     pub fn reduce(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>) -> Tensor<T> {
-        let (new_shape, new_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
+        let (out_shape, map_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
+        let (map_shape, map_stride) = collapse_to_uniform_stride(&self.shape, &map_stride);
 
-        let mut output = vec![Default::default(); new_shape.iter().product()];
+        let mut output = vec![Default::default(); out_shape.iter().product()];
 
-        let mut dst_indices = FlatIndexGenerator::from(&self.shape, &new_stride);
-        let mut dst: *mut T = output.as_mut_ptr();
+        let mut dst_indices = FlatIndexGenerator::from(&map_shape, &map_stride);
+        let dst: *mut T = output.as_mut_ptr();
 
         for el in self.flatiter() {
             unsafe {
@@ -51,7 +62,7 @@ impl<T: RawDataType> Tensor<'_, T> {
             }
         }
 
-        unsafe { Tensor::from_contiguous_owned_buffer(new_shape, output) }
+        unsafe { Tensor::from_contiguous_owned_buffer(out_shape, output) }
     }
 }
 
@@ -115,6 +126,14 @@ mod tests {
 
     #[test]
     fn test_reduce_shape_and_stride() {
+        let shape = vec![3, 2];
+
+        let correct_shape = vec![3];
+        let correct_stride = vec![1, 0];
+        let (new_shape, new_stride) = reduced_shape_and_stride(&vec![1], &shape);
+        assert_eq!(new_shape, correct_shape);
+        assert_eq!(new_stride, correct_stride);
+
         let shape = vec![4, 2, 3];
 
         let correct_shape = vec![2, 3];
