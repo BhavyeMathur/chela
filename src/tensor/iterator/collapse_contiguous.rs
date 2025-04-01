@@ -71,8 +71,9 @@ pub(in crate::tensor) fn collapse_to_uniform_stride(shape: &[usize], stride: &[u
 
     for i in 1..ndims {
         // check if this dimension can be collapsed into the previous one
-        if stride[i] == new_shape[last_idx] * new_stride[last_idx] {
+        if new_stride[last_idx] == shape[i] * stride[i] {
             new_shape[last_idx] *= shape[i];  // collapse by merging dimension into the previous one
+            new_stride[last_idx] = stride[i];
         } else {
             new_shape.push(shape[i]);  // otherwise, start a new dimension
             new_stride.push(stride[i]);
@@ -87,6 +88,7 @@ pub(in crate::tensor) fn collapse_to_uniform_stride(shape: &[usize], stride: &[u
 pub(in crate::tensor) fn has_uniform_stride(shape: &[usize], stride: &[usize]) -> Option<usize> {
     let (_, new_stride) = collapse_to_uniform_stride(shape, stride);
 
+    // TODO don't need to calculate entire collapsed stride so this can be faster
     if new_stride.len() == 1 {
         return Some(new_stride[0]);
     }
@@ -129,6 +131,7 @@ mod tests {
     }
 
     // courtesy of ChatGPT
+    #[test]
     fn test_collapse_to_uniform_stride() {
         // Example 1
         let shape = [2, 3];
@@ -199,5 +202,19 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [2, 3]);
         assert_eq!(b, [4, 2]); // Cannot collapse due to non-contiguous strides.
+
+        // Edge Case: Zero stride
+        let shape = [3, 3, 3];
+        let stride = [0, 1, 0];
+        let (a, b) = collapse_to_uniform_stride(&shape, &stride);
+        assert_eq!(a, [3, 3, 3]);
+        assert_eq!(b, [0, 1, 0]);
+
+        // Edge Case: Zero stride with some dimensions collapsed
+        let shape = [5, 2, 3, 3, 4, 3];
+        let stride = [6, 3, 0, 4, 1, 0];
+        let (a, b) = collapse_to_uniform_stride(&shape, &stride);
+        assert_eq!(a, [10, 3, 12, 3]);
+        assert_eq!(b, [3, 0, 1, 0]);
     }
 }
