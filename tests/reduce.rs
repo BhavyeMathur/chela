@@ -61,32 +61,32 @@ fn test_reduce_mean() {
     assert_eq!(output, correct);
 }
 
-// #[test]
-// fn test_reduce_min() {
-//     let tensor = Tensor::from([[1, 3], [2, 4], [3, 5]]);
-//
-//     let correct = Tensor::from([1, 2, 3]);
-//     let output = tensor.min_along(1);
-//     assert_eq!(output, correct);
-//
-//     let correct = Tensor::scalar(1);
-//     let output = tensor.min();
-//     assert_eq!(output, correct);
-// }
-//
-// #[test]
-// fn test_reduce_max() {
-//     let tensor = Tensor::from([[1, 3], [2, 4], [3, 5]]);
-//
-//     let correct = Tensor::from([3, 4, 5]);
-//     let output = tensor.max_along(1);
-//     assert_eq!(output, correct);
-//
-//     let correct = Tensor::scalar(5);
-//     let output = tensor.max();
-//     assert_eq!(output, correct);
-// }
-//
+#[test]
+fn test_reduce_min() {
+    let tensor = Tensor::from([[1, 3], [2, 4], [3, 5]]);
+
+    let correct = Tensor::from([1, 2, 3]);
+    let output = tensor.min_along(1);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(1);
+    let output = tensor.min();
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_reduce_max() {
+    let tensor = Tensor::from([[1, 3], [2, 4], [3, 5]]);
+
+    let correct = Tensor::from([3, 4, 5]);
+    let output = tensor.max_along(1);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(5);
+    let output = tensor.max();
+    assert_eq!(output, correct);
+}
+
 // #[test]
 // fn test_reduce_min_f32() {
 //     let tensor = Tensor::from([[1.0f32, 3.0], [2.0, 4.0], [3.0, 5.0]]);

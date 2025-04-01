@@ -3,6 +3,7 @@ use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
+use std::cmp::{max, min};
 use std::collections::VecDeque;
 use std::ops::Div;
 
@@ -79,14 +80,6 @@ impl<T: NumericDataType + From<bool>> Tensor<'_, T> {
         self.product_along(0..self.ndims())
     }
 
-    // pub fn max(&self) -> Tensor<T> {
-    //     self.max_along(0..self.ndims())
-    // }
-    //
-    // pub fn min(&self) -> Tensor<T> {
-    //     self.min_along(0..self.ndims())
-    // }
-
     pub fn sum_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
         self.reduce(|val, acc| val + acc, axes, false.into())
     }
@@ -94,14 +87,6 @@ impl<T: NumericDataType + From<bool>> Tensor<'_, T> {
     pub fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
         self.reduce(|val, acc| val * acc, axes, true.into())
     }
-
-    // pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-    //     self.reduce(|val, acc| max(val, acc), axes, 0)
-    // }
-
-    // pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-    //     self.reduce(|val, acc| min(val, acc), axes)
-    // }
 }
 
 impl<T: NumericDataType + From<bool>> Tensor<'_, T>
@@ -122,6 +107,24 @@ where
         let n: T::AsFloatType = (n as f32).into();
 
         self.reduce(|val, acc| val + acc, axes, false.into()) / n
+    }
+}
+
+impl<T: NumericDataType + num::Bounded + Ord> Tensor<'_, T> {
+    pub fn max(&self) -> Tensor<T> {
+        self.max_along(0..self.ndims())
+    }
+
+    pub fn min(&self) -> Tensor<T> {
+        self.min_along(0..self.ndims())
+    }
+
+    pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce(|val, acc| max(val, acc), axes, T::min_value())
+    }
+
+    pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce(|val, acc| min(val, acc), axes, T::max_value())
     }
 }
 
