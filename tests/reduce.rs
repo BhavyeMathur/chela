@@ -44,23 +44,23 @@ fn test_reduce_multiply() {
     assert_eq!(output, correct);
 }
 
-// #[test]
-// fn test_reduce_mean() {
-//     let tensor = Tensor::from([[1, 3], [2, 4], [3, 5]]);
-//
-//     let correct = Tensor::from([2.0f32, 3.0, 4.0]);
-//     let output = tensor.mean_along(1);
-//     assert_eq!(output, correct);
-//
-//     let correct = Tensor::from([[1.0f32, 3.0], [2.0, 4.0], [3.0, 5.0]]);
-//     let output = tensor.mean_along([]);
-//     assert_eq!(output, correct);
-//
-//     let correct = Tensor::scalar(3.0f32);
-//     let output = tensor.mean();
-//     assert_eq!(output, correct);
-// }
-//
+#[test]
+fn test_reduce_mean() {
+    let tensor = Tensor::from([[1f32, 3.0], [2.0, 4.0], [3.0, 5.0]]);
+
+    let correct = Tensor::from([2.0f32, 3.0, 4.0]);
+    let output = tensor.mean_along(1);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([[1.0f32, 3.0], [2.0, 4.0], [3.0, 5.0]]);
+    let output = tensor.mean_along([]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(3.0f32);
+    let output = tensor.mean();
+    assert_eq!(output, correct);
+}
+
 // #[test]
 // fn test_reduce_min() {
 //     let tensor = Tensor::from([[1, 3], [2, 4], [3, 5]]);

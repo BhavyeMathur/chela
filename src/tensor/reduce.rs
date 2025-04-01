@@ -1,10 +1,10 @@
-use std::collections::VecDeque;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
-
+use std::collections::VecDeque;
+use std::ops::Div;
 
 // returns a tuple (output_shape, map_stride)
 // output_shape is simply the shape of the output tensor after the reduction operation
@@ -45,11 +45,11 @@ fn reduced_shape_and_stride(axes: &[usize], shape: &[usize]) -> (Vec<usize>, Vec
 
 
 impl<T: RawDataType> Tensor<'_, T> {
-    pub fn reduce(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>) -> Tensor<T> {
+    pub fn reduce(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T> {
         let (out_shape, map_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
         let (map_shape, map_stride) = collapse_to_uniform_stride(&self.shape, &map_stride);
 
-        let mut output = vec![Default::default(); out_shape.iter().product()];
+        let mut output = vec![default; out_shape.iter().product()];
 
         let mut dst_indices = FlatIndexGenerator::from(&map_shape, &map_stride);
         let dst: *mut T = output.as_mut_ptr();
@@ -70,7 +70,7 @@ fn reduce_sum<T: NumericDataType>(value: T, accumulator: T) -> T {
     accumulator + value
 }
 
-impl<T: NumericDataType> Tensor<'_, T> {
+impl<T: NumericDataType + From<bool>> Tensor<'_, T> {
     pub fn sum(&self) -> Tensor<T> {
         self.sum_along(0..self.ndims())
     }
@@ -79,10 +79,6 @@ impl<T: NumericDataType> Tensor<'_, T> {
         self.product_along(0..self.ndims())
     }
 
-    // pub fn mean(&self) -> Tensor<T::AsFloatType> {
-    //     self.mean_along(0..self.ndims())
-    // }
-    //
     // pub fn max(&self) -> Tensor<T> {
     //     self.max_along(0..self.ndims())
     // }
@@ -92,32 +88,41 @@ impl<T: NumericDataType> Tensor<'_, T> {
     // }
 
     pub fn sum_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|val, acc| val + acc, axes)
+        self.reduce(|val, acc| val + acc, axes, false.into())
     }
 
     pub fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce(|val, acc| val * acc, axes)
+        self.reduce(|val, acc| val * acc, axes, true.into())
     }
 
-    // pub fn mean_along(&self, axes: impl ToVec<usize>) -> Tensor<T::AsFloatType> {
-    //     let axes = axes.to_vec();
-    //
-    //     let mut n = 1;
-    //     for &axis in axes.iter() {
-    //         n *= self.shape[axis];
-    //     }
-    //     let n: T::AsFloatType = (n as f32).into();
-    //
-    //     self.reduce(|val, acc| val + acc, axes)
-    // }
-    //
     // pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-    //     self.reduce(|val, acc| max(val, acc), axes)
+    //     self.reduce(|val, acc| max(val, acc), axes, 0)
     // }
-    //
+
     // pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
     //     self.reduce(|val, acc| min(val, acc), axes)
     // }
+}
+
+impl<T: NumericDataType + From<bool>> Tensor<'_, T>
+where
+        for<'a> Tensor<'a, T>: Div<T::AsFloatType>,
+{
+    pub fn mean(&self) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
+        self.mean_along(0..self.ndims())
+    }
+
+    pub fn mean_along(&self, axes: impl ToVec<usize>) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
+        let axes = axes.to_vec();
+
+        let mut n = 1;
+        for &axis in axes.iter() {
+            n *= self.shape[axis];
+        }
+        let n: T::AsFloatType = (n as f32).into();
+
+        self.reduce(|val, acc| val + acc, axes, false.into()) / n
+    }
 }
 
 #[cfg(test)]
