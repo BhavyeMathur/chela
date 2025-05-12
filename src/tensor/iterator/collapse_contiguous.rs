@@ -75,19 +75,24 @@ pub(in crate::tensor) fn collapse_to_uniform_stride(shape: &[usize], stride: &[u
 }
 
 pub(in crate::tensor) fn has_uniform_stride(shape: &[usize], stride: &[usize]) -> Option<usize> {
-    let (_, new_stride) = collapse_to_uniform_stride(shape, stride);
-
-    // TODO don't need to calculate entire collapsed stride so this can be faster
-    if new_stride.len() == 1 {
-        return Some(new_stride[0]);
+    let ndims = shape.len();
+    if ndims == 0 {
+        return Some(0);
     }
-    None
+
+    for i in 1..ndims {
+        if stride[i - 1] != shape[i] * stride[i] {
+            return None;
+        }
+    }
+
+    Some(stride[ndims - 1])
 }
 
 #[cfg(test)]
 mod tests {
     use super::collapse_contiguous;
-    use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
+    use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride, has_uniform_stride};
     use crate::{s, Tensor};
 
     #[test]
@@ -118,7 +123,6 @@ mod tests {
         assert_eq!(stride, [6, 1]);
     }
 
-    // courtesy of ChatGPT
     #[test]
     fn test_collapse_to_uniform_stride() {
         // Example 1
@@ -127,6 +131,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [6]);
         assert_eq!(b, [1]); // Collapsed stride should match the inner-most dimension's stride.
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
 
         // Example 2
         let shape = [2, 3];
@@ -134,6 +139,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [6]);
         assert_eq!(b, [2]); // Collapsed as strides are consistent.
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(2));
 
         // Example 3
         let shape = [2, 3];
@@ -141,6 +147,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [2, 3]);
         assert_eq!(b, [5, 2]); // Cannot collapse due to inconsistent strides.
+        assert_eq!(has_uniform_stride(&shape, &stride), None);
 
         // Example 4
         let shape = [2, 2, 2];
@@ -148,6 +155,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [4, 2]);
         assert_eq!(b, [3, 2]); // Collapsed outer two dimensions.
+        assert_eq!(has_uniform_stride(&shape, &stride), None);
 
         // Additional Example 1
         let shape = [3, 4, 5];
@@ -155,6 +163,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [60]);
         assert_eq!(b, [1]); // Fully collapsed due to consistent strides.
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
 
         // Additional Example 2
         let shape = [4, 5, 6];
@@ -162,6 +171,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [120]);
         assert_eq!(b, [1]); // Fully collapsed due to consistent strides.
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
 
         // Additional Example 3
         let shape = [3, 3, 3];
@@ -169,6 +179,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [27]);
         assert_eq!(b, [1]); // Fully collapsed into a single dimension.
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
 
         // Edge Case: Empty shape and stride
         let shape = [];
@@ -176,6 +187,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, []);
         assert_eq!(b, []); // Should handle empty inputs correctly.
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(0));
 
         // Edge Case: Single dimension
         let shape = [10];
@@ -183,6 +195,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [10]);
         assert_eq!(b, [1]); // Single dimension remains unchanged.
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
 
         // Edge Case: Non-contiguous strides
         let shape = [2, 3];
@@ -190,6 +203,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [2, 3]);
         assert_eq!(b, [4, 2]); // Cannot collapse due to non-contiguous strides.
+        assert_eq!(has_uniform_stride(&shape, &stride), None);
 
         // Edge Case: Zero stride
         let shape = [3, 3, 3];
@@ -197,6 +211,7 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [3, 3, 3]);
         assert_eq!(b, [0, 1, 0]);
+        assert_eq!(has_uniform_stride(&shape, &stride), None);
 
         // Edge Case: Zero stride with some dimensions collapsed
         let shape = [5, 2, 3, 3, 4, 3];
@@ -204,5 +219,6 @@ mod tests {
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [10, 3, 12, 3]);
         assert_eq!(b, [3, 0, 1, 0]);
+        assert_eq!(has_uniform_stride(&shape, &stride), None);
     }
 }
