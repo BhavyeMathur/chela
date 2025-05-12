@@ -126,26 +126,28 @@ impl<T: IntegerDataType> TensorNumericReduce<T> for Tensor<'_, T> {}
 impl TensorNumericReduce<f32> for Tensor<'_, f32> {
     #[cfg(use_apple_accelerate)]
     fn sum(&self) -> Tensor<f32> {
-        if self.is_contiguous() {
-            let mut output = 0.0;
-            unsafe { vDSP_sve(self.ptr.as_ptr(), 1, std::ptr::addr_of_mut!(output), self.len as isize); }
-            return Tensor::scalar(output);
+        match self.has_uniform_stride() {
+            None => { self.reduce(|val, acc| acc + val, 0.0) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_sve(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
         }
-
-        self.reduce(|val, acc| acc + val, 0.0)
     }
 }
 
 impl TensorNumericReduce<f64> for Tensor<'_, f64> {
     #[cfg(use_apple_accelerate)]
     fn sum(&self) -> Tensor<f64> {
-        if self.is_contiguous() {
-            let mut output = 0.0;
-            unsafe { vDSP_sveD(self.ptr.as_ptr(), 1, std::ptr::addr_of_mut!(output), self.len as isize); }
-            return Tensor::scalar(output);
+        match self.has_uniform_stride() {
+            None => { self.reduce(|val, acc| acc + val, 0.0) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_sveD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
         }
-
-        self.reduce(|val, acc| acc + val, 0.0)
     }
 }
 

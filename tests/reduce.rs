@@ -28,6 +28,109 @@ fn test_reduce_sum_f32() {
 }
 
 #[test]
+fn test_reduce_sum_slice_u128() {
+    let tensor = Tensor::from([
+        [[1u128, 5, 3], [2, 9, 4]],
+        [[2, 6, 4], [3, 8, 3]],
+        [[3, 7, 5], [4, 7, 2]],
+        [[4, 8, 6], [5, 6, 1]]
+    ]);
+    let slice = tensor.slice(s![1..3, .., 0..=1]);
+
+    let correct = Tensor::from([12u128, 28]);
+    let output = slice.sum_along([0, 1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(40u128);
+    let output = slice.sum();
+    assert_eq!(output, correct);
+
+    // uniform stride but non-contiguous
+    let slice = tensor.slice(s![.., .., 0]);
+
+    let correct = Tensor::scalar(24u128);
+    let output = slice.sum();
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([3u128, 5, 7, 9]);
+    let output = slice.sum_along([1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([10u128, 14]);
+    let output = slice.sum_along([0]);
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_reduce_sum_slice_f32() {
+    let tensor = Tensor::from([
+        [[1f32, 5.0, 3.0], [2.0, 9.0, 4.0]],
+        [[2.0, 6.0, 4.0], [3.0, 8.0, 3.0]],
+        [[3.0, 7.0, 5.0], [4.0, 7.0, 2.0]],
+        [[4.0, 8.0, 6.0], [5.0, 6.0, 1.0]]
+    ]);
+    // non-uniform stride, non-contiguous
+    let slice = tensor.slice(s![1..3, .., 0..=1]);
+
+    let correct = Tensor::from([12f32, 28.0]);
+    let output = slice.sum_along([0, 1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(40.0);
+    let output = slice.sum();
+    assert_eq!(output, correct);
+
+    // uniform stride but non-contiguous
+    let slice = tensor.slice(s![.., .., 0]);
+
+    let correct = Tensor::scalar(24.0);
+    let output = slice.sum();
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([3f32, 5.0, 7.0, 9.0]);
+    let output = slice.sum_along([1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([10f32, 14.0]);
+    let output = slice.sum_along([0]);
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_reduce_sum_slice_f64() {
+    let tensor = Tensor::from([
+        [[1f64, 5.0, 3.0], [2.0, 9.0, 4.0]],
+        [[2.0, 6.0, 4.0], [3.0, 8.0, 3.0]],
+        [[3.0, 7.0, 5.0], [4.0, 7.0, 2.0]],
+        [[4.0, 8.0, 6.0], [5.0, 6.0, 1.0]]
+    ]);
+    let slice = tensor.slice(s![1..3, .., 0..=1]);
+
+    let correct = Tensor::from([12f64, 28.0]);
+    let output = slice.sum_along([0, 1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(40.0);
+    let output = slice.sum();
+    assert_eq!(output, correct);
+
+    // uniform stride but non-contiguous
+    let slice = tensor.slice(s![.., .., 0]);
+
+    let correct = Tensor::scalar(24.0);
+    let output = slice.sum();
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([3f64, 5.0, 7.0, 9.0]);
+    let output = slice.sum_along([1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([10f64, 14.0]);
+    let output = slice.sum_along([0]);
+    assert_eq!(output, correct);
+}
+
+#[test]
 fn test_reduce_sum_f64() {
     let tensor = Tensor::from([[1f64, 1.0], [2.0, 2.0], [3.0, 3.0]]);
 
