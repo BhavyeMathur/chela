@@ -7,6 +7,8 @@ use crate::traits::to_vec::ToVec;
 use crate::Tensor;
 use std::collections::VecDeque;
 use std::ops::Div;
+use num::Bounded;
+use crate::accelerate::cblas::{vDSP_maxv, vDSP_maxvD, vDSP_minv, vDSP_minvD};
 
 // returns a tuple (output_shape, map_stride)
 // output_shape is simply the shape of the output tensor after the reduction operation
@@ -117,12 +119,28 @@ pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
     fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
         self.reduce_along(|val, acc| acc * val, axes, T::one())
     }
+
+    fn max(&self) -> Tensor<T> {
+        self.reduce(partial_max, T::min_value())
+    }
+
+    fn min(&self) -> Tensor<T> {
+        self.reduce(partial_min, T::max_value())
+    }
+
+    fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce_along(partial_max, axes, T::min_value())
+    }
+
+    fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce_along(partial_min, axes, T::max_value())
+    }
 }
 
 impl<T: IntegerDataType> TensorNumericReduce<T> for Tensor<'_, T> {}
 
+#[cfg(use_apple_accelerate)]
 impl TensorNumericReduce<f32> for Tensor<'_, f32> {
-    #[cfg(use_apple_accelerate)]
     fn sum(&self) -> Tensor<f32> {
         match self.has_uniform_stride() {
             None => { self.reduce(|val, acc| acc + val, 0.0) }
@@ -133,16 +151,60 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
             }
         }
     }
+
+    fn max(&self) -> Tensor<f32> {
+        match self.has_uniform_stride() {
+            None => { self.reduce(partial_max, f32::min_value()) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_maxv(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
+        }
+    }
+
+    fn min(&self) -> Tensor<f32> {
+        match self.has_uniform_stride() {
+            None => { self.reduce(partial_min, f32::max_value()) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_minv(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
+        }
+    }
 }
 
+#[cfg(use_apple_accelerate)]
 impl TensorNumericReduce<f64> for Tensor<'_, f64> {
-    #[cfg(use_apple_accelerate)]
     fn sum(&self) -> Tensor<f64> {
         match self.has_uniform_stride() {
             None => { self.reduce(|val, acc| acc + val, 0.0) }
             Some(stride) => {
                 let mut output = 0.0;
                 unsafe { vDSP_sveD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
+        }
+    }
+
+    fn max(&self) -> Tensor<f64> {
+        match self.has_uniform_stride() {
+            None => { self.reduce(partial_max, f64::min_value()) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_maxvD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
+        }
+    }
+
+    fn min(&self) -> Tensor<f64> {
+        match self.has_uniform_stride() {
+            None => { self.reduce(partial_min, f64::max_value()) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_minvD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -168,32 +230,6 @@ where
         let n: T::AsFloatType = (n as f32).into();
 
         self.sum_along(axes) / n
-    }
-}
-
-fn partial_max<T: PartialOrd>(a: T, b: T) -> T {
-    if a.partial_cmp(&b) == Some(std::cmp::Ordering::Greater) { a } else { b }
-}
-
-fn partial_min<T: PartialOrd>(a: T, b: T) -> T {
-    if a.partial_cmp(&b) == Some(std::cmp::Ordering::Less) { a } else { b }
-}
-
-impl<T: NumericDataType + PartialOrd> Tensor<'_, T> {
-    pub fn max(&self) -> Tensor<T> {
-        self.reduce(partial_max, T::min_value())
-    }
-
-    pub fn min(&self) -> Tensor<T> {
-        self.reduce(partial_min, T::max_value())
-    }
-
-    pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce_along(partial_max, axes, T::min_value())
-    }
-
-    pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce_along(partial_min, axes, T::max_value())
     }
 }
 
@@ -249,4 +285,12 @@ mod tests {
         assert_eq!(new_shape, correct_shape);
         assert_eq!(new_stride, correct_stride);
     }
+}
+
+fn partial_max<T: PartialOrd>(a: T, b: T) -> T {
+    if a.partial_cmp(&b) == Some(std::cmp::Ordering::Greater) { a } else { b }
+}
+
+fn partial_min<T: PartialOrd>(a: T, b: T) -> T {
+    if a.partial_cmp(&b) == Some(std::cmp::Ordering::Less) { a } else { b }
 }
