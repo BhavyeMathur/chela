@@ -22,14 +22,14 @@ impl<T: RawDataType> Tensor<'_, T> {
         self.ptr = self.ptr.offset(offset);
     }
 
+    #[inline]
     pub fn has_uniform_stride(&self) -> Option<usize> {
-        let (_, new_stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
-
-        // TODO don't need to calculate entire collapsed stride so this can be faster
-        if new_stride.len() == 1 {
-            return Some(new_stride[0]);
+        if !self.flags.contains(TensorFlags::UniformStride) {
+            return None;
         }
-        None
+
+        let (_, new_stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
+        Some(new_stride[0])
     }
 }
 

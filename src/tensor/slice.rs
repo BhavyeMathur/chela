@@ -2,18 +2,30 @@ use crate::axis::indexer::Indexer;
 
 use crate::axis::Axis;
 use crate::dtype::RawDataType;
-use crate::iterator::collapse_contiguous::is_contiguous;
+use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::tensor::flags::TensorFlags;
 use crate::Tensor;
 
 pub(super) fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
     flags -= TensorFlags::Owned;
 
-    if is_contiguous(shape, stride) {
-        flags | TensorFlags::Contiguous
-    } else {
-        flags - TensorFlags::Contiguous
+    match has_uniform_stride(shape, stride) {
+        None => {
+            flags -= TensorFlags::UniformStride;
+            flags -= TensorFlags::Contiguous;
+        }
+        Some(stride) => {
+            flags |= TensorFlags::UniformStride;
+
+            if stride <= 1 {
+                flags |= TensorFlags::Contiguous;
+            } else {
+                flags -= TensorFlags::Contiguous;
+            }
+        }
     }
+
+    flags
 }
 
 fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {

@@ -105,6 +105,8 @@ fn test_reduce_sum_slice_f64() {
         [[4.0, 8.0, 6.0], [5.0, 6.0, 1.0]]
     ]);
     let slice = tensor.slice(s![1..3, .., 0..=1]);
+    assert!(!slice.is_contiguous());
+    assert!(slice.has_uniform_stride().is_none());
 
     let correct = Tensor::from([12f64, 28.0]);
     let output = slice.sum_along([0, 1]);
@@ -116,6 +118,8 @@ fn test_reduce_sum_slice_f64() {
 
     // uniform stride but non-contiguous
     let slice = tensor.slice(s![.., .., 0]);
+    assert!(!slice.is_contiguous());
+    assert!(slice.has_uniform_stride().is_some());
 
     let correct = Tensor::scalar(24.0);
     let output = slice.sum();
