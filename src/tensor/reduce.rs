@@ -1,13 +1,16 @@
-use crate::accelerate::cblas::{vDSP_sve, vDSP_sveD};
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
-use std::any::TypeId;
 use std::cmp::{max, min};
 use std::collections::VecDeque;
 use std::ops::Div;
+
+#[cfg(use_apple_accelerate)]
+use crate::accelerate::cblas::{vDSP_sve, vDSP_sveD};
+#[cfg(use_apple_accelerate)]
+use std::any::TypeId;
 
 // returns a tuple (output_shape, map_stride)
 // output_shape is simply the shape of the output tensor after the reduction operation
