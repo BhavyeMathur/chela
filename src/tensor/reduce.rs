@@ -1,4 +1,4 @@
-use crate::dtype::{NumericDataType, RawDataType};
+use crate::dtype::{IntegerDataType, NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
@@ -9,8 +9,6 @@ use std::ops::Div;
 
 #[cfg(use_apple_accelerate)]
 use crate::accelerate::cblas::{vDSP_sve, vDSP_sveD};
-#[cfg(use_apple_accelerate)]
-use std::any::TypeId;
 
 // returns a tuple (output_shape, map_stride)
 // output_shape is simply the shape of the output tensor after the reduction operation
@@ -50,7 +48,27 @@ fn reduced_shape_and_stride(axes: &[usize], shape: &[usize]) -> (Vec<usize>, Vec
 }
 
 impl<T: RawDataType> Tensor<'_, T> {
-    pub fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T> {
+    unsafe fn reduce_contiguous(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
+        let mut output = default;
+
+        let mut src: *mut T = self.ptr.as_ptr();
+        for _ in 0..self.len {
+            output = func(*src, output);
+            src = src.add(1);
+        }
+
+        Tensor::scalar(output)
+    }
+}
+
+pub trait TensorReduce<T: RawDataType> {
+    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T>;
+
+    fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T>;
+}
+
+impl<T: RawDataType> TensorReduce<T> for Tensor<'_, T> {
+    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T> {
         let (out_shape, map_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
         let (map_shape, map_stride) = collapse_to_uniform_stride(&self.shape, &map_stride);
 
@@ -70,19 +88,7 @@ impl<T: RawDataType> Tensor<'_, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(out_shape, output) }
     }
 
-    unsafe fn reduce_contiguous(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
-        let mut output = default;
-
-        let mut src: *mut T = self.ptr.as_ptr();
-        for _ in 0..self.len {
-            output = func(*src, output);
-            src = src.add(1);
-        }
-
-        Tensor::scalar(output)
-    }
-
-    pub fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
+    fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
         if self.is_contiguous() {
             return unsafe { self.reduce_contiguous(func, default) };
         }
@@ -97,60 +103,56 @@ impl<T: RawDataType> Tensor<'_, T> {
     }
 }
 
-fn reduce_sum<T: NumericDataType>(value: T, accumulator: T) -> T {
-    accumulator + value
+pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
+    fn sum(&self) -> Tensor<T> {
+        self.reduce(|val, acc| acc + val, T::zero())
+    }
+
+    fn sum_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce_along(|val, acc| acc + val, axes, T::zero())
+    }
+
+    fn product(&self) -> Tensor<T> {
+        self.reduce(|val, acc| acc * val, T::one())
+    }
+
+    fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce_along(|val, acc| acc * val, axes, T::one())
+    }
 }
 
-fn reduce_product<T: NumericDataType>(value: T, accumulator: T) -> T {
-    accumulator * value
-}
+impl<T: IntegerDataType> TensorNumericReduce<T> for Tensor<'_, T> {}
 
-fn reduce_min<T: NumericDataType + Ord>(value: T, accumulator: T) -> T {
-    min(accumulator, value)
-}
-
-fn reduce_max<T: NumericDataType + Ord>(value: T, accumulator: T) -> T {
-    max(accumulator, value)
-}
-
-impl<T: NumericDataType + 'static> Tensor<'_, T> {
-    pub fn sum(&self) -> Tensor<T> {
-        #[cfg(use_apple_accelerate)]
+impl TensorNumericReduce<f32> for Tensor<'_, f32> {
+    #[cfg(use_apple_accelerate)]
+    fn sum(&self) -> Tensor<f32> {
         if self.is_contiguous() {
-            if TypeId::of::<T>() == TypeId::of::<f32>() {
-                let mut output = T::zero();
-                unsafe { vDSP_sve(self.ptr.as_ptr() as *const f32, 1, std::ptr::addr_of_mut!(output) as *mut f32, self.len as isize); }
-                return Tensor::scalar(output);
-            }
-
-            if TypeId::of::<T>() == TypeId::of::<f64>() {
-                let mut output = T::zero();
-                unsafe { vDSP_sveD(self.ptr.as_ptr() as *const f64, 1, std::ptr::addr_of_mut!(output) as *mut f64, self.len as isize); }
-                return Tensor::scalar(output);
-            }
+            let mut output = 0.0;
+            unsafe { vDSP_sve(self.ptr.as_ptr(), 1, std::ptr::addr_of_mut!(output), self.len as isize); }
+            return Tensor::scalar(output);
         }
 
-        self.reduce(reduce_sum, T::zero())
-    }
-
-    pub fn sum_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce_along(reduce_sum, axes, T::zero())
+        self.reduce(|val, acc| acc + val, 0.0)
     }
 }
 
-impl<T: NumericDataType> Tensor<'_, T> {
-    pub fn product(&self) -> Tensor<T> {
-        self.reduce(reduce_product, T::one())
-    }
+impl TensorNumericReduce<f64> for Tensor<'_, f64> {
+    #[cfg(use_apple_accelerate)]
+    fn sum(&self) -> Tensor<f64> {
+        if self.is_contiguous() {
+            let mut output = 0.0;
+            unsafe { vDSP_sveD(self.ptr.as_ptr(), 1, std::ptr::addr_of_mut!(output), self.len as isize); }
+            return Tensor::scalar(output);
+        }
 
-    pub fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce_along(reduce_product, axes, T::one())
+        self.reduce(|val, acc| acc + val, 0.0)
     }
 }
 
-impl<T: NumericDataType + 'static> Tensor<'_, T>
+
+impl<T: NumericDataType> Tensor<'_, T>
 where
-        for<'a> Tensor<'a, T>: Div<T::AsFloatType>,
+        for<'a> Tensor<'a, T>: Div<T::AsFloatType> + TensorNumericReduce<T>,
 {
     pub fn mean(&self) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
         self.sum() / (self.size() as f32).into()
@@ -169,21 +171,21 @@ where
     }
 }
 
-impl<T: NumericDataType + num::Bounded + Ord> Tensor<'_, T> {
+impl<T: IntegerDataType> Tensor<'_, T> {
     pub fn max(&self) -> Tensor<T> {
-        self.reduce(reduce_max, T::min_value())
+        self.reduce(|val, acc| max(acc, val), T::min_value())
     }
 
     pub fn min(&self) -> Tensor<T> {
-        self.reduce(reduce_min, T::max_value())
+        self.reduce(|val, acc| min(acc, val), T::max_value())
     }
 
     pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce_along(reduce_max, axes, T::min_value())
+        self.reduce_along(|val, acc| max(acc, val), axes, T::min_value())
     }
 
     pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce_along(reduce_min, axes, T::max_value())
+        self.reduce_along(|val, acc| min(acc, val), axes, T::max_value())
     }
 }
 

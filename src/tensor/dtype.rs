@@ -1,4 +1,4 @@
-use num::{ToPrimitive};
+use num::{Bounded, ToPrimitive};
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul};
@@ -86,7 +86,7 @@ impl NumericDataType for f64 {
     type AsFloatType = f64;
 }
 
-pub trait IntegerDataType: NumericDataType {}
+pub trait IntegerDataType: NumericDataType + Ord + Bounded {}
 
 impl IntegerDataType for u8 {}
 impl IntegerDataType for u16 {}
