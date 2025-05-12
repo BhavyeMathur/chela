@@ -1,14 +1,14 @@
-#[cfg(use_apple_accelerate)]
-use crate::accelerate::cblas::{vDSP_sve, vDSP_sveD};
 use crate::dtype::{IntegerDataType, NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
+use num::{Bounded};
 use std::collections::VecDeque;
 use std::ops::Div;
-use num::Bounded;
-use crate::accelerate::cblas::{vDSP_maxv, vDSP_maxvD, vDSP_minv, vDSP_minvD};
+
+#[cfg(use_apple_accelerate)]
+use crate::accelerate::vdsp::*;
 
 // returns a tuple (output_shape, map_stride)
 // output_shape is simply the shape of the output tensor after the reduction operation
@@ -135,6 +135,22 @@ pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
     fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
         self.reduce_along(partial_min, axes, T::max_value())
     }
+
+    fn max_magnitude(&self) -> Tensor<T> {
+        self.reduce(partial_max_magnitude, T::zero())
+    }
+
+    fn min_magnitude(&self) -> Tensor<T> {
+        self.reduce(partial_min_magnitude, T::zero())
+    }
+
+    fn max_magnitude_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce_along(partial_max_magnitude, axes, T::zero())
+    }
+
+    fn min_magnitude_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+        self.reduce_along(partial_min_magnitude, axes, T::zero())
+    }
 }
 
 impl<T: IntegerDataType> TensorNumericReduce<T> for Tensor<'_, T> {}
@@ -173,6 +189,28 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
             }
         }
     }
+
+    fn max_magnitude(&self) -> Tensor<f32> {
+        match self.has_uniform_stride() {
+            None => { self.reduce(partial_max_magnitude, 0.0) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_maxmgv(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
+        }
+    }
+
+    fn min_magnitude(&self) -> Tensor<f32> {
+        match self.has_uniform_stride() {
+            None => { self.reduce(partial_min_magnitude, 0.0) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_minmg(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
+        }
+    }
 }
 
 #[cfg(use_apple_accelerate)]
@@ -205,6 +243,28 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
             Some(stride) => {
                 let mut output = 0.0;
                 unsafe { vDSP_minvD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
+        }
+    }
+
+    fn max_magnitude(&self) -> Tensor<f64> {
+        match self.has_uniform_stride() {
+            None => { self.reduce(partial_max_magnitude, 0.0) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_maxmgvD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
+                Tensor::scalar(output)
+            }
+        }
+    }
+
+    fn min_magnitude(&self) -> Tensor<f64> {
+        match self.has_uniform_stride() {
+            None => { self.reduce(partial_min_magnitude, 0.0) }
+            Some(stride) => {
+                let mut output = 0.0;
+                unsafe { vDSP_minmgD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.len as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -287,10 +347,20 @@ mod tests {
     }
 }
 
-fn partial_max<T: PartialOrd>(a: T, b: T) -> T {
+fn partial_max<T: NumericDataType>(a: T, b: T) -> T {
     if a.partial_cmp(&b) == Some(std::cmp::Ordering::Greater) { a } else { b }
 }
 
-fn partial_min<T: PartialOrd>(a: T, b: T) -> T {
+fn partial_min<T: NumericDataType>(a: T, b: T) -> T {
     if a.partial_cmp(&b) == Some(std::cmp::Ordering::Less) { a } else { b }
+}
+
+fn partial_max_magnitude<T: NumericDataType>(val: T, acc: T) -> T {
+    let val = val.abs();
+    if acc.partial_cmp(&val) == Some(std::cmp::Ordering::Greater) { acc } else { val }
+}
+
+fn partial_min_magnitude<T: NumericDataType>(val: T, acc: T) -> T {
+    let val = val.abs();
+    if acc.partial_cmp(&val) == Some(std::cmp::Ordering::Less) { acc } else { val }
 }

@@ -25,65 +25,119 @@ impl RawDataType for bool {}
 
 pub trait NumericDataType:
 RawDataType + Sum + Product + Add<Output=Self> + Mul<Output=Self> + Div<Output=Self>
-+ ToPrimitive + PartialOrd + num::Zero + num::One + Bounded
++ ToPrimitive + PartialOrd + Bounded + num::Zero + num::One
 {
     type AsFloatType: NumericDataType + From<f32>;
 
     fn to_float(&self) -> Self::AsFloatType {
         self.to_f32().unwrap().into()
     }
+
+    fn abs(&self) -> Self;
 }
 
 impl NumericDataType for u8 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        self.clone()
+    }
 }
 
 impl NumericDataType for u16 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        self.clone()
+    }
 }
 
 impl NumericDataType for u32 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        self.clone()
+    }
 }
 
 impl NumericDataType for u64 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        self.clone()
+    }
 }
 
 impl NumericDataType for u128 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        self.clone()
+    }
 }
 
 impl NumericDataType for usize {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        self.clone()
+    }
 }
 
 impl NumericDataType for i8 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        num::Signed::abs(self)
+    }
 }
 
 impl NumericDataType for i16 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        num::Signed::abs(self)
+    }
 }
 
 impl NumericDataType for i32 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        num::Signed::abs(self)
+    }
 }
 
 impl NumericDataType for i64 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        num::Signed::abs(self)
+    }
 }
 
 impl NumericDataType for i128 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        num::Signed::abs(self)
+    }
 }
 
 impl NumericDataType for f32 {
     type AsFloatType = f32;
+
+    fn abs(&self) -> Self {
+        num::Signed::abs(self)
+    }
 }
 
 impl NumericDataType for f64 {
     type AsFloatType = f64;
+
+    fn abs(&self) -> Self {
+        num::Signed::abs(self)
+    }
 }
 
 pub trait IntegerDataType: NumericDataType + Ord {}

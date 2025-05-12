@@ -573,3 +573,105 @@ fn test_reduce_max_slice_i32() {
     let output = slice.max_along([0]);
     assert_eq!(output, correct);
 }
+
+#[test]
+fn test_reduce_max_magnitude_f32() {
+    let tensor = Tensor::from([
+        [[-3f32, 5.0, 36.0], [2.0, 9.0, -4.0]],
+        [[12.0, 56.0, 47.0], [3.0, 8.0, -36.0]],
+        [[23.0, -67.0, 5.0], [-4.0, 7.0, 2.0]],
+        [[-40.0, -80.0, 62.0], [-45.0, 6.0, -90.0]]
+    ]);
+    let slice = tensor.slice(s![1..3, .., 0..=1]);
+
+    let correct = Tensor::from([23f32, 67.0]);
+    let output = slice.max_magnitude_along([0, 1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(67f32);
+    let output = slice.max_magnitude();
+    assert_eq!(output, correct);
+
+    // uniform stride but non-contiguous
+    let slice = tensor.slice(s![.., .., 0]);
+
+    let correct = Tensor::scalar(45.0);
+    let output = slice.max_magnitude();
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([3f32, 12.0, 23.0, 45.0]);
+    let output = slice.max_magnitude_along([1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([40f32, 45.0]);
+    let output = slice.max_magnitude_along([0]);
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_reduce_max_magnitude_f64() {
+    let tensor = Tensor::from([
+        [[-3f64, 5.0, 36.0], [2.0, 9.0, -4.0]],
+        [[12.0, 56.0, 47.0], [3.0, 8.0, -36.0]],
+        [[23.0, -67.0, 5.0], [-4.0, 7.0, 2.0]],
+        [[-40.0, -80.0, 62.0], [-45.0, 6.0, -90.0]]
+    ]);
+    let slice = tensor.slice(s![1..3, .., 0..=1]);
+
+    let correct = Tensor::from([23f64, 67.0]);
+    let output = slice.max_magnitude_along([0, 1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(67f64);
+    let output = slice.max_magnitude();
+    assert_eq!(output, correct);
+
+    // uniform stride but non-contiguous
+    let slice = tensor.slice(s![.., .., 0]);
+
+    let correct = Tensor::scalar(45.0);
+    let output = slice.max_magnitude();
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([3f64, 12.0, 23.0, 45.0]);
+    let output = slice.max_magnitude_along([1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([40f64, 45.0]);
+    let output = slice.max_magnitude_along([0]);
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_reduce_max_magnitude_i32() {
+    let tensor = Tensor::from([
+        [[-3, 5, 36], [2, 9, -4]],
+        [[12, 56, 47], [3, 8, -36]],
+        [[23, -67, 5], [-4, 7, 2]],
+        [[-40, -80, 62], [-45, 6, -90]]
+    ]);
+    let slice = tensor.slice(s![1..3, .., 0..=1]);
+
+    let correct = Tensor::from([23, 67]);
+    let output = slice.max_magnitude_along([0, 1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(67);
+    let output = slice.max_magnitude();
+    assert_eq!(output, correct);
+
+    // uniform stride but non-contiguous
+    let slice = tensor.slice(s![.., .., 0]);
+
+    let correct = Tensor::scalar(45);
+    let output = slice.max_magnitude();
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([3, 12, 23, 45]);
+    let output = slice.max_magnitude_along([1]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::from([40, 45]);
+    let output = slice.max_magnitude_along([0]);
+    assert_eq!(output, correct);
+}
