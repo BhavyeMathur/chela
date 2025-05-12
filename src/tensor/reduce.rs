@@ -1,8 +1,10 @@
+use crate::accelerate::cblas::{vDSP_sve, vDSP_sveD};
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
+use std::any::TypeId;
 use std::cmp::{max, min};
 use std::collections::VecDeque;
 use std::ops::Div;
@@ -43,7 +45,6 @@ fn reduced_shape_and_stride(axes: &[usize], shape: &[usize]) -> (Vec<usize>, Vec
 
     (Vec::from(new_shape), Vec::from(new_stride))
 }
-
 
 impl<T: RawDataType> Tensor<'_, T> {
     pub fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T> {
@@ -109,8 +110,23 @@ fn reduce_max<T: NumericDataType + Ord>(value: T, accumulator: T) -> T {
     max(accumulator, value)
 }
 
-impl<T: NumericDataType + num::Zero> Tensor<'_, T> {
+impl<T: NumericDataType + 'static> Tensor<'_, T> {
     pub fn sum(&self) -> Tensor<T> {
+        #[cfg(use_apple_accelerate)]
+        if self.is_contiguous() {
+            if TypeId::of::<T>() == TypeId::of::<f32>() {
+                let mut output = T::zero();
+                unsafe { vDSP_sve(self.ptr.as_ptr() as *const f32, 1, std::ptr::addr_of_mut!(output) as *mut f32, self.len as isize); }
+                return Tensor::scalar(output);
+            }
+
+            if TypeId::of::<T>() == TypeId::of::<f64>() {
+                let mut output = T::zero();
+                unsafe { vDSP_sveD(self.ptr.as_ptr() as *const f64, 1, std::ptr::addr_of_mut!(output) as *mut f64, self.len as isize); }
+                return Tensor::scalar(output);
+            }
+        }
+
         self.reduce(reduce_sum, T::zero())
     }
 
@@ -119,7 +135,7 @@ impl<T: NumericDataType + num::Zero> Tensor<'_, T> {
     }
 }
 
-impl<T: NumericDataType + num::One> Tensor<'_, T> {
+impl<T: NumericDataType> Tensor<'_, T> {
     pub fn product(&self) -> Tensor<T> {
         self.reduce(reduce_product, T::one())
     }
@@ -129,12 +145,12 @@ impl<T: NumericDataType + num::One> Tensor<'_, T> {
     }
 }
 
-impl<T: NumericDataType + num::Zero> Tensor<'_, T>
+impl<T: NumericDataType + 'static> Tensor<'_, T>
 where
         for<'a> Tensor<'a, T>: Div<T::AsFloatType>,
 {
     pub fn mean(&self) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
-        self.reduce(reduce_sum, T::zero()) / (self.size() as f32).into()
+        self.sum() / (self.size() as f32).into()
     }
 
     pub fn mean_along(&self, axes: impl ToVec<usize>) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
@@ -146,7 +162,7 @@ where
         }
         let n: T::AsFloatType = (n as f32).into();
 
-        self.reduce_along(reduce_sum, axes, T::zero()) / n
+        self.sum_along(axes) / n
     }
 }
 

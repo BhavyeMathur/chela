@@ -2,6 +2,7 @@
 name = "chela"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 [[bin]]
 name = "fill_f32"
@@ -42,3 +43,7 @@ dead_code = "allow"
 [profile.release]
 debug = true
 strip = false
+
+[features]
+default = []
+apple_accelerate = []

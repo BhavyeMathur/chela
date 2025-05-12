@@ -8,8 +8,48 @@ fn test_reduce_panic() {
 }
 
 #[test]
-fn test_reduce_sum() {
-    let tensor = Tensor::from([[1, 1], [2, 2], [3, 3]]);
+fn test_reduce_sum_f32() {
+    let tensor = Tensor::from([[1f32, 1.0], [2.0, 2.0], [3.0, 3.0]]);
+
+    let correct = Tensor::from([2f32, 4.0, 6.0]);
+    let output = tensor.sum_along(1);
+    assert_eq!(output, correct);
+
+    let output = tensor.sum_along(Axis(1));
+    assert_eq!(output, correct);
+
+    let correct = tensor.clone();
+    let output = tensor.sum_along([]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(12.0);
+    let output = tensor.sum();
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_reduce_sum_f64() {
+    let tensor = Tensor::from([[1f64, 1.0], [2.0, 2.0], [3.0, 3.0]]);
+
+    let correct = Tensor::from([2f64, 4.0, 6.0]);
+    let output = tensor.sum_along(1);
+    assert_eq!(output, correct);
+
+    let output = tensor.sum_along(Axis(1));
+    assert_eq!(output, correct);
+
+    let correct = tensor.clone();
+    let output = tensor.sum_along([]);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(12.0);
+    let output = tensor.sum();
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_reduce_sum_i32() {
+    let tensor = Tensor::from([[1i32, 1], [2, 2], [3, 3]]);
 
     let correct = Tensor::from([2, 4, 6]);
     let output = tensor.sum_along(1);

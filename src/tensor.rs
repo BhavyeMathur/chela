@@ -23,6 +23,7 @@ use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 
 pub use iterator::*;
+pub use reduce::*;
 
 #[derive(Debug)]
 pub struct Tensor<'a, T: RawDataType> {

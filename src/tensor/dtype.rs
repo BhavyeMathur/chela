@@ -1,4 +1,4 @@
-use num::ToPrimitive;
+use num::{ToPrimitive};
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul};
@@ -24,7 +24,8 @@ impl RawDataType for f64 {}
 impl RawDataType for bool {}
 
 pub trait NumericDataType:
-RawDataType + Sum + Product + Add<Output=Self> + Mul<Output=Self> + Div<Output=Self> + ToPrimitive + PartialOrd
+RawDataType + Sum + Product + Add<Output=Self> + Mul<Output=Self> + Div<Output=Self>
++ ToPrimitive + PartialOrd + num::Zero + num::One
 {
     type AsFloatType: NumericDataType + From<f32>;
 
@@ -84,3 +85,18 @@ impl NumericDataType for f32 {
 impl NumericDataType for f64 {
     type AsFloatType = f64;
 }
+
+pub trait IntegerDataType: NumericDataType {}
+
+impl IntegerDataType for u8 {}
+impl IntegerDataType for u16 {}
+impl IntegerDataType for u32 {}
+impl IntegerDataType for u64 {}
+impl IntegerDataType for u128 {}
+impl IntegerDataType for usize {}
+
+impl IntegerDataType for i8 {}
+impl IntegerDataType for i16 {}
+impl IntegerDataType for i32 {}
+impl IntegerDataType for i64 {}
+impl IntegerDataType for i128 {}
