@@ -40,7 +40,7 @@ impl<T: RawDataType> Tensor<'_, T> {
 
             shape,
             stride,
-            flags: TensorFlags::Owned | TensorFlags::Contiguous | TensorFlags::Writeable,
+            flags: TensorFlags::Owned | TensorFlags::Contiguous | TensorFlags::UniformStride | TensorFlags::Writeable,
 
             _marker: Default::default(),
         }
