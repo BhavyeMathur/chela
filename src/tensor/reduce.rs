@@ -155,6 +155,13 @@ pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
 
 impl<T: IntegerDataType> TensorNumericReduce<T> for Tensor<'_, T> {}
 
+#[cfg(not(use_apple_accelerate))]
+impl TensorNumericReduce<f32> for Tensor<'_, f32> {}
+
+#[cfg(not(use_apple_accelerate))]
+impl TensorNumericReduce<f64> for Tensor<'_, f64> {}
+
+
 #[cfg(use_apple_accelerate)]
 impl TensorNumericReduce<f32> for Tensor<'_, f32> {
     fn sum(&self) -> Tensor<f32> {
