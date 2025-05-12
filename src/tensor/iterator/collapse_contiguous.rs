@@ -1,6 +1,3 @@
-use crate::dtype::RawDataType;
-use crate::TensorReduce;
-
 // interprets all contiguously stored dimensions as 1 big dimension
 // if the entire array is stored contiguously, this results in just 1 long dimension
 pub(in crate::tensor) fn collapse_contiguous(shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {

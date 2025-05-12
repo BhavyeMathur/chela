@@ -25,7 +25,7 @@ impl RawDataType for bool {}
 
 pub trait NumericDataType:
 RawDataType + Sum + Product + Add<Output=Self> + Mul<Output=Self> + Div<Output=Self>
-+ ToPrimitive + PartialOrd + num::Zero + num::One
++ ToPrimitive + PartialOrd + num::Zero + num::One + Bounded
 {
     type AsFloatType: NumericDataType + From<f32>;
 
@@ -86,7 +86,7 @@ impl NumericDataType for f64 {
     type AsFloatType = f64;
 }
 
-pub trait IntegerDataType: NumericDataType + Ord + Bounded {}
+pub trait IntegerDataType: NumericDataType + Ord {}
 
 impl IntegerDataType for u8 {}
 impl IntegerDataType for u16 {}
@@ -100,3 +100,8 @@ impl IntegerDataType for i16 {}
 impl IntegerDataType for i32 {}
 impl IntegerDataType for i64 {}
 impl IntegerDataType for i128 {}
+
+pub trait FloatDataType: NumericDataType {}
+
+impl FloatDataType for f32 {}
+impl FloatDataType for f64 {}

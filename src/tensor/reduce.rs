@@ -1,14 +1,12 @@
+#[cfg(use_apple_accelerate)]
+use crate::accelerate::cblas::{vDSP_sve, vDSP_sveD};
 use crate::dtype::{IntegerDataType, NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
-use std::cmp::{max, min};
 use std::collections::VecDeque;
 use std::ops::Div;
-
-#[cfg(use_apple_accelerate)]
-use crate::accelerate::cblas::{vDSP_sve, vDSP_sveD};
 
 // returns a tuple (output_shape, map_stride)
 // output_shape is simply the shape of the output tensor after the reduction operation
@@ -173,21 +171,29 @@ where
     }
 }
 
-impl<T: IntegerDataType> Tensor<'_, T> {
+fn partial_max<T: PartialOrd>(a: T, b: T) -> T {
+    if a.partial_cmp(&b) == Some(std::cmp::Ordering::Greater) { a } else { b }
+}
+
+fn partial_min<T: PartialOrd>(a: T, b: T) -> T {
+    if a.partial_cmp(&b) == Some(std::cmp::Ordering::Less) { a } else { b }
+}
+
+impl<T: NumericDataType + PartialOrd> Tensor<'_, T> {
     pub fn max(&self) -> Tensor<T> {
-        self.reduce(|val, acc| max(acc, val), T::min_value())
+        self.reduce(partial_max, T::min_value())
     }
 
     pub fn min(&self) -> Tensor<T> {
-        self.reduce(|val, acc| min(acc, val), T::max_value())
+        self.reduce(partial_min, T::max_value())
     }
 
     pub fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce_along(|val, acc| max(acc, val), axes, T::min_value())
+        self.reduce_along(partial_max, axes, T::min_value())
     }
 
     pub fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
-        self.reduce_along(|val, acc| min(acc, val), axes, T::max_value())
+        self.reduce_along(partial_min, axes, T::max_value())
     }
 }
 

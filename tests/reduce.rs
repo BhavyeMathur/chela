@@ -344,29 +344,28 @@ fn test_product_operations() {
     assert_eq!(slice.product(), Tensor::scalar(48));
 }
 
-// TODO
-// #[test]
-// fn test_reduce_min_f32() {
-//     let tensor = Tensor::from([[1.0f32, 3.0], [2.0, 4.0], [3.0, 5.0]]);
-//
-//     let correct = Tensor::from([1.0f32, 2.0, 3.0]);
-//     let output = tensor.min_along(1);
-//     assert_eq!(output, correct);
-//
-//     let correct = Tensor::scalar(1.0f32);
-//     let output = tensor.min();
-//     assert_eq!(output, correct);
-// }
-//
-// #[test]
-// fn test_reduce_max_f64() {
-//     let tensor = Tensor::from([[1.0f64, 3.0], [2.0, 4.0], [3.0, 5.0]]);
-//
-//     let correct = Tensor::from([3.0f64, 4.0, 5.0]);
-//     let output = tensor.max_along(1);
-//     assert_eq!(output, correct);
-//
-//     let correct = Tensor::scalar(5.0f64);
-//     let output = tensor.max();
-//     assert_eq!(output, correct);
-// }
+#[test]
+fn test_reduce_min_f32() {
+    let tensor = Tensor::from([[1.0f32, 3.0], [2.0, 4.0], [3.0, 5.0]]);
+
+    let correct = Tensor::from([1.0f32, 2.0, 3.0]);
+    let output = tensor.min_along(1);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(1.0f32);
+    let output = tensor.min();
+    assert_eq!(output, correct);
+}
+
+#[test]
+fn test_reduce_max_f64() {
+    let tensor = Tensor::from([[1.0f64, 3.0], [2.0, 4.0], [3.0, 5.0]]);
+
+    let correct = Tensor::from([3.0f64, 4.0, 5.0]);
+    let output = tensor.max_along(1);
+    assert_eq!(output, correct);
+
+    let correct = Tensor::scalar(5.0f64);
+    let output = tensor.max();
+    assert_eq!(output, correct);
+}
