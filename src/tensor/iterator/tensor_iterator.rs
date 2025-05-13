@@ -28,6 +28,10 @@ impl<T: RawDataType> Tensor<'_, T> {
             return None;
         }
 
+        if self.ndims() == 0 {
+            return Some(0);
+        }
+
         let (_, new_stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
         Some(new_stride[0])
     }

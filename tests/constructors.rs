@@ -163,3 +163,13 @@ fn random_uniform_f32() {
     assert!(a.is_contiguous());
     assert_eq!(a.has_uniform_stride(), Some(1));
 }
+
+#[test]
+fn scalar_f32() {
+    let a: Tensor<f32> = Tensor::scalar(5.0);
+    let _: Vec<_> = a.flatiter().collect();
+    assert_eq!(a.shape(), &[]);
+    assert!(!a.is_view());
+    assert!(a.is_contiguous());
+    assert_eq!(a.has_uniform_stride(), Some(0));
+}
