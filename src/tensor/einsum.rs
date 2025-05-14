@@ -14,7 +14,7 @@ fn parse_subscripts<const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; 
     let mut subscript_to_index = HashMap::new();
     let mut axes_lengths = Vec::new();
 
-    for (tensor, subscripts) in operands.iter().zip(subscripts) {
+    for (tensor, subscripts) in operands.iter().zip(subscripts.iter()) {
         assert_eq!(subscripts.len(), tensor.ndims(), "einstein sum subscripts must have same length as dimensions for tensor {}", tensor.ndims());
 
         for (&axis_length, subscript) in tensor.shape().iter().zip(subscripts.chars()) {
@@ -49,8 +49,9 @@ fn iter_operands_for_einsum<const N: usize, T: NumericDataType>(operands: [&Tens
                                                                 subscript_to_index: &HashMap<char, usize>) -> Vec<BufferIterator<T>> {
     let mut result = Vec::with_capacity(subscripts.len());
 
-    for (tensor, subscript) in operands.iter().zip(subscripts) {
+    for (&tensor, &subscript) in operands.iter().zip(subscripts.iter()) {
         let stride = get_augmented_stride(subscript, tensor.stride(), &subscript_to_index);
+
         result.push(unsafe {
             BufferIterator::from_reshaped_view(&tensor, &axes_lengths, &stride)
         });
@@ -72,7 +73,9 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: [&Tensor<T>; N],
                 result_shape.push(axes_lengths[index]);
                 output_subscript_indices.push(index);
             }
-            None => { panic!("einstein sum subscripts string included output subscript '{}' which never appeared in an input", subscript) }
+            None => {
+                panic!("einstein sum subscripts string included output subscript '{}' which never appeared in an input", subscript)
+            }
         }
     }
 
@@ -85,12 +88,13 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: [&Tensor<T>; N],
         BufferIterator::from_reshaped_view(&result, &axes_lengths, &get_augmented_stride(result_subscripts, result.stride(), &subscript_to_index))
     };
 
+    // note that every iterator in input_iters is guaranteed to be the same length as result_iter
     let mut input_iters = iter_operands_for_einsum(operands, &input_subscripts, &axes_lengths, &subscript_to_index);
 
     for dst in result_iter {
         let mut product = T::one();
         for src in input_iters.iter_mut() {
-            product *= unsafe { *src.next().unwrap() };
+            product *= unsafe { *src.next().unwrap_unchecked() };
         }
 
         unsafe { *dst += product };

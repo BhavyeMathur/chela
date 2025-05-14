@@ -28,6 +28,10 @@ path = "benches/sum_f32_slice.rs"
 name = "sum_f32_slice2"
 path = "benches/sum_f32_slice2.rs"
 
+[[bin]]
+name = "einsum"
+path = "benches/einsum.rs"
+
 
 [dependencies]
 cpu-time = "1.0.0"

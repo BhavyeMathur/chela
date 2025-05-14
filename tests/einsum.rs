@@ -1,4 +1,26 @@
+use cpu_time::ProcessTime;
 use chela::*;
+
+#[test]
+#[should_panic]
+fn test_einsum_dimension_mismatch() {
+    let a = Tensor::from([[1, 2]]);
+    let b = Tensor::from([[3, 4], [5, 6], [7, 8]]);
+    let _ = einsum([&a, &b], (["ij", "jk"], "ik")); // incompatible shapes
+}
+
+#[test]
+#[should_panic]
+fn test_einsum_invalid_index() {
+    let a = Tensor::from([[1, 2]]);
+    let b = Tensor::from([[3, 4], [5, 6], [7, 8]]);
+    let _ = einsum([&a, &b], (["ij", "kl"], "m")); // invalid index
+}
+
+#[test]
+fn test_einsum_empty() {
+    let _: Tensor<'_, f32> = einsum([], ([], ""));
+}
 
 #[test]
 fn test_einsum_basic_matmul() {
@@ -78,6 +100,11 @@ fn test_einsum_broadcasting_vector_matrix() {
     let result = einsum([&a, &b], (["i", "ij"], "ij"));
     let expected = Tensor::from([[3, 4, 5], [12, 14, 16]]);
     assert_eq!(result, expected);
+
+    let b = Tensor::from([[3, 4], [5, 6]]);
+    let result = einsum([&a, &b], (["i", "ij"], "ij"));
+    let expected = Tensor::from([[3, 4], [10, 12]]);
+    assert_eq!(result, expected);
 }
 
 #[test]
@@ -110,6 +137,10 @@ fn test_einsum_identity() {
     let a = Tensor::from([[9, 8], [7, 6]]);
     let result = einsum([&a], (["ij"], "ij"));
     assert_eq!(result, a);
+
+    let a = Tensor::from([[0, 0], [0, 0]]);
+    let result = einsum([&a], (["ij"], "ij"));
+    assert_eq!(result, a);
 }
 
 #[test]
@@ -122,9 +153,26 @@ fn test_einsum_batch_matmul() {
 }
 
 #[test]
-#[should_panic]
-fn test_einsum_dimension_mismatch() {
-    let a = Tensor::from([[1, 2]]);
-    let b = Tensor::from([[3, 4], [5, 6], [7, 8]]);
-    let _ = einsum([&a, &b], (["ij", "jk"], "ik")); // incompatible shapes
+fn test_einsum_repeated_output_indices() {
+    let a = Tensor::from([[1, 2], [3, 4]]);
+    let result = einsum([&a], (["ij"], "ii"));
+    let expected = Tensor::from([[3, 0], [0, 7]]);
+    assert_eq!(result, expected);
+
+    let result = einsum([&a], (["ii"], "ii"));
+    let expected = Tensor::from([[1, 0], [0, 4]]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn profile() {
+    let i = 10;
+    let j = 100;
+    let k = 1000;
+
+    let tensor_a: Tensor<f32> = Tensor::rand([i, k]);
+    let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
+
+    let result = einsum([&tensor_a, &tensor_b], (["ik", "jk"], "ij"));
+    println!("{:?}", result);
 }
