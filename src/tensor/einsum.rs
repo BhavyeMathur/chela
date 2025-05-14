@@ -1,5 +1,5 @@
-use crate::buffer_iterator::BufferIterator;
 use crate::dtype::{NumericDataType, RawDataType};
+use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::tensor::MAX_DIMS;
 use crate::Tensor;
 
@@ -195,12 +195,10 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
     unsafe { Tensor::reshaped_view(&operand, new_shape, new_stride) }
 }
 
-fn operand_iter_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
-                                               operand_labels: &[i8; MAX_DIMS],
-                                               iter_labels: &[i8],
-                                               iter_shape: &[usize]) -> BufferIterator<T> {
-    let mut stride = vec![0; iter_shape.len()];
-
+fn operand_stride_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
+                                                 operand_labels: &[i8; MAX_DIMS],
+                                                 result: &mut [usize],
+                                                 iter_labels: &[i8]) {
     for (i, &label) in iter_labels.iter().enumerate() {
         if label == 0 {
             panic!("broadcasting in einsum is currently unsupported");
@@ -214,12 +212,11 @@ fn operand_iter_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
                     if op_label >= 0 { op_label } else { operand_labels[(index as i8 + op_label) as usize] };
 
                 if label == op_label {
-                    stride[i] += operand.stride[index];
+                    result[i] += operand.stride[index];
                 }
             }
         }
     }
-    unsafe { BufferIterator::from_reshaped_view(operand, &iter_shape, &stride) }
 }
 
 // TODO this is around 10x slower than NumPy. We need to speed it up!
@@ -272,11 +269,13 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     }
     let iter_labels = &iter_labels[0..iter_ndims];
 
-    let mut input_iters = Vec::with_capacity(operands.len());
-    for (operand, labels) in operands.iter().zip(operand_labels.iter_mut()) {
-        let operand = reshape_operand_for_einsum(operand, labels);
-        input_iters.push(operand_iter_for_einsum(&operand, labels, iter_labels, &iter_shape));
+    let mut operand_strides = [[0; MAX_DIMS]; N];
+    for ((operand, labels), stride) in operands.iter()
+                                               .zip(operand_labels.iter_mut())
+                                               .zip(operand_strides.iter_mut()) {
+        operand_stride_for_einsum(&operand, labels, stride, iter_labels)
     }
+    let mut operand_indices = MultiFlatIndexGenerator::from(&iter_shape, &operand_strides);
 
 
     // main einsum calculation loop
@@ -284,12 +283,15 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     let nterms = iter_shape.iter().product::<usize>() / output_len;
 
     for dst in output.iter_mut() {
-        *dst = (0..nterms).map(|_| {
-            input_iters
-                .iter_mut()
-                .map(|src| unsafe { *src.next().unwrap_unchecked() })
-                .product()
-        }).sum()
+        for _ in 0..nterms {
+            let mut product = T::one();
+            let index = unsafe { operand_indices.next().unwrap_unchecked() };
+            for (&i, operand) in index.iter().zip(operands.iter()) {
+                product *= unsafe { operand.ptr.add(i).read() };
+            }
+
+            *dst += product;
+        }
     }
     unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
 }

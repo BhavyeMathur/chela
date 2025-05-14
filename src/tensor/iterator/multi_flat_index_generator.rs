@@ -15,8 +15,10 @@ pub struct MultiFlatIndexGenerator<const N: usize>
 }
 
 impl<const N: usize> MultiFlatIndexGenerator<N> {
-    pub(in crate::tensor) fn from(shape: &[usize], strides: &[&[usize]; N]) -> Self {
+    pub(in crate::tensor) fn from<const M: usize>(shape: &[usize], strides: &[[usize; M]; N]) -> Self {
         let ndims = shape.len();
+        assert!(M >= ndims);
+
         let size = shape.iter().product();
 
         let mut new_shape = [0; MAX_DIMS];
@@ -24,7 +26,7 @@ impl<const N: usize> MultiFlatIndexGenerator<N> {
 
         let mut new_strides = [[0; MAX_DIMS]; N];
         for (stride, new_stride) in strides.iter().zip(new_strides.iter_mut()) {
-            new_stride[0..ndims].copy_from_slice(&stride);
+            new_stride[0..ndims].copy_from_slice(&stride[0..ndims]);
         }
 
         Self {
