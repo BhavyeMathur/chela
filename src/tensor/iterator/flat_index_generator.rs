@@ -37,6 +37,29 @@ impl FlatIndexGenerator {
             flat_index: 0,
         }
     }
+
+    #[inline(always)]
+    pub fn advance_by(&mut self, mut n: usize) {
+        let remaining = self.size - self.iterator_index;
+        n = n.min(remaining);
+
+        if n == 0 {
+            return;
+        }
+        self.iterator_index += n;
+
+        let mut carry = n;
+        for i in (0..self.ndims).rev() {
+            let dim = self.shape[i];
+            let idx = &mut self.indices[i];
+
+            let total = *idx + carry;
+            *idx = total % dim;
+            carry = total / dim;
+
+            self.flat_index += self.stride[i] * (*idx - self.indices[i]);
+        }
+    }
 }
 
 impl Iterator for FlatIndexGenerator {

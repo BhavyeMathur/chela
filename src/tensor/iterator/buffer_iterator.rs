@@ -30,6 +30,11 @@ impl<T: RawDataType> BufferIteratorMut<T> {
             indices: FlatIndexGenerator::from(shape, stride),
         }
     }
+
+    #[inline(always)]
+    pub fn advance_by(&mut self, n: usize) {
+        self.indices.advance_by(n);
+    }
 }
 
 impl<T: RawDataType> BufferIterator<T> {
@@ -45,6 +50,11 @@ impl<T: RawDataType> BufferIterator<T> {
             ptr: tensor.ptr.as_ptr(),
             indices: FlatIndexGenerator::from(shape, stride),
         }
+    }
+
+    #[inline(always)]
+    pub fn advance_by(&mut self, n: usize) {
+        self.indices.advance_by(n);
     }
 }
 
