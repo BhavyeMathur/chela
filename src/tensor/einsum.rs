@@ -2,7 +2,6 @@ use crate::buffer_iterator::BufferIterator;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::tensor::MAX_DIMS;
 use crate::Tensor;
-use std::collections::HashMap;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -150,43 +149,6 @@ fn parse_output_subscripts(subscripts: &str,
 }
 
 /*
- Let A be a tensor with shape (I, J)
- Let B be a tensor with shape (J, K)
- Suppose our subscripts describe "ij,jk->ik"
-
- Then subscript_to_index will be {i: 0, j: 1, k: 2}
- and axes_lengths will be [I, J, K]
- */
-fn parse_subscripts<const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N],
-                                                        subscripts: &[&str; N])
-                                                        -> (HashMap<u8, usize>, Vec<usize>) {
-    let mut subscript_to_index = HashMap::new();
-    let mut label_to_dim = Vec::new();
-
-    for (tensor, subscripts) in operands.iter().zip(subscripts.iter()) {
-        if !subscripts.is_ascii() {
-            panic!("einsum subscripts must be ascii");
-        }
-        if subscripts.len() != tensor.ndims() {
-            panic!("einstein sum subscripts must have same length as dimensions for tensor {}", tensor.ndims());
-        }
-        let subscripts = subscripts.as_bytes();
-
-        for (&axis_length, &subscript) in tensor.shape().iter().zip(subscripts.iter()) {
-            match subscript_to_index.get(&subscript) {
-                None => {
-                    subscript_to_index.insert(subscript, subscript_to_index.len());
-                    label_to_dim.push(axis_length);
-                }
-                Some(&i) => { assert_eq!(label_to_dim[i], axis_length, "the lengths of axes corresponding to the same index must match"); }
-            };
-        }
-    }
-
-    (subscript_to_index, label_to_dim)
-}
-
-/*
 Collapses dimensions with repeated subscripts. For example in ii-> (trace) or ii->i (diagonal)
  */
 fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
@@ -244,6 +206,10 @@ fn operand_iter_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
             panic!("broadcasting in einsum is currently unsupported");
         } else {
             for (index, &op_label) in operand_labels.iter().enumerate() {
+                if index == operand.ndims() {
+                    break;
+                }
+
                 let op_label =
                     if op_label >= 0 { op_label } else { operand_labels[(index as i8 + op_label) as usize] };
 
@@ -307,8 +273,9 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     let iter_labels = &iter_labels[0..iter_ndims];
 
     let mut input_iters = Vec::with_capacity(operands.len());
-    for (operand, labels) in operands.iter().zip(operand_labels.iter()) {
-        input_iters.push(operand_iter_for_einsum(operand, labels, iter_labels, &iter_shape));
+    for (operand, labels) in operands.iter().zip(operand_labels.iter_mut()) {
+        let operand = reshape_operand_for_einsum(operand, labels);
+        input_iters.push(operand_iter_for_einsum(&operand, labels, iter_labels, &iter_shape));
     }
 
 

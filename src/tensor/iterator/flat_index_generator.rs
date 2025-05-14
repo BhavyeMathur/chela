@@ -86,8 +86,8 @@ impl Iterator for FlatIndexGenerator {
                     break;
                 }
 
-                self.flat_index -= *self.stride.get_unchecked(i) * (*self.shape.get_unchecked(i) - 1);
                 *idx = 0; // reset this dimension and carry over to the next
+                self.flat_index -= *self.stride.get_unchecked(i) * (*self.shape.get_unchecked(i) - 1);
             }
         }
 
