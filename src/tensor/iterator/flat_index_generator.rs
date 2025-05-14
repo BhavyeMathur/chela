@@ -52,9 +52,9 @@ impl Iterator for FlatIndexGenerator {
 
         let mut i = self.ndims;
         while i > 0 {
-            i -= 1;
-
             unsafe {
+                i = i.unchecked_sub(1);
+
                 let idx = self.indices.get_unchecked_mut(i);
                 *idx += 1;
 

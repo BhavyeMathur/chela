@@ -3,6 +3,7 @@ use crate::dtype::{NumericDataType, RawDataType};
 use crate::tensor::MAX_DIMS;
 use crate::Tensor;
 use std::collections::HashMap;
+use std::i8::MAX;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -18,20 +19,20 @@ Examples:
     subscripts="abbcbc",  ndim=6 -> result = [97, 98, -1, 99, -3, -2]
     subscripts="ab..bc", ndim=6 -> result = [97, 98, 0, 0, -3, 99]
  */
-fn parse_operand_subscripts<T: NumericDataType>(subscripts: &str, operand: &Tensor<T>,
+fn parse_operand_subscripts<T: NumericDataType>(subscripts: &str,
+                                                operand: &Tensor<T>,
                                                 result: &mut [i8; MAX_DIMS],
                                                 label_counts: &mut [u32; 128],
+                                                label_dims: &mut [usize; 128],
                                                 broadcast_dims: &mut usize) {
     if !subscripts.is_ascii() {
         panic!("einsum subscripts must be ascii");
     }
-    if subscripts.len() > operand.ndims() {
-        panic!("too many labels in einsum subscripts string");
-    }
     let subscripts = subscripts.as_bytes();
+
     *broadcast_dims = operand.ndims() - subscripts.iter().filter(|c| c.is_ascii_alphanumeric()).count();
 
-    let mut first_occurrence = [0i8; 128];
+    let mut first_occurrence = [(MAX_DIMS + 3) as i8; 128];
     let mut ellipsis_index: isize = -1;
     let mut check_ellipsis = false;
 
@@ -46,14 +47,24 @@ fn parse_operand_subscripts<T: NumericDataType>(subscripts: &str, operand: &Tens
 
         if label.is_ascii_alphabetic() {
             let axis = if ellipsis_index == -1 { i } else { (i - 2) + *broadcast_dims };
+            if axis >= operand.ndims() {
+                panic!("too many labels in einsum subscripts string");
+            }
 
-            if label_counts[label as usize] == 0 {
+            if first_occurrence[label as usize] == (MAX_DIMS + 3) as i8 {
                 first_occurrence[label as usize] = i as i8;
+                label_dims[label as usize] = operand.shape[i];
                 result[axis] = label as i8;
-            } else {
+            }
+            else {
                 result[axis] = first_occurrence[label as usize] - axis as i8;
-            };
+
+                if label_dims[label as usize] != operand.shape[i] {
+                    panic!("the dimensions of axes corresponding to the same einsum label must match");
+                }
+            }
             label_counts[label as usize] += 1;
+
         } else if label == b'.' {
             if ellipsis_index != -1 {
                 panic!("einsum string may only contain single '..' for broadcasting");
@@ -334,9 +345,10 @@ mod tests {
         let tensor: Tensor<f32> = Tensor::zeros([1; 4]);
         let mut result = [3; MAX_DIMS];
         let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("a..b..", &tensor, &mut result, &mut label_counts, &mut broadcast_dims);
+        parse_operand_subscripts("a..b..", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
     }
 
     #[test]
@@ -345,9 +357,10 @@ mod tests {
         let tensor: Tensor<f32> = Tensor::zeros([1; 6]);
         let mut result = [1; MAX_DIMS];
         let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("a.b", &tensor, &mut result, &mut label_counts, &mut broadcast_dims);
+        parse_operand_subscripts("a.b", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
     }
 
     #[test]
@@ -356,9 +369,10 @@ mod tests {
         let tensor: Tensor<f32> = Tensor::zeros([1; 3]);
         let mut result = [4; MAX_DIMS];
         let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("ab.", &tensor, &mut result, &mut label_counts, &mut broadcast_dims);
+        parse_operand_subscripts("ab.", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
     }
 
     #[test]
@@ -366,9 +380,10 @@ mod tests {
         let tensor: Tensor<f32> = Tensor::zeros([1; 6]);
         let mut result = [1; MAX_DIMS];
         let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
         let mut broadcast_dims = 1;
 
-        parse_operand_subscripts("abcdef", &tensor, &mut result, &mut label_counts, &mut broadcast_dims);
+        parse_operand_subscripts("abcdef", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..6], [97, 98, 99, 100, 101, 102]);
         assert_eq!(broadcast_dims, 0);
     }
@@ -378,9 +393,10 @@ mod tests {
         let tensor: Tensor<f32> = Tensor::zeros([1; 6]);
         let mut result = [5; MAX_DIMS];
         let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
         let mut broadcast_dims = 60;
 
-        parse_operand_subscripts("abbcbc", &tensor, &mut result, &mut label_counts, &mut broadcast_dims);
+        parse_operand_subscripts("abbcbc", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
 
         assert_eq!(result[0..6], [97, 98, -1, 99, -3, -2]);
         assert_eq!(broadcast_dims, 0);
@@ -391,9 +407,10 @@ mod tests {
         let tensor: Tensor<f32> = Tensor::zeros([1; 7]);
         let mut result = [9; MAX_DIMS];
         let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("ab..bc", &tensor, &mut result, &mut label_counts, &mut broadcast_dims);
+        parse_operand_subscripts("ab..bc", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..7], [97, 98, 0, 0, 0, -4, 99]);
         assert_eq!(broadcast_dims, 3);
     }
@@ -403,9 +420,10 @@ mod tests {
         let tensor: Tensor<f32> = Tensor::zeros([1; 9]);
         let mut result = [9; MAX_DIMS];
         let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("ab..bc", &tensor, &mut result, &mut label_counts, &mut broadcast_dims);
+        parse_operand_subscripts("ab..bc", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..9], [97, 98, 0, 0, 0, 0, 0, -6, 99]);
         assert_eq!(broadcast_dims, 5);
     }
@@ -415,11 +433,35 @@ mod tests {
         let tensor: Tensor<f32> = Tensor::zeros([1; 5]);
         let mut result = [2; MAX_DIMS];
         let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("..ab", &tensor, &mut result, &mut label_counts, &mut broadcast_dims);
+        parse_operand_subscripts("..ab", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..5], [0, 0, 0, 97, 98]);
         assert_eq!(broadcast_dims, 3);
+    }
+
+    #[test]
+    fn test_multiple_operands() {
+        let tensor: Tensor<f32> = Tensor::zeros([1; 4]);
+        let mut result = [0; MAX_DIMS];
+        let mut label_counts = [0; 128];
+        let mut label_dims = [0; 128];
+        let mut broadcast_dims = 0;
+
+        parse_operand_subscripts("abb..", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        assert_eq!(result[0..4], [97, 98, -1, 0]);
+        assert_eq!(broadcast_dims, 1);
+
+        let tensor: Tensor<f32> = Tensor::zeros([1; 5]);
+        parse_operand_subscripts("abb..", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        assert_eq!(result[0..5], [97, 98, -1, 0, 0]);
+        assert_eq!(broadcast_dims, 2);
+
+        let tensor: Tensor<f32> = Tensor::zeros([1; 4]);
+        parse_operand_subscripts("baba", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        assert_eq!(result[0..4], [98, 97, -2, -2]);
+        assert_eq!(broadcast_dims, 0);
     }
 
 

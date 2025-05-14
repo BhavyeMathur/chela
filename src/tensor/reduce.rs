@@ -3,10 +3,9 @@ use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
 use crate::Tensor;
-use num::{Bounded};
 use std::collections::VecDeque;
 use std::ops::Div;
-
+use num::Bounded;
 #[cfg(use_apple_accelerate)]
 use crate::accelerate::vdsp::*;
 

@@ -1,5 +1,4 @@
 use chela::*;
-use std::env;
 
 use cpu_time::ProcessTime;
 
