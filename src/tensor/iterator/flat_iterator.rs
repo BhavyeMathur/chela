@@ -1,15 +1,15 @@
-use crate::buffer_iterator::BufferIterator;
+use crate::buffer_iterator::BufferIteratorMut;
 use crate::dtype::RawDataType;
 use crate::Tensor;
 
 pub struct FlatIterator<T: RawDataType> {
-    buffer_iterator: BufferIterator<T>,
+    buffer_iterator: BufferIteratorMut<T>,
 }
 
 impl<T: RawDataType> FlatIterator<T> {
     pub(super) fn from(tensor: &Tensor<T>) -> Self {
         Self {
-            buffer_iterator: BufferIterator::from(tensor),
+            buffer_iterator: BufferIteratorMut::from(tensor),
         }
     }
 }
