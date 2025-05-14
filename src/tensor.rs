@@ -18,12 +18,14 @@ pub mod binary_ops;
 
 mod flags;
 pub mod random;
+pub mod einsum;
 
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 
 pub use iterator::*;
 pub use reduce::*;
+pub use einsum::*;
 
 #[derive(Debug)]
 pub struct Tensor<'a, T: RawDataType> {
