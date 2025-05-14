@@ -5,4 +5,4 @@ pub mod tensor_iterator;
 
 pub(super) mod collapse_contiguous;
 mod util;
-mod flat_iterator;
+pub(super) mod flat_iterator;

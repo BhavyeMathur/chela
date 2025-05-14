@@ -14,6 +14,13 @@ impl<T: RawDataType> BufferIterator<T> {
             indices: FlatIndexGenerator::from(&tensor.shape, &tensor.stride),
         }
     }
+
+    pub(crate) unsafe fn from_reshaped_view(tensor: &Tensor<T>, shape: &[usize], stride: &[usize]) -> Self {
+        Self {
+            ptr: tensor.ptr.as_ptr(),
+            indices: FlatIndexGenerator::from(shape, stride),
+        }
+    }
 }
 
 impl<T: RawDataType> Iterator for BufferIterator<T> {

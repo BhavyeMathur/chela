@@ -1,7 +1,7 @@
 use num::{Bounded, ToPrimitive};
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
-use std::ops::{Add, Div, Mul};
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign};
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug {}
 
@@ -24,7 +24,7 @@ impl RawDataType for f64 {}
 impl RawDataType for bool {}
 
 pub trait NumericDataType:
-RawDataType + Sum + Product + Add<Output=Self> + Mul<Output=Self> + Div<Output=Self>
+RawDataType + Sum + Product + Add<Output=Self> + Mul<Output=Self> + Div<Output=Self> + AddAssign + MulAssign
 + ToPrimitive + PartialOrd + Bounded + num::Zero + num::One
 {
     type AsFloatType: NumericDataType + From<f32>;
