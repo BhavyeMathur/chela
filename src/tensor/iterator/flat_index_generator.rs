@@ -72,3 +72,19 @@ impl Iterator for FlatIndexGenerator {
         Some(return_index)
     }
 }
+
+impl Clone for FlatIndexGenerator {
+    fn clone(&self) -> Self {
+        Self {
+            ndims: self.ndims,
+            shape: self.shape.clone(),
+            stride: self.stride.clone(),
+
+            size: self.size,
+            iterator_index: self.iterator_index,
+
+            indices: self.indices.clone(),
+            flat_index: self.flat_index,
+        }
+    }
+}

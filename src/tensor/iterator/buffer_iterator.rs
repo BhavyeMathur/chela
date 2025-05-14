@@ -69,3 +69,12 @@ impl<T: RawDataType> Iterator for BufferIterator<T> {
         }
     }
 }
+
+impl<T: RawDataType> Clone for BufferIterator<T> {
+    fn clone(&self) -> Self {
+        Self {
+            ptr: self.ptr,
+            indices: self.indices.clone(),
+        }
+    }
+}
