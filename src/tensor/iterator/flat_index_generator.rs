@@ -42,6 +42,7 @@ impl FlatIndexGenerator {
 impl Iterator for FlatIndexGenerator {
     type Item = usize;
 
+    #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         if self.iterator_index == self.size {
             return None;
@@ -53,15 +54,18 @@ impl Iterator for FlatIndexGenerator {
         while i > 0 {
             i -= 1;
 
-            self.indices[i] += 1;
+            unsafe {
+                let idx = self.indices.get_unchecked_mut(i);
+                *idx += 1;
 
-            if self.indices[i] < self.shape[i] {
-                self.flat_index += self.stride[i];
-                break;
+                if *idx < *self.shape.get_unchecked(i) {
+                    self.flat_index += *self.stride.get_unchecked(i);
+                    break;
+                }
+
+                self.flat_index -= *self.stride.get_unchecked(i) * (*self.shape.get_unchecked(i) - 1);
+                *idx = 0; // reset this dimension and carry over to the next
             }
-
-            self.flat_index -= self.stride[i] * (self.shape[i] - 1);
-            self.indices[i] = 0; // reset this dimension and carry over to the next
         }
 
         self.iterator_index += 1;
