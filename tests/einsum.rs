@@ -45,3 +45,86 @@ fn test_einsum_three_tensors() {
     let expected = einsum([&einsum([&a, &b], (["ij", "jk"], "ik")), &c], (["ik", "kl"], "il"));
     assert_eq!(result, expected);
 }
+
+#[test]
+fn test_einsum_scalar_times_tensor() {
+    let a = Tensor::from([[1, 2], [3, 4]]);
+    let b = Tensor::scalar(10);
+    let result = einsum([&a, &b], (["ij", ""], "ij"));
+    let expected = Tensor::from([[10, 20], [30, 40]]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_transpose() {
+    let a = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let result = einsum([&a], (["ij"], "ji"));
+    let expected = Tensor::from([[1, 4], [2, 5], [3, 6]]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_sum_axis() {
+    let a = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let result = einsum([&a], (["ij"], "i")); // Sum along axis j
+    let expected = Tensor::from([6, 15]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_broadcasting_vector_matrix() {
+    let a = Tensor::from([1, 2]); // shape: (2,)
+    let b = Tensor::from([[3, 4, 5], [6, 7, 8]]); // shape: (2, 3)
+    let result = einsum([&a, &b], (["i", "ij"], "ij"));
+    let expected = Tensor::from([[3, 4, 5], [12, 14, 16]]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_diagonal_extraction() {
+    let a = Tensor::from([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+    let result = einsum([&a], (["ii"], "i")); // Extract diagonal
+    let expected = Tensor::from([1, 5, 9]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_tensor_contraction() {
+    let a = Tensor::from([[[1, 2], [3, 4]]]); // shape: (1, 2, 2)
+    let b = Tensor::from([[5, 6], [7, 8]]);   // shape: (2, 2)
+    let result = einsum([&a, &b], (["ijk", "kl"], "ijl"));
+    let expected = Tensor::from([[[19, 22], [43, 50]]]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_all_sum() {
+    let a = Tensor::from([[1, 2], [3, 4]]);
+    let result = einsum([&a], (["ij"], ""));
+    let expected = Tensor::scalar(10);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_identity() {
+    let a = Tensor::from([[9, 8], [7, 6]]);
+    let result = einsum([&a], (["ij"], "ij"));
+    assert_eq!(result, a);
+}
+
+#[test]
+fn test_einsum_batch_matmul() {
+    let a = Tensor::from([[[1, 2], [3, 4]]]); // shape: (1, 2, 2)
+    let b = Tensor::from([[[5, 6], [7, 8]]]); // shape: (1, 2, 2)
+    let result = einsum([&a, &b], (["bij", "bjk"], "bik"));
+    let expected = Tensor::from([[[19, 22], [43, 50]]]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+#[should_panic]
+fn test_einsum_dimension_mismatch() {
+    let a = Tensor::from([[1, 2]]);
+    let b = Tensor::from([[3, 4], [5, 6], [7, 8]]);
+    let _ = einsum([&a, &b], (["ij", "jk"], "ik")); // incompatible shapes
+}

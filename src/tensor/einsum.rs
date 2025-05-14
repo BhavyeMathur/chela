@@ -38,7 +38,7 @@ fn get_augmented_stride(subscripts: &str, stride: &[usize], subscript_to_index: 
     let mut result = vec![0; subscript_to_index.len()];
     for (&stride, subscript) in stride.iter().zip(subscripts.chars()) {
         let index = subscript_to_index[&subscript];
-        result[index] = stride;
+        result[index] += stride;
     }
     result
 }
