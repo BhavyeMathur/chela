@@ -27,7 +27,7 @@ pub use iterator::*;
 pub use reduce::*;
 pub use einsum::*;
 
-const MAX_DIMS: usize = 64;
+const MAX_DIMS: usize = 32;
 
 #[derive(Debug)]
 pub struct Tensor<'a, T: RawDataType> {

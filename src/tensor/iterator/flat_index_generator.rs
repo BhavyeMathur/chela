@@ -1,15 +1,17 @@
-use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride};
+use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
+use crate::tensor::MAX_DIMS;
 
 #[non_exhaustive]
 pub struct FlatIndexGenerator
 {
-    shape: Vec<usize>,
-    stride: Vec<usize>,
+    ndims: usize,
+    shape: [usize; MAX_DIMS],
+    stride: [usize; MAX_DIMS],
 
     size: usize,
     iterator_index: usize,
 
-    indices: Vec<usize>, // current index along each dimension
+    indices: [usize; MAX_DIMS], // current index along each dimension
     flat_index: usize,
 }
 
@@ -19,12 +21,19 @@ impl FlatIndexGenerator {
         let ndims = shape.len();
         let size = shape.iter().product();
 
+        let mut new_shape = [0; MAX_DIMS];
+        let mut new_stride = [0; MAX_DIMS];
+
+        new_shape[0..ndims].copy_from_slice(&shape);
+        new_stride[0..ndims].copy_from_slice(&stride);
+
         Self {
-            shape,
-            stride,
+            ndims,
+            shape: new_shape,
+            stride: new_stride,
             size,
             iterator_index: 0,
-            indices: vec![0; ndims],
+            indices: [0; MAX_DIMS],
             flat_index: 0,
         }
     }
@@ -40,7 +49,10 @@ impl Iterator for FlatIndexGenerator {
 
         let return_index = self.flat_index;
 
-        for i in (0..self.shape.len()).rev() {
+        let mut i = self.ndims;
+        while i > 0 {
+            i -= 1;
+
             self.indices[i] += 1;
 
             if self.indices[i] < self.shape[i] {
