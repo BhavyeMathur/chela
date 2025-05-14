@@ -12,7 +12,7 @@ fn profile() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
 
     let start = ProcessTime::now();
-    _ = einsum([&tensor_a, &tensor_b], (["ik", "jk"], "ij"));
+    _ = einsum(&[&tensor_a, &tensor_b], (["ik", "jk"], "ij"));
     start.elapsed().as_nanos()
 }
 

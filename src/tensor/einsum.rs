@@ -3,7 +3,6 @@ use crate::dtype::{NumericDataType, RawDataType};
 use crate::tensor::MAX_DIMS;
 use crate::Tensor;
 use std::collections::HashMap;
-use std::i8::MAX;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -53,18 +52,18 @@ fn parse_operand_subscripts<T: NumericDataType>(subscripts: &str,
 
             if first_occurrence[label as usize] == (MAX_DIMS + 3) as i8 {
                 first_occurrence[label as usize] = i as i8;
-                label_dims[label as usize] = operand.shape[i];
+
                 result[axis] = label as i8;
-            }
-            else {
+            } else {
                 result[axis] = first_occurrence[label as usize] - axis as i8;
-
-                if label_dims[label as usize] != operand.shape[i] {
-                    panic!("the dimensions of axes corresponding to the same einsum label must match");
-                }
             }
-            label_counts[label as usize] += 1;
 
+            label_counts[label as usize] += 1;
+            if label_counts[label as usize] == 1 {
+                label_dims[label as usize] = operand.shape[i];
+            } else if label_dims[label as usize] != operand.shape[i] {
+                panic!("the dimensions of axes corresponding to the same einsum label must match");
+            }
         } else if label == b'.' {
             if ellipsis_index != -1 {
                 panic!("einsum string may only contain single '..' for broadcasting");
@@ -146,7 +145,8 @@ fn parse_output_subscripts(subscripts: &str,
         }
     }
 
-    1
+    let ndims = subscripts.len();
+    if found_ellipsis { (ndims - 2) + broadcast_dims } else { ndims }
 }
 
 /*
@@ -157,26 +157,33 @@ fn parse_output_subscripts(subscripts: &str,
  Then subscript_to_index will be {i: 0, j: 1, k: 2}
  and axes_lengths will be [I, J, K]
  */
-fn parse_subscripts<const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N], subscripts: &[&str; N])
-                                                        -> (HashMap<char, usize>, Vec<usize>) {
+fn parse_subscripts<const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N],
+                                                        subscripts: &[&str; N])
+                                                        -> (HashMap<u8, usize>, Vec<usize>) {
     let mut subscript_to_index = HashMap::new();
-    let mut axes_lengths = Vec::new();
+    let mut label_to_dim = Vec::new();
 
     for (tensor, subscripts) in operands.iter().zip(subscripts.iter()) {
-        assert_eq!(subscripts.len(), tensor.ndims(), "einstein sum subscripts must have same length as dimensions for tensor {}", tensor.ndims());
+        if !subscripts.is_ascii() {
+            panic!("einsum subscripts must be ascii");
+        }
+        if subscripts.len() != tensor.ndims() {
+            panic!("einstein sum subscripts must have same length as dimensions for tensor {}", tensor.ndims());
+        }
+        let subscripts = subscripts.as_bytes();
 
-        for (&axis_length, subscript) in tensor.shape().iter().zip(subscripts.chars()) {
+        for (&axis_length, &subscript) in tensor.shape().iter().zip(subscripts.iter()) {
             match subscript_to_index.get(&subscript) {
                 None => {
                     subscript_to_index.insert(subscript, subscript_to_index.len());
-                    axes_lengths.push(axis_length);
+                    label_to_dim.push(axis_length);
                 }
-                Some(&i) => { assert_eq!(axes_lengths[i], axis_length, "the lengths of axes corresponding to the same index must match"); }
+                Some(&i) => { assert_eq!(label_to_dim[i], axis_length, "the lengths of axes corresponding to the same index must match"); }
             };
         }
     }
 
-    (subscript_to_index, axes_lengths)
+    (subscript_to_index, label_to_dim)
 }
 
 /*
@@ -226,113 +233,100 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
     unsafe { Tensor::reshaped_view(&operand, new_shape, new_stride) }
 }
 
-// Suppose subscript_to_index is {i: 0, j: 1, k: 2} and subscripts is 'ik'
-// and suppose stride is (K, 1)
-// Then this function should output [K, 0, 1]
-fn get_augmented_stride(subscripts: &str, stride: &[usize], subscript_to_index: &HashMap<char, usize>) -> Vec<usize> {
-    let mut result = vec![0; subscript_to_index.len()];
-    for (&stride, subscript) in stride.iter().zip(subscripts.chars()) {
-        let index = subscript_to_index[&subscript];
-        result[index] += stride;
-    }
-    result
-}
+fn operand_iter_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
+                                               operand_labels: &[i8; MAX_DIMS],
+                                               iter_labels: &[i8],
+                                               iter_shape: &[usize]) -> BufferIterator<T> {
+    let mut stride = vec![0; iter_shape.len()];
 
-fn iter_operands_for_einsum<const N: usize, T: NumericDataType>(operands: [&Tensor<T>; N],
-                                                                subscripts: &[&str; N],
-                                                                axes_lengths: &Vec<usize>,
-                                                                subscript_to_index: &HashMap<char, usize>) -> Vec<BufferIterator<T>> {
-    let mut result = Vec::with_capacity(subscripts.len());
+    for (i, &label) in iter_labels.iter().enumerate() {
+        if label == 0 {
+            panic!("broadcasting in einsum is currently unsupported");
+        } else {
+            for (index, &op_label) in operand_labels.iter().enumerate() {
+                let op_label =
+                    if op_label >= 0 { op_label } else { operand_labels[(index as i8 + op_label) as usize] };
 
-    for (&tensor, &subscript) in operands.iter().zip(subscripts.iter()) {
-        let stride = get_augmented_stride(subscript, tensor.stride(), &subscript_to_index);
-
-        result.push(unsafe {
-            BufferIterator::from_reshaped_view(&tensor, &axes_lengths, &stride)
-        });
-    }
-
-    result
-}
-
-// pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: [&Tensor<T>; N], subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
-//     let mut operand_labels = [[0; MAX_DIMS]; N];
-//     let mut output_labels = [0; MAX_DIMS];
-//     let mut label_counts = [0; 128];
-//
-//     let mut broadcast_dims = 0;
-//     let mut max_broadcast_dims = 0;
-//
-//     for (i, (subscript, operand)) in subscripts.0.iter().zip(operands.iter()).enumerate() {
-//         parse_operand_subscripts(subscript, operand, &mut operand_labels[i], &mut label_counts, &mut broadcast_dims);
-//         max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
-//     }
-//
-//     let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
-//
-//     let mut reshaped_operands = Vec::with_capacity(operands.len());
-//     for (operand, labels) in operands.iter().zip(operand_labels.iter_mut()) {
-//         let view = reshape_operand_for_einsum(operand, labels);
-//         reshaped_operands.push(view);
-//     }
-//
-//     let mut iter_dims = output_dims;
-//     let mut iter_labels = output_labels;
-//
-//     for label in 0i8..=127 {
-//         if label_counts[label as usize] == 0 || output_labels.contains(&label) {
-//             continue;
-//         }
-//         if iter_dims >= MAX_DIMS {
-//             panic!("too many subscripts in einsum");
-//         }
-//
-//         iter_labels[iter_dims] = label;
-//         iter_dims += 1;
-//     }
-// }
-
-pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: [&Tensor<T>; N], subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
-    let (input_subscripts, result_subscripts) = subscripts;
-    let (subscript_to_index, axes_lengths) = parse_subscripts(&operands, &input_subscripts);
-
-    let mut result_shape = Vec::with_capacity(result_subscripts.len());
-    let mut output_subscript_indices = Vec::with_capacity(result_subscripts.len());
-
-    for subscript in result_subscripts.chars() {
-        match subscript_to_index.get(&subscript) {
-            Some(&index) => {
-                result_shape.push(axes_lengths[index]);
-                output_subscript_indices.push(index);
-            }
-            None => {
-                panic!("einstein sum subscripts string included output subscript '{}' which never appeared in an input", subscript)
+                if label == op_label {
+                    stride[i] += operand.stride[index];
+                }
             }
         }
     }
+    unsafe { BufferIterator::from_reshaped_view(operand, &iter_shape, &stride) }
+}
 
-    let len = result_shape.iter().product();
-    let result = unsafe {
-        Tensor::from_contiguous_owned_buffer(result_shape, vec![T::zero(); len])
-    };
+pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N],
+                                                      subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
+    let mut operand_labels = [[0; MAX_DIMS]; N];
+    let mut output_labels = [0; MAX_DIMS];
+    let mut label_counts = [0; 128];
+    let mut label_dims = [0; 128];
 
-    let result_iter = unsafe {
-        BufferIterator::from_reshaped_view(&result, &axes_lengths, &get_augmented_stride(result_subscripts, result.stride(), &subscript_to_index))
-    };
+    let mut broadcast_dims = 0;
+    let mut max_broadcast_dims = 0;
 
-    // note that every iterator in input_iters is guaranteed to be the same length as result_iter
-    let mut input_iters = iter_operands_for_einsum(operands, &input_subscripts, &axes_lengths, &subscript_to_index);
-
-    for dst in result_iter {
-        let mut product = T::one();
-        for src in input_iters.iter_mut() {
-            product *= unsafe { *src.next().unwrap_unchecked() };
-        }
-
-        unsafe { *dst += product };
+    for (i, (subscript, operand)) in subscripts.0.iter().zip(operands.iter()).enumerate() {
+        parse_operand_subscripts(subscript, operand, &mut operand_labels[i], &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
     }
 
-    result
+    let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
+
+    let mut iter_ndims = output_dims;
+    let mut iter_labels = output_labels;
+    let output_labels = &output_labels[0..output_dims];
+
+
+    // set up the output buffer after calculating its shape
+
+    let mut output_shape = Vec::with_capacity(output_dims);
+    for &label in output_labels.iter() {
+        output_shape.push(label_dims[label as usize]);
+    }
+    let output_len = output_shape.iter().product();
+    let mut output = vec![T::zero(); output_len];
+
+
+    // create iterators to iterate over the operands in the correct order
+
+    let mut iter_shape = output_shape.clone();
+    for label in 0i8..=127 {
+        if label_counts[label as usize] == 0 || output_labels.contains(&label) {
+            continue;
+        }
+        if iter_ndims >= MAX_DIMS {
+            panic!("too many subscripts in einsum");
+        }
+
+        iter_labels[iter_ndims] = label;
+        iter_shape.push(label_dims[label as usize]);
+        iter_ndims += 1;
+    }
+    let iter_labels = &iter_labels[0..iter_ndims];
+
+    let mut input_iters = Vec::with_capacity(operands.len());
+    for (operand, labels) in operands.iter().zip(operand_labels.iter()) {
+        input_iters.push(operand_iter_for_einsum(operand, labels, iter_labels, &iter_shape));
+    }
+
+
+    // main einsum calculation loop
+
+    let nterms = iter_shape.iter().product::<usize>() / output_len;
+
+    for dst in output.iter_mut() {
+        for _ in 0..nterms {
+            let mut product = T::one();
+            for src in input_iters.iter_mut() {
+                product *= unsafe { *src.next().unwrap_unchecked() };
+            }
+
+            *dst += product;
+        }
+    }
+
+    unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
 }
 
 #[cfg(test)]
@@ -462,23 +456,5 @@ mod tests {
         parse_operand_subscripts("baba", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..4], [98, 97, -2, -2]);
         assert_eq!(broadcast_dims, 0);
-    }
-
-
-    #[test]
-    fn test_get_augmented_stride() {
-        let index = HashMap::from([('i', 0), ('j', 1), ('k', 2)]);
-
-        let stride = vec![10, 1];
-        let subscripts = "ik";
-        assert_eq!(get_augmented_stride(&subscripts, &stride, &index), vec![10, 0, 1]);
-
-        let stride = vec![10, 1];
-        let subscripts = "ij";
-        assert_eq!(get_augmented_stride(&subscripts, &stride, &index), vec![10, 1, 0]);
-
-        let stride = vec![30, 1];
-        let subscripts = "jk";
-        assert_eq!(get_augmented_stride(&subscripts, &stride, &index), vec![0, 30, 1]);
     }
 }
