@@ -2,6 +2,80 @@ use crate::buffer_iterator::BufferIterator;
 use crate::dtype::NumericDataType;
 use crate::Tensor;
 use std::collections::HashMap;
+/*
+See NumPy's implementation of this function for more details.
+
+Returns an array with 'ndims' labels after parsing the subscripts for one operand with
+    - the ASCII code of the label on its first occurrence
+    - the (negative) offset to the first occurrence of the label for repeated labels
+    - zero for broadcast dimensions (if the subscript has ellipsis)
+
+Examples:
+    subscripts="abbcbc",  ndim=6 -> result = [97, 98, -1, 99, -3, -2]
+    subscripts="ab..bc", ndim=6 -> result = [97, 98, 0, 0, -3, 99]
+ */
+fn parse_operand_subscripts<const N: usize, T: NumericDataType>(subscripts: &str, operand: &Tensor<T>,
+                                                                result: &mut [i32; N],
+                                                                label_counts: &mut [u32; 128]) {
+    if !subscripts.is_ascii() {
+        panic!("einsum subscripts must be ascii");
+    }
+    if subscripts.len() > operand.ndims() {
+        panic!("too many labels in einsum subscripts string");
+    }
+    let broadcast_dims = operand.ndims() - subscripts.len();
+    let subscripts = subscripts.as_bytes();
+
+    let mut first_occurrence = [0; 128];
+    let mut ellipsis_index: isize = -1;
+    let mut check_ellipsis = false;
+
+    for (i, &label) in subscripts.iter().enumerate() {
+        if check_ellipsis {
+            check_ellipsis = false;
+            if label != b'.' {
+                panic!("einsum subscripts string contains '.' that is not part of an ellipsis ('..')")
+            }
+            continue;
+        }
+
+        if label.is_ascii_alphabetic() {
+            let val;
+
+            if label_counts[label as usize] == 0 {
+                first_occurrence[label as usize] = i as i32;
+                val = label as i32;
+            } else {
+                val = first_occurrence[label as usize] - i as i32;
+            };
+            label_counts[label as usize] += 1;
+
+            if ellipsis_index == -1 {
+                result[i] = val;
+            } else {
+                result[i + broadcast_dims] = val;
+            }
+        } else if label == b'.' {
+            if ellipsis_index != -1 {
+                panic!("einsum string may only contain single '#' for broadcasting");
+            }
+            check_ellipsis = true;
+            ellipsis_index = i as isize;
+            result[i] = 0;
+            result[i + 1] = 0;
+        } else if label != b' ' {
+            panic!("invalid label '{}' in einsum string, subscripts must be letters", label);
+        }
+    }
+
+    if check_ellipsis {
+        panic!("einsum subscripts string contains '.' that is not part of an ellipsis ('..')")
+    }
+
+    if ellipsis_index == -1 && broadcast_dims != 0 {
+        panic!("too few labels in einsum subscripts string");
+    }
+}
 
 // Let A be a tensor with shape (I, J)
 // Let B be a tensor with shape (J, K)
@@ -106,6 +180,85 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: [&Tensor<T>; N],
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_ellipsis_multiple() {
+        const N: usize = 4;
+        let tensor: Tensor<f32> = Tensor::zeros([1; N]);
+        let mut result = [0; N];
+        let mut label_counts = [0; 128];
+
+        parse_operand_subscripts("a..b..", &tensor, &mut result, &mut label_counts);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_ellipsis() {
+        const N: usize = 4;
+        let tensor: Tensor<f32> = Tensor::zeros([1; N]);
+        let mut result = [0; N];
+        let mut label_counts = [0; 128];
+
+        parse_operand_subscripts("a.b", &tensor, &mut result, &mut label_counts);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_ellipsis_at_end() {
+        const N: usize = 4;
+        let tensor: Tensor<f32> = Tensor::zeros([1; N]);
+        let mut result = [0; N];
+        let mut label_counts = [0; 128];
+
+        parse_operand_subscripts("ab.", &tensor, &mut result, &mut label_counts);
+    }
+
+    #[test]
+    fn test_unique_labels() {
+        const N: usize = 6;
+        let tensor: Tensor<f32> = Tensor::zeros([1; N]);
+        let mut result = [0; N];
+        let mut label_counts = [0; 128];
+
+        parse_operand_subscripts("abcdef", &tensor, &mut result, &mut label_counts);
+        assert_eq!(result, [97, 98, 99, 100, 101, 102]);
+    }
+
+    #[test]
+    fn test_parse_operand_subscripts_with_repeats() {
+        const N: usize = 6;
+        let tensor: Tensor<f32> = Tensor::zeros([1; N]);
+        let mut result = [-45; N];
+        let mut label_counts = [0; 128];
+
+        parse_operand_subscripts("abbcbc", &tensor, &mut result, &mut label_counts);
+
+        assert_eq!(result, [97, 98, -1, 99, -3, -2]);
+    }
+
+    #[test]
+    fn test_ellipsis_middle() {
+        const N: usize = 7;
+        let tensor: Tensor<f32> = Tensor::zeros([1; N]);
+        let mut result = [0; N];
+        let mut label_counts = [0; 128];
+
+        parse_operand_subscripts("ab..bc", &tensor, &mut result, &mut label_counts);
+        assert_eq!(result, [97, 98, 0, 0, 0, -3, 99]);
+    }
+
+    #[test]
+    fn test_ellipsis_start() {
+        const N: usize = 5;
+        let tensor: Tensor<f32> = Tensor::zeros([1; N]);
+        let mut result = [0; N];
+        let mut label_counts = [0; 128];
+
+        parse_operand_subscripts("..ab", &tensor, &mut result, &mut label_counts);
+        assert_eq!(result, [0, 0, 0, 97, 98]);
+    }
+
 
     #[test]
     fn test_get_augmented_stride() {

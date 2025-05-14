@@ -1,4 +1,3 @@
-use cpu_time::ProcessTime;
 use chela::*;
 
 #[test]
@@ -162,17 +161,4 @@ fn test_einsum_repeated_output_indices() {
     let result = einsum([&a], (["ii"], "ii"));
     let expected = Tensor::from([[1, 0], [0, 4]]);
     assert_eq!(result, expected);
-}
-
-#[test]
-fn profile() {
-    let i = 10;
-    let j = 100;
-    let k = 1000;
-
-    let tensor_a: Tensor<f32> = Tensor::rand([i, k]);
-    let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
-
-    let result = einsum([&tensor_a, &tensor_b], (["ik", "jk"], "ij"));
-    println!("{:?}", result);
 }

@@ -4,7 +4,7 @@ use std::env;
 use cpu_time::ProcessTime;
 
 
-fn profile(size: usize) -> u128 {
+fn profile(_: usize) -> u128 {
     let i = 10;
     let j = 100;
     let k = 10000;
