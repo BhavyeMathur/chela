@@ -256,6 +256,7 @@ fn operand_iter_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
     unsafe { BufferIterator::from_reshaped_view(operand, &iter_shape, &stride) }
 }
 
+// TODO this is around 10x slower than NumPy. We need to speed it up!
 pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N],
                                                       subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
     let mut operand_labels = [[0; MAX_DIMS]; N];
@@ -316,16 +317,13 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     let nterms = iter_shape.iter().product::<usize>() / output_len;
 
     for dst in output.iter_mut() {
-        for _ in 0..nterms {
-            let mut product = T::one();
-            for src in input_iters.iter_mut() {
-                product *= unsafe { *src.next().unwrap_unchecked() };
-            }
-
-            *dst += product;
-        }
+        *dst = (0..nterms).map(|_| {
+            input_iters
+                .iter_mut()
+                .map(|src| unsafe { *src.next().unwrap_unchecked() })
+                .product()
+        }).sum()
     }
-
     unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
 }
 
