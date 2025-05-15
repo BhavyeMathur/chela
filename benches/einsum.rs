@@ -137,7 +137,7 @@ fn einsum10() -> u128 {
 fn einsum_2operands_0() -> u128 {
     let i = 100;
     let j = 50;
-    let k = 200;
+    let k = 100;
 
     let tensor_a: Tensor<f32> = Tensor::rand([i, j]);
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
@@ -150,7 +150,7 @@ fn einsum_2operands_0() -> u128 {
 fn einsum_2operands_1() -> u128 {
     let i = 100;
     let j = 50;
-    let k = 200;
+    let k = 100;
 
     let tensor_a: Tensor<f32> = Tensor::rand([i, j]);
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
@@ -163,7 +163,7 @@ fn einsum_2operands_1() -> u128 {
 fn einsum_2operands_2() -> u128 {
     let i = 100;
     let j = 50;
-    let k = 200;
+    let k = 100;
 
     let tensor_a: Tensor<f32> = Tensor::rand([i, j]);
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
@@ -176,7 +176,7 @@ fn einsum_2operands_2() -> u128 {
 fn einsum_2operands_3() -> u128 {
     let i = 100;
     let j = 50;
-    let k = 200;
+    let k = 100;
 
     let tensor_a: Tensor<f32> = Tensor::rand([i, j]);
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);

@@ -139,7 +139,7 @@ class Einsum2Operands0(TensorEinsumBase):
     name = "ij,jk->"
 
     def __init__(self):
-        super().__init__(self.name, {"i": 100, "j": 50, "k": 200})
+        super().__init__(self.name, {"i": 100, "j": 50, "k": 100})
 
 
 class Einsum2Operands1(TensorEinsumBase):
@@ -147,7 +147,7 @@ class Einsum2Operands1(TensorEinsumBase):
     name = "ij,jk->i"
 
     def __init__(self):
-        super().__init__(self.name, {"i": 100, "j": 50, "k": 200})
+        super().__init__(self.name, {"i": 100, "j": 50, "k": 100})
 
 
 class Einsum2Operands2(TensorEinsumBase):
@@ -155,7 +155,7 @@ class Einsum2Operands2(TensorEinsumBase):
     name = "ij,jk->ij"
 
     def __init__(self):
-        super().__init__(self.name, {"i": 100, "j": 50, "k": 200})
+        super().__init__(self.name, {"i": 100, "j": 50, "k": 100})
 
 
 class Einsum2Operands3(TensorEinsumBase):
@@ -163,7 +163,7 @@ class Einsum2Operands3(TensorEinsumBase):
     name = "ij,jk->ijk"
 
     def __init__(self):
-        super().__init__(self.name, {"i": 100, "j": 50, "k": 200})
+        super().__init__(self.name, {"i": 100, "j": 50, "k": 100})
 
 
 if __name__ == "__main__":
@@ -184,5 +184,5 @@ if __name__ == "__main__":
         Einsum2Operands1,
         Einsum2Operands2,
         Einsum2Operands3
-    ], n=10)
+    ], n=20)
     plot_barplot(results, "Einstein Summation Benchmark")
