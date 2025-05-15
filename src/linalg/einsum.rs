@@ -17,12 +17,12 @@ Examples:
     subscripts="abbcbc",  ndim=6 -> result = [97, 98, -1, 99, -3, -2]
     subscripts="ab..bc", ndim=6 -> result = [97, 98, 0, 0, -3, 99]
  */
-fn parse_operand_subscripts<T: NumericDataType>(subscripts: &str,
-                                                operand: &Tensor<T>,
-                                                result: &mut [i8; MAX_DIMS],
-                                                label_counts: &mut [u32; 128],
-                                                label_dims: &mut [usize; 128],
-                                                broadcast_dims: &mut usize) {
+fn parse_operand_subscripts<A: TensorMethods>(subscripts: &str,
+                                              operand: &A,
+                                              result: &mut [i8; MAX_DIMS],
+                                              label_counts: &mut [u32; 128],
+                                              label_dims: &mut [usize; 128],
+                                              broadcast_dims: &mut usize) {
     if !subscripts.is_ascii() {
         panic!("einsum subscripts must be ascii");
     }
@@ -149,10 +149,10 @@ fn parse_output_subscripts(subscripts: &str,
 }
 
 
-fn reshape_shape_and_stride_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<T>,
-                                                           labels: &[i8; MAX_DIMS],
-                                                           output_dims: usize,
-                                                           output_labels: &[i8]) -> Option<(Vec<usize>, Vec<usize>)> {
+fn reshape_shape_and_stride_for_einsum<'a, A: TensorMethods>(operand: &'a A,
+                                                             labels: &[i8; MAX_DIMS],
+                                                             output_dims: usize,
+                                                             output_labels: &[i8]) -> Option<(Vec<usize>, Vec<usize>)> {
     let mut new_stride = vec![0; output_dims];
     let mut new_shape = vec![0; output_dims];
 
@@ -349,10 +349,10 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
     unsafe { Tensor::reshaped_view(&operand, new_shape, new_stride) }
 }
 
-fn operand_stride_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
-                                                 operand_labels: &[i8; MAX_DIMS],
-                                                 result: &mut [usize],
-                                                 iter_labels: &[i8]) {
+fn operand_stride_for_einsum<A: TensorMethods>(operand: &A,
+                                               operand_labels: &[i8; MAX_DIMS],
+                                               result: &mut [usize],
+                                               iter_labels: &[i8]) {
     for (i, &label) in iter_labels.iter().enumerate() {
         if label == 0 {
             panic!("broadcasting in einsum is currently unsupported");
@@ -406,7 +406,7 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
 
     // parse input & output subscripts
 
-    for (i, (subscript, operand)) in subscripts.0.iter().zip(operands.iter()).enumerate() {
+    for (i, (subscript, &operand)) in subscripts.0.iter().zip(operands.iter()).enumerate() {
         parse_operand_subscripts(subscript, operand, &mut operand_labels[i], &mut label_counts, &mut label_dims, &mut broadcast_dims);
         max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
     }
@@ -471,7 +471,7 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     for ((operand, labels), stride) in reshaped_operands.iter()
                                                         .zip(operand_labels.iter_mut())
                                                         .zip(operand_strides.iter_mut()) {
-        operand_stride_for_einsum(&operand, labels, stride, iter_labels)
+        operand_stride_for_einsum(operand, labels, stride, iter_labels)
     }
 
 
