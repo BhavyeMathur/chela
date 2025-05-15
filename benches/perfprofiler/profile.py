@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Type, Any
+from typing import Callable, Type
 from collections import defaultdict
 import time
 
@@ -43,10 +43,12 @@ def cls_profile(cls, *args, n: int = 10, verbose: bool = True, **kwargs) -> dict
     return results
 
 
+# noinspection PyUnresolvedReferences
 def profile(suite: Type["TimingSuite"], *args, n: int = 10, **kwargs) -> dict[str, Result]:
     return suite.profile(*args, n=n, **kwargs)
 
 
+# noinspection PyUnresolvedReferences
 def profile_all(suites: list[Type["TimingSuite"]], *args, n: int = 10, **kwargs) -> dict[str, dict[str, Result]]:
     return {suite.name: profile(suite, *args, n=n, **kwargs) for suite in suites}
 

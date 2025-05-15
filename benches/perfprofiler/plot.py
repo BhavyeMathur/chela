@@ -65,7 +65,7 @@ def plot_barplot(results: dict[str, dict[str, Result]],
                  normalize: str = "NumPy") -> None:
 
     suites = []
-    data = defaultdict(list)
+    data: dict[str, np.ndarray] | defaultdict = defaultdict(list)
     errors = defaultdict(list)
     max_ = 0
 
