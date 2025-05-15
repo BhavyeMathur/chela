@@ -1,5 +1,4 @@
 use crate::dtype::RawDataType;
-use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::iterator::util::split_by_indices;
 use crate::tensor::flags::TensorFlags;
 use crate::traits::haslength::HasLength;
@@ -20,20 +19,6 @@ pub struct NdIterator<'a, T: RawDataType> {
 impl<T: RawDataType> Tensor<'_, T> {
     pub(in crate::tensor) unsafe fn offset_ptr(&mut self, offset: isize) {
         self.ptr = self.ptr.offset(offset);
-    }
-
-    #[inline]
-    pub fn has_uniform_stride(&self) -> Option<usize> {
-        if !self.flags.contains(TensorFlags::UniformStride) {
-            return None;
-        }
-
-        if self.ndims() == 0 {
-            return Some(0);
-        }
-
-        let (_, new_stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
-        Some(new_stride[0])
     }
 }
 

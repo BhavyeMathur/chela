@@ -1,5 +1,5 @@
 use crate::dtype::RawDataType;
-use crate::Tensor;
+use crate::{Tensor, TensorMethods};
 use std::ops::Index;
 
 impl<T: RawDataType, const D: usize> Index<[usize; D]> for Tensor<'_, T> {

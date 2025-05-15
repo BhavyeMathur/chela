@@ -26,6 +26,7 @@ use crate::tensor::flags::TensorFlags;
 pub use iterator::*;
 pub use reduce::*;
 pub use einsum::*;
+pub use methods::*;
 
 const MAX_DIMS: usize = 32;
 

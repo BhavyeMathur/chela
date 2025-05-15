@@ -1,6 +1,6 @@
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
-use crate::{Axis, Tensor};
+use crate::{Axis, Tensor, TensorMethods};
 use crate::slice::update_flags_with_contiguity;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {

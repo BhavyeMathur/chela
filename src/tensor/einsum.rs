@@ -1,7 +1,7 @@
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::tensor::MAX_DIMS;
-use crate::Tensor;
+use crate::{Tensor, TensorMethods};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
