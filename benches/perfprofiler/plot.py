@@ -1,7 +1,26 @@
+from collections import defaultdict
+import colorsys
+
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
+import numpy as np
 
 from .result import Result
+
+
+def hex_to_rgb(hex_color: str) -> tuple[float, float, float]:
+    hex_color = hex_color.lstrip("#")
+    r = int(hex_color[0:2], 16) / 255
+    g = int(hex_color[2:4], 16) / 255
+    b = int(hex_color[4:6], 16) / 255
+    return r, g, b
+
+
+def scale_lightness(hex_color: str, scale_l: float) -> tuple[float, float, float]:
+    rgb = hex_to_rgb(hex_color)
+    h, l, s = colorsys.rgb_to_hls(*rgb)
+    return colorsys.hls_to_rgb(h, min(1, l * scale_l), s=min(1, s * scale_l))
+
 
 colors = {
     "NumPy":       "#4dabcf",
@@ -41,4 +60,53 @@ def plot_results(x, results: dict[str, list[Result]],
     plt.show()
 
 
-__all__ = ["plot_results"]
+def plot_barplot(results: dict[str, dict[str, Result]],
+                 title: str,
+                 normalize: str = "NumPy") -> None:
+
+    suites = []
+    data = defaultdict(list)
+    errors = defaultdict(list)
+    max_ = 0
+
+    for suite, results in results.items():
+        suites.append(suite)
+
+        for series, result in results.items():
+            data[series].append(1000 * float(result))
+            errors[series].append(1000 * result.se())
+
+    normalizer = np.array(data[normalize])
+    for (series, result), (_, error) in zip(data.items(), errors.items()):
+        data[series] = np.array(result) / normalizer
+        errors[series] = np.array(error) / normalizer
+        max_ = max(max_, data[series].max())
+
+    x = np.arange(len(suites))
+    width = 0.25
+    multiplier = 0
+
+    fig, ax = plt.subplots(figsize=(12, 7))
+    ax.set_ylabel(f"Time (relative to {normalize})")
+    ax.set_title(title)
+
+    for (series, measurement), (_, error) in zip(data.items(), errors.items()):
+        color = colors.get(series)
+        ecolor = scale_lightness(color, 0.9)
+
+        offset = width * multiplier
+
+        rects = ax.bar(x + offset, height=measurement, width=width, color=color, label=series,
+                       yerr=error, error_kw={"elinewidth": 1, "mew": 1, "capsize": 4, "ecolor": ecolor,
+                                             "mfc":    ecolor, "mec": ecolor, "ms": 4, "fmt": "o"})
+        ax.bar_label(rects, fmt="{:.2f}x", padding=3, size=7)
+        multiplier += 1
+
+    ax.set_xticks(x + width, suites, size=7)
+    ax.set_ylim(0, 1.1 * max_)
+    ax.legend(loc="best", ncols=3)
+
+    plt.show()
+
+
+__all__ = ["plot_results", "plot_barplot"]

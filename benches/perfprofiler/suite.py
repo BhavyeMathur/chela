@@ -1,32 +1,28 @@
-from typing import Iterable
-import subprocess
+from __future__ import annotations
 
+from typing import Iterable
 from tqdm import tqdm
 
-# noinspection PyProtectedMember
-from .profile import profile, profile_methods, rust_methods
-from .util import merge_dicts
-from .result import Result
-
-
-# from tqdm import tqdm
+from .profile import cls_profile, profile_methods, rust_methods
 
 
 class TimingSuiteMeta(type):
     perf_methods = {}
 
     def __new__(cls, name, bases, attrs):
-        attrs["perf_methods"] = profile_methods.pop(name, {})
-        attrs["rust_methods"] = rust_methods.pop(name, {})
-        attrs["profile"] = profile
+        attrs["perf_methods"] = profile_methods.get(name, {})
+        attrs["rust_methods"] = rust_methods.get(name, {})
+        attrs["profile"] = cls_profile
+
+        for base in bases:
+            attrs["perf_methods"].update(profile_methods.get(base.__name__, {}))
+            attrs["rust_methods"].update(rust_methods.get(base.__name__, {}))
+
         return type.__new__(cls, name, bases, attrs)
 
 
 class TimingSuite(metaclass=TimingSuiteMeta):
-    def run_rust(self, executable, *argv) -> float:
-        value = subprocess.check_output(f"{executable} {''.join(map(str, argv))}", shell=True)
-        return int(value)
-
+    name: str = ""
     def profile(*args, **kwargs) -> dict[str, Result]:
         raise NotImplementedError()  # implemented by TimingSuiteMeta
 
@@ -48,3 +44,7 @@ class TimingSuite(metaclass=TimingSuiteMeta):
 
 
 __all__ = ["TimingSuite"]
+
+# noinspection PyProtectedMember
+from .util import merge_dicts
+from .result import Result
