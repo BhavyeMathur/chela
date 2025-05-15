@@ -111,7 +111,7 @@ class TensorEinsum9(TensorEinsumBase):
 
     def __init__(self):
         super().__init__("ii->i",
-                         {"i": 1000})
+                         {"i": 4096})
 
 
 class TensorEinsum10(TensorEinsumBase):
@@ -119,7 +119,7 @@ class TensorEinsum10(TensorEinsumBase):
     name = "Reshape"
 
     def __init__(self):
-        super().__init__("abcd->dcba",  # Axis reversal with shape retention
+        super().__init__("abcd->dcba",
                          {"a": 10, "b": 20, "c": 30, "d": 40})
 
 

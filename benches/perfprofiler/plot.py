@@ -2,7 +2,7 @@ from collections import defaultdict
 import colorsys
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, StrMethodFormatter
 import numpy as np
 
 from .result import Result
@@ -86,7 +86,7 @@ def plot_barplot(results: dict[str, dict[str, Result]],
     width = 0.25
     multiplier = 0
 
-    fig, ax = plt.subplots(figsize=(12, 7))
+    fig, ax = plt.subplots(figsize=(max(7, int(1.5 * len(suites))), 7))
     ax.set_ylabel(f"Time (relative to {normalize})")
     ax.set_title(title)
 
@@ -99,12 +99,13 @@ def plot_barplot(results: dict[str, dict[str, Result]],
         rects = ax.bar(x + offset, height=measurement, width=width, color=color, label=series,
                        yerr=error, error_kw={"elinewidth": 1, "mew": 1, "capsize": 4, "ecolor": ecolor,
                                              "mfc":    ecolor, "mec": ecolor, "ms": 4, "fmt": "o"})
-        ax.bar_label(rects, fmt="{:.2f}x", padding=3, size=7)
+        ax.bar_label(rects, fmt="{:.2f}x", padding=3, size=6)
         multiplier += 1
 
     ax.set_xticks(x + width, suites, size=7)
     ax.set_ylim(0, 1.1 * max_)
     ax.legend(loc="best", ncols=3)
+    ax.yaxis.set_major_formatter(StrMethodFormatter("{x:.0f}x"))
 
     plt.show()
 

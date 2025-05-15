@@ -112,7 +112,7 @@ fn einsum8() -> u128 {
 }
 
 fn einsum9() -> u128 {
-    let i = 1000;
+    let i = 4096;
 
     let tensor_a: Tensor<f32> = Tensor::rand([i, i]);
 
