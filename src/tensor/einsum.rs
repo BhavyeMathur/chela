@@ -283,15 +283,23 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     let nterms = iter_shape.iter().product::<usize>() / output_len;
 
     for dst in output.iter_mut() {
-        for _ in 0..nterms {
-            let mut product = T::one();
-            let index = unsafe { operand_indices.next().unwrap_unchecked() };
-            for (&i, operand) in index.iter().zip(operands.iter()) {
-                product *= unsafe { operand.ptr.add(i).read() };
-            }
+        let mut sum = T::zero();
 
-            *dst += product;
+        let mut i = nterms;
+        while i > 0 {
+            i -= 1;
+
+            unsafe {
+                sum += operand_indices.cur_indices().iter()
+                                      .zip(operands.iter())
+                                      .map(|(&i, operand)|
+                                          *operand.ptr.add(i).as_ptr())
+                                      .product();
+
+                operand_indices.increment_flat_indices();
+            }
         }
+        *dst = sum;
     }
     unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
 }

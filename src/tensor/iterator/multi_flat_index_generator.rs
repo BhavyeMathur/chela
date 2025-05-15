@@ -39,40 +39,54 @@ impl<const N: usize> MultiFlatIndexGenerator<N> {
             flat_indices: [0; N],
         }
     }
+
+    #[inline]
+    pub(crate) unsafe fn cur_indices(&mut self) -> &[usize; N] {
+        &self.flat_indices
+    }
+
+    // SAFETY: this function does not increment self.iterator_index
+    #[inline]
+    pub(crate) unsafe fn increment_flat_indices(&mut self) {
+        let mut idim = self.ndims;
+
+        while idim > 0 {
+            idim -= 1;
+
+            unsafe {
+                let idx = self.indices.get_unchecked_mut(idim);
+                let dimension = *self.shape.get_unchecked(idim);
+                *idx += 1;
+
+                if *idx < dimension {
+                    for (flat_index, stride) in self.flat_indices.iter_mut().zip(self.strides.iter()) {
+                        *flat_index += *stride.get_unchecked(idim);
+                    }
+                    return;
+                }
+
+                *idx = 0; // reset this dimension and carry over to the next
+                for (flat_index, stride) in self.flat_indices.iter_mut().zip(self.strides.iter()) {
+                    *flat_index -= *stride.get_unchecked(idim) * (dimension - 1);
+                }
+            }
+        }
+    }
 }
 
 impl<const N: usize> Iterator for MultiFlatIndexGenerator<N> {
     type Item = [usize; N];
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.iterator_index == self.size {
             return None;
         }
 
         let return_indices = self.flat_indices.clone();
-
-        for idim in (0..self.ndims).rev() {
-            unsafe {
-                let idx = self.indices.get_unchecked_mut(idim);
-                *idx += 1;
-
-                if *idx < *self.shape.get_unchecked(idim) {
-                    for (flat_index, stride) in self.flat_indices.iter_mut().zip(self.strides.iter()) {
-                        *flat_index += *stride.get_unchecked(idim);
-                    }
-                    break;
-                }
-
-                *idx = 0; // reset this dimension and carry over to the next
-                let dim_length_minus_1 = *self.shape.get_unchecked(idim) - 1;
-                for (flat_index, stride) in self.flat_indices.iter_mut().zip(self.strides.iter()) {
-                    *flat_index -= *stride.get_unchecked(idim) * dim_length_minus_1;
-                }
-            }
-        }
-
+        unsafe { self.increment_flat_indices() };
         self.iterator_index += 1;
+
         Some(return_indices)
     }
 }

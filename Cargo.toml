@@ -47,8 +47,11 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(use_apple_accelerate)'] }
 
 [profile.release]
 debug = true
-strip = false
+overflow-checks = false
 
 [features]
 default = []
 apple_accelerate = []
+
+[build]
+rustflags = ["-C", "target-cpu=native"]
