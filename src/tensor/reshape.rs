@@ -24,11 +24,11 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
     }
 
-    pub(super) unsafe fn reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
+    pub(crate) unsafe fn reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
         self.reshaped_view_with_flags(shape, stride, self.flags - TensorFlags::Owned - TensorFlags::Writeable)
     }
 
-    pub(super) unsafe fn mut_reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
+    pub(crate) unsafe fn mut_reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
         self.reshaped_view_with_flags(shape, stride, self.flags - TensorFlags::Owned)
     }
 

@@ -5,6 +5,6 @@ pub mod tensor_iterator;
 
 pub(super) mod collapse_contiguous;
 pub(super) mod flat_iterator;
-pub(super) mod multi_flat_index_generator;
+pub(crate) mod multi_flat_index_generator;
 
 mod util;

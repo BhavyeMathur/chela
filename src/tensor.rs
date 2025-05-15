@@ -18,21 +18,19 @@ pub mod binary_ops;
 
 mod flags;
 pub mod random;
-pub mod einsum;
 
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 
 pub use iterator::*;
 pub use reduce::*;
-pub use einsum::*;
 pub use methods::*;
 
-const MAX_DIMS: usize = 32;
+pub(crate) const MAX_DIMS: usize = 32;
 
 #[derive(Debug)]
 pub struct Tensor<'a, T: RawDataType> {
-    ptr: NonNull<T>,
+    pub(crate) ptr: NonNull<T>,
     len: usize,
     capacity: usize,
 

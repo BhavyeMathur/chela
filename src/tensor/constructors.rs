@@ -47,7 +47,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     }
 
     /// Safety: ensure data is non-empty and shape matches data buffer
-    pub(super) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>, data: Vec<T>) -> Self {
+    pub(crate) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>, data: Vec<T>) -> Self {
         let stride = stride_from_shape(&shape);
         Self::from_owned_buffer(shape, stride, data)
     }

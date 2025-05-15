@@ -15,7 +15,7 @@ pub struct MultiFlatIndexGenerator<const N: usize>
 }
 
 impl<const N: usize> MultiFlatIndexGenerator<N> {
-    pub(in crate::tensor) fn from<const M: usize>(shape: &[usize], strides: &[[usize; M]; N]) -> Self {
+    pub(crate) fn from<const M: usize>(shape: &[usize], strides: &[[usize; M]; N]) -> Self {
         let ndims = shape.len();
         assert!(M >= ndims);
 

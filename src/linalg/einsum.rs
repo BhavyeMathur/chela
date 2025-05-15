@@ -59,8 +59,8 @@ fn parse_operand_subscripts<T: NumericDataType>(subscripts: &str,
 
             label_counts[label as usize] += 1;
             if label_counts[label as usize] == 1 {
-                label_dims[label as usize] = operand.shape[i];
-            } else if label_dims[label as usize] != operand.shape[i] {
+                label_dims[label as usize] = operand.shape()[i];
+            } else if label_dims[label as usize] != operand.shape()[i] {
                 panic!("the dimensions of axes corresponding to the same einsum label must match");
             }
         } else if label == b'.' {
@@ -168,8 +168,8 @@ fn reshape_shape_and_stride_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<T
             match output_labels.iter().position(|&val| val == label) {
                 None => { return None; },
                 Some(axis_in_output) => {
-                    new_shape[axis_in_output] = operand.shape[idim];
-                    new_stride[axis_in_output] += operand.stride[idim];
+                    new_shape[axis_in_output] = operand.shape()[idim];
+                    new_stride[axis_in_output] += operand.stride()[idim];
                 }
             }
         }
@@ -319,8 +319,8 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
 
     for axis in 0..operand.ndims() {
         let label = labels[axis];
-        let dimension = operand.shape[axis];
-        let stride = operand.stride[axis];
+        let dimension = operand.shape()[axis];
+        let stride = operand.stride()[axis];
 
         if label >= 0 { // label seen for the first time
             icombinemap[axis] = icombine;
@@ -366,7 +366,7 @@ fn operand_stride_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
                     if op_label >= 0 { op_label } else { operand_labels[(index as i8 + op_label) as usize] };
 
                 if label == op_label {
-                    result[i] += operand.stride[index];
+                    result[i] += operand.stride()[index];
                 }
             }
         }
