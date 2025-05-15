@@ -192,6 +192,88 @@ fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<T>,
 
 
 /*
+Accelerated einsum loops
+ */
+
+fn einsum_2operands_3labels<'b, T: NumericDataType>(operand1: &Tensor<T>,
+                                                    operand2: &Tensor<T>,
+                                                    strides1: &[usize; 3],
+                                                    strides2: &[usize; 3],
+                                                    iter_shape: &[usize; 3],
+                                                    mut output: Vec<T>,
+                                                    output_shape: Vec<usize>) -> Tensor<'b, T> {
+    let op1 = operand1.ptr.as_ptr() as *const T;
+    let op2 = operand2.ptr.as_ptr() as *const T;
+    let mut dst = output.as_mut_ptr();
+
+    let output_dims = output_shape.len();
+
+    if output_dims == 0 {
+        unsafe {
+            let mut sum = T::zero();
+
+            for i in 0..iter_shape[0] {
+                for j in 0..iter_shape[1] {
+                    for k in 0..iter_shape[2] {
+                        sum += (*op1.add(i * strides1[0] + j * strides1[1] + k * strides1[2]))
+                            * (*op2.add(i * strides2[0] + j * strides2[1] + k * strides2[2]))
+                    }
+                }
+            }
+
+            *dst = sum;
+        }
+    } else if output_dims == 1 {
+        unsafe {
+            for i in 0..iter_shape[0] {
+                let mut sum = T::zero();
+
+                for j in 0..iter_shape[1] {
+                    for k in 0..iter_shape[2] {
+                        sum += (*op1.add(i * strides1[0] + j * strides1[1] + k * strides1[2]))
+                            * (*op2.add(i * strides2[0] + j * strides2[1] + k * strides2[2]))
+                    }
+                }
+
+                *dst = sum;
+                dst = dst.add(1);
+            }
+        }
+    } else if output_dims == 2 {
+        unsafe {
+            for i in 0..iter_shape[0] {
+                for j in 0..iter_shape[1] {
+                    let mut sum = T::zero();
+
+                    for k in 0..iter_shape[2] {
+                        sum += (*op1.add(i * strides1[0] + j * strides1[1] + k * strides1[2]))
+                            * (*op2.add(i * strides2[0] + j * strides2[1] + k * strides2[2]))
+                    }
+
+                    *dst = sum;
+                    dst = dst.add(1);
+                }
+            }
+        }
+    } else if output_dims == 3 {
+        unsafe {
+            for i in 0..iter_shape[0] {
+                for j in 0..iter_shape[1] {
+                    for k in 0..iter_shape[2] {
+                        *dst = (*op1.add(i * strides1[0] + j * strides1[1] + k * strides1[2]))
+                            * (*op2.add(i * strides2[0] + j * strides2[1] + k * strides2[2]));
+                        dst = dst.add(1);
+                    }
+                }
+            }
+        }
+    }
+
+    unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
+}
+
+
+/*
 Collapses dimensions with repeated subscripts. For example in ii-> (trace) or ii->i (diagonal)
  */
 fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
@@ -353,30 +435,47 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     }
     let iter_labels = &iter_labels[0..iter_ndims];
 
+
+    // create iterator to traverse operand values in the correct order
+
     let mut operand_strides = [[0; MAX_DIMS]; N];
     for ((operand, labels), stride) in reshaped_operands.iter()
                                                         .zip(operand_labels.iter_mut())
                                                         .zip(operand_strides.iter_mut()) {
         operand_stride_for_einsum(&operand, labels, stride, iter_labels)
     }
-    let mut operand_indices = MultiFlatIndexGenerator::from(&iter_shape, &operand_strides);
+
+
+    // accelerated loops for specific structures
+
+    if N == 2 && iter_ndims == 3 {
+        return einsum_2operands_3labels(operands[0], operands[1],
+                                        <&[usize; 3]>::try_from(&operand_strides[0][0..3]).unwrap(),
+                                        <&[usize; 3]>::try_from(&operand_strides[1][0..3]).unwrap(),
+                                        <&[usize; 3]>::try_from(&iter_shape[0..3]).unwrap(),
+                                        output, output_shape);
+    }
 
 
     // main einsum calculation loop
+
+    let mut operand_indices = MultiFlatIndexGenerator::from(&iter_shape, &operand_strides);
 
     for dst in output.iter_mut() {
         let mut sum = T::zero();
 
         let mut i = nterms;
-        while i > 0 {
+        while i != 0 {
             i -= 1;
 
             unsafe {
-                sum += operand_indices.cur_indices().iter()
-                                      .zip(operands.iter())
-                                      .map(|(&i, operand)|
-                                          *operand.ptr.add(i).as_ptr())
-                                      .product();
+                let indices = operand_indices.cur_indices();
+
+                sum += indices.iter()
+                              .zip(operands.iter())
+                              .map(|(&i, operand)|
+                                  *operand.ptr.add(i).as_ptr())
+                              .product();
 
                 operand_indices.increment_flat_indices();
             }

@@ -7,12 +7,17 @@ from perfprofiler import *
 class TensorEinsumBase(TimingSuite):
     ID: int
 
-    def __init__(self, einsum_string: str, shapes: dict[str, int]):
+    def __init__(self, einsum_string: str | list[str], shapes: dict[str, int]):
         self.einsum_string = einsum_string
 
-        shapes = self.tensor_dims_from_einsum_string(einsum_string, shapes)
-        self.ndarrays = rand_ndarrays_with_shape(shapes)
-        self.tensors = rand_tensors_with_shape(shapes)
+        if isinstance(self.einsum_string, str):
+            shapes = self.tensor_dims_from_einsum_string(einsum_string, shapes)
+            self.ndarrays = rand_ndarrays_with_shape(shapes)
+            self.tensors = rand_tensors_with_shape(shapes)
+        else:
+            shapes = [self.tensor_dims_from_einsum_string(string, shapes) for string in self.einsum_string]
+            self.ndarrays = [rand_ndarrays_with_shape(shape) for shape in shapes]
+            self.tensors = [rand_tensors_with_shape(shape) for shape in shapes]
 
     @classmethod
     def tensor_dims_from_einsum_string(cls, einsum_string: str, shapes: dict[str, int]) -> list[tuple[int, ...]]:
@@ -22,11 +27,17 @@ class TensorEinsumBase(TimingSuite):
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        torch.einsum(self.einsum_string, *self.tensors)
+        if isinstance(self.einsum_string, str):
+            torch.einsum(self.einsum_string, *self.tensors)
+        else:
+            [torch.einsum(op, *arr) for op, arr in zip(self.einsum_string, self.tensors)]
 
     @measure_performance("NumPy")
     def run(self):
-        np.einsum(self.einsum_string, *self.ndarrays)
+        if isinstance(self.einsum_string, str):
+            np.einsum(self.einsum_string, *self.ndarrays)
+        else:
+            [np.einsum(op, *arr) for op, arr in zip(self.einsum_string, self.tensors)]
 
     @measure_rust_performance("Chela CPU", target="einsum")
     def run(self, executable):
@@ -123,7 +134,55 @@ class TensorEinsum10(TensorEinsumBase):
                          {"a": 10, "b": 20, "c": 30, "d": 40})
 
 
+class Einsum2Operands0(TensorEinsumBase):
+    ID = 100
+    name = "ij,jk->"
+
+    def __init__(self):
+        super().__init__(self.name, {"i": 100, "j": 50, "k": 200})
+
+
+class Einsum2Operands1(TensorEinsumBase):
+    ID = 101
+    name = "ij,jk->i"
+
+    def __init__(self):
+        super().__init__(self.name, {"i": 100, "j": 50, "k": 200})
+
+
+class Einsum2Operands2(TensorEinsumBase):
+    ID = 102
+    name = "ij,jk->ij"
+
+    def __init__(self):
+        super().__init__(self.name, {"i": 100, "j": 50, "k": 200})
+
+
+class Einsum2Operands3(TensorEinsumBase):
+    ID = 103
+    name = "ij,jk->ijk"
+
+    def __init__(self):
+        super().__init__(self.name, {"i": 100, "j": 50, "k": 200})
+
+
 if __name__ == "__main__":
-    results = profile_all([TensorEinsum1, TensorEinsum2, TensorEinsum3, TensorEinsum4, TensorEinsum5,
-                           TensorEinsum6, TensorEinsum7, TensorEinsum8, TensorEinsum9, TensorEinsum10], n=10)
+    results = profile_all([
+        # TensorEinsum1,
+        # TensorEinsum2,
+        # TensorEinsum3,
+        # TensorEinsum4,
+        # TensorEinsum5,
+        # TensorEinsum6,
+        # TensorEinsum7,
+        # TensorEinsum8,
+        # TensorEinsum9,
+        # TensorEinsum10,
+        # TensorEinsum11
+
+        Einsum2Operands0,
+        Einsum2Operands1,
+        Einsum2Operands2,
+        Einsum2Operands3
+    ], n=10)
     plot_barplot(results, "Einstein Summation Benchmark")

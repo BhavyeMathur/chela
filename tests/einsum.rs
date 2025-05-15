@@ -31,6 +31,65 @@ fn test_einsum_basic_matmul() {
 }
 
 #[test]
+fn test_einsum_pointwise_multiplication() {
+    let a = Tensor::from([[1, 2, 3], [0, 1, 2], [4, 5, 6]]);
+    let b = Tensor::from([[5, 6, 7], [10, 20, 30], [3, 6, 9]]);
+    let result = chela::einsum(&[&a, &b], (["ij", "ij"], "ij"));
+    let expected = Tensor::from([[5, 12, 21], [0, 20, 60], [12, 30, 54]]);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_sum_along_axes() {
+    let a = Tensor::from([[1f32, 2.0], [0.0, 1.0]]);
+    let b = Tensor::from([[5.0, 6.0], [10.0, 20.0]]);
+
+    let expected = Tensor::from([71f32, 30.0]);
+    let result = chela::einsum(&[&a, &b], (["ij", "jk"], "i"));
+    assert_eq!(result, expected);
+
+    let expected = Tensor::from([11f32, 90.0]);
+    let result = chela::einsum(&[&a, &b], (["ij", "jk"], "j"));
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_sum_product() {
+    let a = Tensor::from([[1f64, 2.0], [0.0, 1.0]]);
+    let b = Tensor::from([[5.0, 6.0], [10.0, 20.0]]);
+
+    let expected = Tensor::scalar(63.0);
+    let result = chela::einsum(&[&a, &b], (["ij", "ik"], ""));
+    assert_eq!(result, expected);
+
+    let expected = Tensor::scalar(101.0);
+    let result = chela::einsum(&[&a, &b], (["ij", "jk"], ""));
+    assert_eq!(result, expected);
+
+    let expected = Tensor::scalar(71.0);
+    let result = chela::einsum(&[&a, &b], (["ij", "ki"], ""));
+    assert_eq!(result, expected);
+
+    let expected = Tensor::scalar(93.0);
+    let result = chela::einsum(&[&a, &b], (["ij", "kj"], ""));
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_einsum_2operands_to_3d() {
+    let a = Tensor::from([[1u8, 2], [0, 1]]);
+    let b = Tensor::from([[5, 6], [10, 20]]);
+
+    let expected = Tensor::from([[[5u8, 10], [12, 40]], [[0, 0], [6, 20]]]);
+    let result = chela::einsum(&[&a, &b], (["ij", "kj"], "ijk"));
+    assert_eq!(result, expected);
+
+    let expected = Tensor::from([[[5u8, 6], [10, 12]], [[0, 0], [10, 20]]]);
+    let result = chela::einsum(&[&a, &b], (["ij", "ik"], "ijk"));
+    assert_eq!(result, expected);
+}
+
+#[test]
 fn test_einsum_inner_product() {
     let a = Tensor::from([1, 2, 3]);
     let b = Tensor::from([4, 5, 6]);
@@ -49,9 +108,21 @@ fn test_einsum_outer_product() {
 }
 
 #[test]
+fn test_einsum_matrix_outer_product() {
+    let a = Tensor::from([[1, 2], [3, 4]]);
+    let b = Tensor::from([[5, 6], [7, 8]]);
+    let result = chela::einsum(&[&a, &b], (["ij", "kl"], "ijkl"));
+    let expected = Tensor::from([
+        [[[5, 6], [7, 8]], [[10, 12], [14, 16]]],
+        [[[15, 18], [21, 24]], [[20, 24], [28, 32]]]
+    ]);
+    assert_eq!(result, expected);
+}
+
+#[test]
 fn test_einsum_trace() {
     let a = Tensor::from([[1, 2],
-                                            [3, 4]]);
+        [3, 4]]);
     let result = einsum(&[&a], (["ii"], ""));
     let expected = Tensor::scalar(5); // trace: 1 + 4
     assert_eq!(result, expected);

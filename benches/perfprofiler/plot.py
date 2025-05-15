@@ -70,7 +70,7 @@ def plot_barplot(results: dict[str, dict[str, Result]],
     max_ = 0
 
     for suite, results in results.items():
-        suites.append(suite)
+        suites.append(suite.replace("->", "→"))
 
         for series, result in results.items():
             data[series].append(1000 * float(result))
