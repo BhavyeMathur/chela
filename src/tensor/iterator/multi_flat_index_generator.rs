@@ -5,7 +5,7 @@ pub struct MultiFlatIndexGenerator<const N: usize>
 {
     ndims: usize,
     shape: [usize; MAX_DIMS],
-    strides: [[usize; MAX_DIMS]; N],
+    strides: [[usize; N]; MAX_DIMS],
 
     size: usize,
     iterator_index: usize,
@@ -24,9 +24,11 @@ impl<const N: usize> MultiFlatIndexGenerator<N> {
         let mut new_shape = [0; MAX_DIMS];
         new_shape[0..ndims].copy_from_slice(&shape);
 
-        let mut new_strides = [[0; MAX_DIMS]; N];
-        for (stride, new_stride) in strides.iter().zip(new_strides.iter_mut()) {
-            new_stride[0..ndims].copy_from_slice(&stride[0..ndims]);
+        let mut new_strides = [[0; N]; MAX_DIMS];
+        for j in 0..ndims {
+            for i in 0..N {
+                new_strides[j][i] = strides[i][j];
+            }
         }
 
         Self {
@@ -56,18 +58,19 @@ impl<const N: usize> MultiFlatIndexGenerator<N> {
             unsafe {
                 let idx = self.indices.get_unchecked_mut(idim);
                 let dimension = *self.shape.get_unchecked(idim);
+                let strides = self.strides.get_unchecked(idim);
                 *idx -= 1;
 
                 if *idx != 0 {
-                    for (flat_index, stride) in self.flat_indices.iter_mut().zip(self.strides.iter()) {
-                        *flat_index += *stride.get_unchecked(idim);
+                    for (i, flat_index) in self.flat_indices.iter_mut().enumerate() {
+                        *flat_index += strides[i];
                     }
                     return;
                 }
 
                 *idx = dimension; // reset this dimension and carry over to the next
-                for (flat_index, stride) in self.flat_indices.iter_mut().zip(self.strides.iter()) {
-                    *flat_index -= *stride.get_unchecked(idim) * (dimension - 1);
+                for (i, flat_index) in self.flat_indices.iter_mut().enumerate() {
+                    *flat_index -= strides[i] * (dimension - 1);
                 }
             }
         }
