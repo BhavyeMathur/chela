@@ -79,8 +79,12 @@ fn test_einsum_scalar_times_tensor() {
 #[test]
 fn test_einsum_transpose() {
     let a = Tensor::from([[1, 2, 3], [4, 5, 6]]);
-    let result = einsum(&[&a], (["ij"], "ji"));
     let expected = Tensor::from([[1, 4], [2, 5], [3, 6]]);
+
+    let result = einsum(&[&a], (["ij"], "ji"));
+    assert_eq!(result, expected);
+
+    let result = einsum_view(&a, ("ij", "ji")).unwrap();
     assert_eq!(result, expected);
 }
 
@@ -109,8 +113,12 @@ fn test_einsum_broadcasting_vector_matrix() {
 #[test]
 fn test_einsum_diagonal_extraction() {
     let a = Tensor::from([[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
-    let result = einsum(&[&a], (["ii"], "i")); // Extract diagonal
     let expected = Tensor::from([1, 5, 9]);
+
+    let result = einsum(&[&a], (["ii"], "i"));
+    assert_eq!(result, expected);
+
+    let result = einsum_view(&a, ("ii", "i")).unwrap();
     assert_eq!(result, expected);
 }
 
@@ -139,6 +147,9 @@ fn test_einsum_identity() {
 
     let a = Tensor::from([[0, 0], [0, 0]]);
     let result = einsum(&[&a], (["ij"], "ij"));
+    assert_eq!(result, a);
+
+    let result = einsum_view(&a, ("ij", "ij")).unwrap();
     assert_eq!(result, a);
 }
 

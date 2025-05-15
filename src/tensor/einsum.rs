@@ -148,6 +148,37 @@ fn parse_output_subscripts(subscripts: &str,
     if found_ellipsis { (ndims - 2) + broadcast_dims } else { ndims }
 }
 
+
+fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<T>,
+                                              labels: &[i8; MAX_DIMS],
+                                              output_dims: usize,
+                                              output_labels: &[i8]) -> Option<Tensor<'a, T>> {
+    let mut new_stride = vec![0; output_dims];
+    let mut new_shape = vec![0; output_dims];
+
+    for idim in 0..operand.ndims() {
+        let mut label = labels[idim];
+        if label < 0 {
+            label = labels[(idim as i8 + label) as usize];
+        }
+
+        if label == 0 {
+            panic!("broadcasting in einsum is currently unsupported");
+        } else {
+            match output_labels.iter().position(|&val| val == label) {
+                None => { return None; },
+                Some(axis_in_output) => {
+                    new_shape[axis_in_output] = operand.shape[idim];
+                    new_stride[axis_in_output] += operand.stride[idim];
+                }
+            }
+        }
+    }
+
+    unsafe { Some(operand.reshaped_view(new_shape, new_stride)) }
+}
+
+
 /*
 Collapses dimensions with repeated subscripts. For example in ii-> (trace) or ii->i (diagonal)
  */
@@ -219,6 +250,25 @@ fn operand_stride_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
     }
 }
 
+pub fn einsum_view<'b, T: NumericDataType>(operand: &'b Tensor<T>,
+                                           subscripts: (&str, &str)) -> Option<Tensor<'b, T>> {
+    let mut labels = [0; MAX_DIMS];
+    let mut output_labels = [0; MAX_DIMS];
+    let mut label_counts = [0; 128];
+
+    let mut broadcast_dims = 0;
+    let mut max_broadcast_dims = 0;
+
+    parse_operand_subscripts(subscripts.0, operand, &mut labels, &mut label_counts, &mut [0; 128], &mut broadcast_dims);
+    max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
+
+    let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
+    let output_labels = &output_labels[0..output_dims];
+
+    // try returning a reshaped view of the tensor
+    try_reshape_for_einsum(operand, &labels, output_dims, output_labels)
+}
+
 // TODO this is around 2.5x slower than NumPy. We need to speed it up!
 pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N],
                                                       subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
@@ -231,16 +281,11 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     let mut max_broadcast_dims = 0;
 
 
-    // parse input operands
+    // parse input & output subscripts
 
     for (i, (subscript, operand)) in subscripts.0.iter().zip(operands.iter()).enumerate() {
         parse_operand_subscripts(subscript, operand, &mut operand_labels[i], &mut label_counts, &mut label_dims, &mut broadcast_dims);
         max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
-    }
-
-    let mut reshaped_operands = Vec::with_capacity(N);
-    for (operand, labels) in operands.iter().zip(operand_labels.iter_mut()) {
-        reshaped_operands.push(reshape_operand_for_einsum(operand, labels));
     }
 
     let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
@@ -249,6 +294,13 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     let mut iter_labels = output_labels;
     let output_labels = &output_labels[0..output_dims];
 
+
+    // process input operands and combine dimensions with duplicate subscripts
+
+    let mut reshaped_operands = Vec::with_capacity(N);
+    for (operand, labels) in operands.iter().zip(operand_labels.iter_mut()) {
+        reshaped_operands.push(reshape_operand_for_einsum(operand, labels));
+    }
 
     // set up the output buffer after calculating its shape
 

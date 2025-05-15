@@ -117,7 +117,7 @@ fn einsum9() -> u128 {
     let tensor_a: Tensor<f32> = Tensor::rand([i, i]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a], (["ii"], "i"));
+    _ = einsum_view(&tensor_a, ("ii", "i")).unwrap();
     start.elapsed().as_nanos()
 }
 
@@ -130,7 +130,7 @@ fn einsum10() -> u128 {
     let tensor_a: Tensor<f32> = Tensor::rand([a, b, c, d]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a], (["abcd"], "dcba"));
+    _ = einsum_view(&tensor_a, ("abcd", "dcba")).unwrap();
     start.elapsed().as_nanos()
 }
 
