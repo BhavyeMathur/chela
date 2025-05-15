@@ -29,7 +29,7 @@ class TensorSum(TimingSuite):
     def run(self):
         torch.einsum("abc,bd,ce->ae", self.tensor_a_cpu, self.tensor_b_cpu, self.tensor_c_cpu)
 
-    @measure_rust_performance("Chela CPU", target="einsum")
+    @measure_rust_performance("Chela CPU", target="einsum2")
     def run(self, executable):
         return self.run_rust(executable, self.n)
 

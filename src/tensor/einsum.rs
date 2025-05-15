@@ -255,6 +255,7 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     // create iterators to iterate over the operands in the correct order
 
     let mut iter_shape = output_shape.clone();
+    let mut nterms = 1;
     for label in 0i8..=127 {
         if label_counts[label as usize] == 0 || output_labels.contains(&label) {
             continue;
@@ -263,24 +264,30 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
             panic!("too many subscripts in einsum");
         }
 
+        let dimension = label_dims[label as usize];
+        nterms *= dimension;
+
         iter_labels[iter_ndims] = label;
-        iter_shape.push(label_dims[label as usize]);
+        iter_shape.push(dimension);
         iter_ndims += 1;
     }
     let iter_labels = &iter_labels[0..iter_ndims];
 
+    let mut reshaped_operands = Vec::with_capacity(N);
+    for (operand, labels) in operands.iter().zip(operand_labels.iter_mut()) {
+        reshaped_operands.push(reshape_operand_for_einsum(operand, labels));
+    }
+
     let mut operand_strides = [[0; MAX_DIMS]; N];
-    for ((operand, labels), stride) in operands.iter()
-                                               .zip(operand_labels.iter_mut())
-                                               .zip(operand_strides.iter_mut()) {
+    for ((operand, labels), stride) in reshaped_operands.iter()
+                                                        .zip(operand_labels.iter_mut())
+                                                        .zip(operand_strides.iter_mut()) {
         operand_stride_for_einsum(&operand, labels, stride, iter_labels)
     }
     let mut operand_indices = MultiFlatIndexGenerator::from(&iter_shape, &operand_strides);
 
 
     // main einsum calculation loop
-
-    let nterms = iter_shape.iter().product::<usize>() / output_len;
 
     for dst in output.iter_mut() {
         let mut sum = T::zero();
