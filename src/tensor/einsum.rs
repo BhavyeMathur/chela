@@ -219,7 +219,7 @@ fn operand_stride_for_einsum<T: NumericDataType>(operand: &Tensor<T>,
     }
 }
 
-// TODO this is around 10x slower than NumPy. We need to speed it up!
+// TODO this is around 2.5x slower than NumPy. We need to speed it up!
 pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N],
                                                       subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
     let mut operand_labels = [[0; MAX_DIMS]; N];
@@ -230,9 +230,17 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
     let mut broadcast_dims = 0;
     let mut max_broadcast_dims = 0;
 
+
+    // parse input operands
+
     for (i, (subscript, operand)) in subscripts.0.iter().zip(operands.iter()).enumerate() {
         parse_operand_subscripts(subscript, operand, &mut operand_labels[i], &mut label_counts, &mut label_dims, &mut broadcast_dims);
         max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
+    }
+
+    let mut reshaped_operands = Vec::with_capacity(N);
+    for (operand, labels) in operands.iter().zip(operand_labels.iter_mut()) {
+        reshaped_operands.push(reshape_operand_for_einsum(operand, labels));
     }
 
     let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
@@ -272,11 +280,6 @@ pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N]
         iter_ndims += 1;
     }
     let iter_labels = &iter_labels[0..iter_ndims];
-
-    let mut reshaped_operands = Vec::with_capacity(N);
-    for (operand, labels) in operands.iter().zip(operand_labels.iter_mut()) {
-        reshaped_operands.push(reshape_operand_for_einsum(operand, labels));
-    }
 
     let mut operand_strides = [[0; MAX_DIMS]; N];
     for ((operand, labels), stride) in reshaped_operands.iter()

@@ -31,11 +31,11 @@ impl<const N: usize> MultiFlatIndexGenerator<N> {
 
         Self {
             ndims,
-            shape: new_shape,
+            shape: new_shape.clone(),
             strides: new_strides,
             size,
             iterator_index: 0,
-            indices: [0; MAX_DIMS],
+            indices: new_shape,
             flat_indices: [0; N],
         }
     }
@@ -50,22 +50,22 @@ impl<const N: usize> MultiFlatIndexGenerator<N> {
     pub(crate) unsafe fn increment_flat_indices(&mut self) {
         let mut idim = self.ndims;
 
-        while idim > 0 {
+        while idim != 0 {
             idim -= 1;
 
             unsafe {
                 let idx = self.indices.get_unchecked_mut(idim);
                 let dimension = *self.shape.get_unchecked(idim);
-                *idx += 1;
+                *idx -= 1;
 
-                if *idx < dimension {
+                if *idx != 0 {
                     for (flat_index, stride) in self.flat_indices.iter_mut().zip(self.strides.iter()) {
                         *flat_index += *stride.get_unchecked(idim);
                     }
                     return;
                 }
 
-                *idx = 0; // reset this dimension and carry over to the next
+                *idx = dimension; // reset this dimension and carry over to the next
                 for (flat_index, stride) in self.flat_indices.iter_mut().zip(self.strides.iter()) {
                     *flat_index -= *stride.get_unchecked(idim) * (dimension - 1);
                 }
