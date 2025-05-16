@@ -46,7 +46,6 @@ dead_code = "allow"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(use_apple_accelerate)'] }
 
 [profile.release]
-debug = true
 overflow-checks = false
 
 [features]
