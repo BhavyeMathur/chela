@@ -1,9 +1,9 @@
-use std::hint::assert_unchecked;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
+use crate::linalg::specialized_einsum::*;
+use crate::linalg::sum_of_products::EinsumDataType;
 use crate::tensor::MAX_DIMS;
 use crate::{Tensor, TensorMethods};
-use crate::linalg::specialized_einsum::*;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -284,8 +284,8 @@ pub fn einsum_view<'b, T: NumericDataType>(operand: &'b Tensor<T>,
 }
 
 // TODO this is around 2.5x slower than NumPy. We need to speed it up!
-pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N],
-                                                      subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
+pub fn einsum<'b, const N: usize, T: EinsumDataType>(operands: &[&Tensor<T>; N],
+                                                     subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
     if N == 0 {
         return Tensor::scalar(T::one());
     }

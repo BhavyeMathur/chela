@@ -1,58 +1,32 @@
-use std::hint::assert_unchecked;
-use crate::dtype::NumericDataType;
+use crate::dtype::{IntegerDataType, NumericDataType};
 use crate::tensor::MAX_DIMS;
+use std::hint::assert_unchecked;
 
-pub(super) fn get_sum_of_products_function<const N: usize>(strides: [usize; N]) -> SumOfProductFunc {
+#[cfg(target_arch = "aarch64")]
+use core::arch::aarch64::*;
+
+pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(strides: [usize; N])
+                                                                              -> unsafe fn(&[*const T; N], &[usize; N], usize, *mut T) {
     if N == 2 {
         let mut code = if strides[0] == 0 { 0 } else { if strides[0] == 1 { 4 } else { 8 } };
         code += if strides[1] == 0 { 0 } else { if strides[1] == 1 { 2 } else { 8 } };
         // code += if strides[2] == 0 { 0 } else { if strides[2] == 1 { 1 } else { 8 } };  // NumPy stores the output's stride as element 2
 
         if code == 2 {
-            return SumOfProductFunc::Stride0ContiguousOutstride0Two;
+            return <T as EinsumDataType>::stride0_contig_outstride0_two;
         }
     }
 
-    SumOfProductFunc::Generic
+    <T as EinsumDataType>::generic
 }
 
-pub(super) enum SumOfProductFunc {
-    Generic,
-    Stride0ContiguousOutstride0Two
-}
-
-pub(super) struct SumOfProductsGeneric;
-pub(super) struct Stride0ContiguousOutstride0Two;
-
-#[macro_export]
-macro_rules! dispatch_einsum_func {
-    (
-        $dispatch_enum:expr,
-        $einsum_fn:ident,
-        $( $arg:expr ),* $(,)?
-    ) => {
-        match $dispatch_enum {
-            SumOfProductFunc::Generic => {
-                $einsum_fn::<T, SumOfProductsGeneric>($( $arg ),*);
-            }
-            SumOfProductFunc::Stride0ContiguousOutstride0Two => {
-                $einsum_fn::<T, Stride0ContiguousOutstride0Two>($( $arg ),*);
-            }
-        }
-    };
-}
-
-pub(super) trait SumOfProducts<const N: usize, T: NumericDataType> {
-    unsafe fn call(ptrs: &[*const T; N], strides: &[usize; N], count: usize) -> T;
-}
-
-impl<const N: usize, T: NumericDataType> SumOfProducts<N, T> for SumOfProductsGeneric {
+pub(super) trait EinsumDataType: NumericDataType {
     #[inline(always)]
-    unsafe fn call(ptrs: &[*const T; N], strides: &[usize; N], count: usize) -> T {
+    unsafe fn generic<const N: usize>(ptrs: &[*const Self; N], strides: &[usize; N], count: usize, dst: *mut Self) {
         assert_unchecked(count > 0);
         assert_unchecked(N > 0 && N <= MAX_DIMS);
 
-        let mut sum = T::zero();
+        let mut sum = Self::zero();
 
         let mut k = count;
         while k != 0 {
@@ -62,18 +36,100 @@ impl<const N: usize, T: NumericDataType> SumOfProducts<N, T> for SumOfProductsGe
                        .product();
         }
 
-        sum
+        *dst += sum;
+    }
+
+    #[inline(always)]
+    unsafe fn stride0_contig_outstride0_two<const N: usize>(ptrs: &[*const Self; N], _: &[usize; N], count: usize, dst: *mut Self) {
+        assert_unchecked(count > 0);
+
+        let value0 = *ptrs[0];
+        let data1 = ptrs[1];
+
+        let mut sum = Self::zero();
+        for i in 0..count {
+            sum += *data1.add(i);
+        }
+
+        *dst = value0.mul_add(sum, *dst);
     }
 }
 
-impl<const N: usize, T: NumericDataType> SumOfProducts<N, T> for Stride0ContiguousOutstride0Two {
+impl<T: IntegerDataType> EinsumDataType for T {}
+
+#[cfg(not(target_arch = "aarch64"))]
+impl EinsumDataType for f32 {}
+
+#[cfg(not(target_arch = "aarch64"))]
+impl EinsumDataType for f64 {}
+
+#[cfg(target_arch = "aarch64")]
+impl EinsumDataType for f64 {
     #[inline(always)]
-    unsafe fn call(ptrs: &[*const T; N], _: &[usize; N], count: usize) -> T {
+    unsafe fn stride0_contig_outstride0_two<const N: usize>(ptrs: &[*const Self; N], _: &[usize; N], count: usize, dst: *mut Self) {
         assert_unchecked(count > 0);
-        assert_unchecked(N == 2);
 
         let value0 = *ptrs[0];
-        let data1 = std::slice::from_raw_parts(ptrs[1], count);
-        value0 * data1.iter().copied().sum()
+        let mut data1 = ptrs[1];
+        let mut count = count as isize;
+
+        let mut sum = vdupq_n_f64(0.0);
+
+        while count >= 8 {
+            let a = vld1q_f64(data1);
+            let b = vld1q_f64(data1.add(8));
+
+            let ab = vaddq_f64(a, b);
+            sum = vaddq_f64(sum, ab);
+
+            data1 = data1.add(8);
+            count -= 8;
+        }
+
+        let sum_array: [f64; 2] = core::mem::transmute(sum);
+        let mut sum = sum_array.iter().copied().sum::<f64>();
+
+        for i in 0..count {
+            sum += *data1.add(i as usize);
+        }
+
+        *dst = value0.mul_add(sum, *dst);
+    }
+}
+
+#[cfg(target_arch = "aarch64")]
+impl EinsumDataType for f32 {
+    #[inline(always)]
+    unsafe fn stride0_contig_outstride0_two<const N: usize>(ptrs: &[*const Self; N], _: &[usize; N], count: usize, dst: *mut Self) {
+        assert_unchecked(count > 0);
+
+        let value0 = *ptrs[0];
+        let mut data1 = ptrs[1];
+        let mut count = count as isize;
+
+        let mut sum = vdupq_n_f32(0.0);
+
+        while count >= 16 {
+            let a = vld1q_f32(data1);
+            let b = vld1q_f32(data1.add(4));
+            let c = vld1q_f32(data1.add(8));
+            let d = vld1q_f32(data1.add(12));
+
+            let ab = vaddq_f32(a, b);
+            let cd = vaddq_f32(c, d);
+            sum = vaddq_f32(sum, vaddq_f32(ab, cd));
+
+            data1 = data1.add(16);
+            count -= 16;
+        }
+
+        let sum_array: [f32; 4] = core::mem::transmute(sum);
+        let mut sum = sum_array.iter().copied().sum::<f32>();
+
+        for i in 0..count {
+            sum += *data1.add(i as usize);
+        }
+
+        *dst = value0.mul_add(sum, *dst);
     }
 }
