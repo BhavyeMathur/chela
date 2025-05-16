@@ -178,7 +178,6 @@ if __name__ == "__main__":
         # TensorEinsum8,
         # TensorEinsum9,
         # TensorEinsum10,
-        # TensorEinsum11
 
         Einsum2Operands0,
         Einsum2Operands1,

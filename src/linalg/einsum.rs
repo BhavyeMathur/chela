@@ -2,6 +2,7 @@ use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::tensor::MAX_DIMS;
 use crate::{Tensor, TensorMethods};
+use crate::linalg::sum_of_products::get_sum_of_products_function;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -253,22 +254,6 @@ unsafe fn einsum_2operands_3labels_1outputdims<T: NumericDataType>(op1: *const T
     }
 }
 
-unsafe fn sum_of_products<const N: usize, T: NumericDataType>(ptrs: [*const T; N],
-                                                              strides: [usize; N],
-                                                              count: usize) -> T {
-    let mut sum = T::zero();
-
-    let mut k = count;
-    while k != 0 {
-        k -= 1;
-        sum += ptrs.iter().zip(strides.iter())
-                   .map(|(ptr, stride)| *ptr.add(k * stride))
-                   .product();
-    }
-
-    sum
-}
-
 unsafe fn einsum_2operands_3labels_0outputdims<T: NumericDataType>(op1: *const T,
                                                                    op2: *const T,
                                                                    dst: *mut T,
@@ -277,12 +262,15 @@ unsafe fn einsum_2operands_3labels_0outputdims<T: NumericDataType>(op1: *const T
                                                                    iter_shape: &[usize; 3]) {
     let mut sum = T::zero();
 
+    let inner_loop_strides = [strides1[2], strides2[2]];
+    let sum_of_products = get_sum_of_products_function(inner_loop_strides);
+
     for i in 0..iter_shape[0] {
         for j in 0..iter_shape[1] {
             let ptr1 = op1.add(i * strides1[0] + j * strides1[1]);
             let ptr2 = op2.add(i * strides2[0] + j * strides2[1]);
 
-            sum += sum_of_products([ptr1, ptr2], [strides1[2], strides2[2]], iter_shape[2]);
+            sum += sum_of_products([ptr1, ptr2], inner_loop_strides, iter_shape[2]);
         }
     }
 
