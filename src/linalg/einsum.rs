@@ -1,3 +1,4 @@
+use std::hint::assert_unchecked;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::tensor::MAX_DIMS;
@@ -284,6 +285,12 @@ fn einsum_2operands_3labels<'b, T: NumericDataType>(operand1: &Tensor<T>,
                                                     iter_shape: &[usize; 3],
                                                     mut output: Vec<T>,
                                                     output_shape: Vec<usize>) -> Tensor<'b, T> {
+    unsafe {
+        assert_unchecked(iter_shape[0] > 0);
+        assert_unchecked(iter_shape[1] > 0);
+        assert_unchecked(iter_shape[2] > 0);
+    }
+
     let op1 = operand1.ptr.as_ptr() as *const T;
     let op2 = operand2.ptr.as_ptr() as *const T;
     let dst = output.as_mut_ptr();
@@ -399,6 +406,10 @@ pub fn einsum_view<'b, T: NumericDataType>(operand: &'b Tensor<T>,
 // TODO this is around 2.5x slower than NumPy. We need to speed it up!
 pub fn einsum<'b, const N: usize, T: NumericDataType>(operands: &[&Tensor<T>; N],
                                                       subscripts: ([&str; N], &str)) -> Tensor<'b, T> {
+    if N == 0 {
+        return Tensor::scalar(T::one());
+    }
+
     let mut operand_labels = [[0; MAX_DIMS]; N];
     let mut output_labels = [0; MAX_DIMS];
     let mut label_counts = [0; 128];

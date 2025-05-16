@@ -1,8 +1,13 @@
+use std::hint::assert_unchecked;
 use crate::dtype::NumericDataType;
+use crate::tensor::MAX_DIMS;
 
 unsafe fn sum_of_products_generic<const N: usize, T: NumericDataType>(ptrs: [*const T; N],
                                                                       strides: [usize; N],
                                                                       count: usize) -> T {
+    assert_unchecked(count > 0);
+    assert_unchecked(N > 0 && N <= MAX_DIMS);
+
     let mut sum = T::zero();
 
     let mut k = count;
@@ -16,9 +21,13 @@ unsafe fn sum_of_products_generic<const N: usize, T: NumericDataType>(ptrs: [*co
     sum
 }
 
+// SAFETY: count must be > 0 and N == 2
 unsafe fn sum_of_products_stride0_contig_outstride0_two<const N: usize, T: NumericDataType>(ptrs: [*const T; N],
                                                                                             _: [usize; N],
                                                                                             count: usize) -> T {
+    assert_unchecked(count > 0);
+    assert_unchecked(N == 2);
+
     let value0 = *ptrs[0];
     let data1 = std::slice::from_raw_parts(ptrs[1], count);
     value0 * data1.iter().copied().sum()
@@ -27,6 +36,8 @@ unsafe fn sum_of_products_stride0_contig_outstride0_two<const N: usize, T: Numer
 
 pub(super) fn get_sum_of_products_function<const N: usize, T: NumericDataType>(strides: [usize; N])
                                                                                -> unsafe fn([*const T; N], [usize; N], usize) -> T {
+    unsafe { assert_unchecked(N > 0 && N <= MAX_DIMS); }
+
     if N == 2 {
         let mut code = if strides[0] == 0 { 0 } else { if strides[0] == 1 { 4 } else { 8 } };
         code += if strides[1] == 0 { 0 } else { if strides[1] == 1 { 2 } else { 8 } };
@@ -39,8 +50,3 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: NumericDataType>(s
 
     sum_of_products_generic
 }
-
-// fn get_sum_of_products_function(int nop, int type_num, npy_intp itemsize, npy_intp const *fixed_strides)
-// ->  {
-//
-// }
