@@ -19,6 +19,7 @@ pub mod binary_ops;
 mod flags;
 pub mod random;
 pub mod astype;
+mod print;
 
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
@@ -29,7 +30,6 @@ pub use methods::*;
 
 pub(crate) const MAX_DIMS: usize = 32;
 
-#[derive(Debug)]
 pub struct Tensor<'a, T: RawDataType> {
     pub(crate) ptr: NonNull<T>,
     len: usize,
