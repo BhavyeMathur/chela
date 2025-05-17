@@ -18,6 +18,7 @@ pub mod binary_ops;
 
 mod flags;
 pub mod random;
+pub mod astype;
 
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
