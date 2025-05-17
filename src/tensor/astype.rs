@@ -5,7 +5,7 @@ use num::NumCast;
 impl<T: NumericDataType> Tensor<'_, T> {
     pub fn astype<'b, F: NumericDataType>(&self) -> Tensor<'b, F>
     {
-        let mut data = vec![F::default(); self.len()];
+        let mut data = vec![F::default(); self.size()];
 
         for (dst, src) in data.iter_mut().zip(self.flatiter()) {
             *dst = NumCast::from(src).expect("astype conversion failed");
