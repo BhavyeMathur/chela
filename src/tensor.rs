@@ -2,31 +2,35 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 
 pub mod constructors;
+pub use constructors::*;
+
 pub mod dtype;
+pub use dtype::*;
+
+pub mod methods;
+pub use methods::*;
+
+pub mod iterator;
+pub use iterator::*;
+
+pub mod reduce;
+pub use reduce::*;
 
 pub mod index_impl;
-pub mod methods;
 pub mod slice;
-pub mod iterator;
 pub mod fill;
 pub mod reshape;
 pub mod clone;
 pub mod equals;
 pub mod broadcast;
-pub mod reduce;
 pub mod binary_ops;
-
-mod flags;
 pub mod random;
 pub mod astype;
+
+mod flags;
+use flags::TensorFlags;
+
 mod print;
-
-use crate::dtype::RawDataType;
-use crate::tensor::flags::TensorFlags;
-
-pub use iterator::*;
-pub use reduce::*;
-pub use methods::*;
 
 pub(crate) const MAX_DIMS: usize = 32;
 

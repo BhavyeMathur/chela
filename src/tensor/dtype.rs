@@ -2,7 +2,7 @@ use num::traits::MulAdd;
 use num::{Bounded, NumCast, One, ToPrimitive, Zero};
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync {}
 
@@ -25,8 +25,8 @@ impl RawDataType for f64 {}
 impl RawDataType for bool {}
 
 pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Zero + One + NumCast
-+ Sum + Product + AddAssign + MulAssign
-+ Add<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self>
++ Sum + Product + AddAssign + SubAssign + MulAssign
++ Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self>
 {
     type AsFloatType: NumericDataType + From<f32>;
 
@@ -35,6 +35,14 @@ pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Ze
     }
 
     fn abs(&self) -> Self;
+
+    fn ceil(&self) -> Self {
+        self.clone()
+    }
+
+    fn floor(&self) -> Self {
+        self.clone()
+    }
 }
 
 impl NumericDataType for u8 {
@@ -131,6 +139,14 @@ impl NumericDataType for f32 {
     fn abs(&self) -> Self {
         num::Signed::abs(self)
     }
+
+    fn ceil(&self) -> Self {
+        num::Float::ceil(*self)
+    }
+
+    fn floor(&self) -> Self {
+        num::Float::floor(*self)
+    }
 }
 
 impl NumericDataType for f64 {
@@ -138,6 +154,14 @@ impl NumericDataType for f64 {
 
     fn abs(&self) -> Self {
         num::Signed::abs(self)
+    }
+
+    fn ceil(&self) -> Self {
+        num::Float::ceil(*self)
+    }
+
+    fn floor(&self) -> Self {
+        num::Float::floor(*self)
     }
 }
 
