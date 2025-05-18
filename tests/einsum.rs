@@ -22,7 +22,7 @@ fn test_einsum_empty() {
     let _: Tensor<'_, f32> = einsum(&[], ([], ""));
 }
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_basic_matmul, {
         let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
         let b = Tensor::from([[5, 6], [7, 8]]).astype::<T>();
@@ -33,7 +33,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_pointwise_multiplication, {
         let a = Tensor::from([[1, 2, 3], [0, 1, 2], [4, 5, 6]]).astype::<T>();
         let b = Tensor::from([[5, 6, 7], [10, 20, 30], [3, 6, 9]]).astype::<T>();
@@ -44,7 +44,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_sum_along_axes, {
         let a = Tensor::from([[1, 2], [0, 1]]).astype::<T>();
         let b = Tensor::from([[5, 6], [10, 20]]).astype::<T>();
@@ -59,7 +59,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_sum_product, {
         let a = Tensor::from([[1, 2], [0, 1]]).astype::<T>();
         let b = Tensor::from([[5, 6], [10, 20]]).astype::<T>();
@@ -82,7 +82,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_2operands_to_3d, {
         let a = Tensor::from([[1, 2], [0, 1]]).astype::<T>();
         let b = Tensor::from([[5, 6], [10, 20]]).astype::<T>();
@@ -97,7 +97,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_inner_product, {
         let a = Tensor::from([1, 2, 3]).astype::<T>();
         let b = Tensor::from([4, 5, 6]).astype::<T>();
@@ -108,7 +108,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_outer_product, {
         let a = Tensor::from([1, 2]).astype::<T>();
         let b = Tensor::from([3, 4, 5]).astype::<T>();
@@ -119,7 +119,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_matrix_outer_product, {
         let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
         let b = Tensor::from([[5, 6], [7, 8]]).astype::<T>();
@@ -133,7 +133,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_trace,
     {
         let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
@@ -144,7 +144,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_three_tensors,
     {
         let a = Tensor::from([[1, 2], [3, 4], [5, 1]]).astype::<T>();
@@ -157,7 +157,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_scalar_times_tensor,
     {
         let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
@@ -169,7 +169,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_transpose,
     {
         let a = Tensor::from([[1, 2, 3], [4, 5, 6]]).astype::<T>();
@@ -183,7 +183,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_sum_axis,
     {
         let a = Tensor::from([[1, 2, 3], [4, 5, 6]]).astype::<T>();
@@ -193,7 +193,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_broadcasting_vector_matrix,
     {
         let a = Tensor::from([1, 2]).astype::<T>();
@@ -209,7 +209,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_diagonal_extraction,
     {
         let a = Tensor::from([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).astype::<T>();
@@ -223,7 +223,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_tensor_contraction,
     {
         let a = Tensor::from([[[1, 2], [3, 4]]]).astype::<T>();
@@ -234,7 +234,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_all_sum,
     {
         let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
@@ -245,7 +245,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_identity,
     {
         let a = Tensor::from([[9, 8], [7, 6]]).astype::<T>();
@@ -261,7 +261,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_einsum_batch_matmul,
     {
         let a = Tensor::from([[[1, 2], [3, 4]]]).astype::<T>();

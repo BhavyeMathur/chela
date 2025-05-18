@@ -1,4 +1,4 @@
-use crate::dtype::{IntegerDataType, NumericDataType};
+use crate::dtype::NumericDataType;
 use crate::tensor::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 use crate::tensor::Tensor;
@@ -6,10 +6,9 @@ use crate::traits::flatten::Flatten;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
 use crate::traits::to_vec::ToVec;
-use std::mem::ManuallyDrop;
-use std::ops::Range;
-use std::ptr::NonNull;
 use num::NumCast;
+use std::mem::ManuallyDrop;
+use std::ptr::NonNull;
 
 // calculates the stride from the tensor's shape
 // shape [5, 3, 2, 1] -> stride [10, 2, 1, 1]
@@ -101,8 +100,7 @@ impl<T: RawDataType> Tensor<'_, T> {
 }
 
 pub trait TensorRangeConstructors<T: NumericDataType> {
-    fn arange(start: T, stop: T) -> Tensor<'static, T>
-    {
+    fn arange(start: T, stop: T) -> Tensor<'static, T> {
         let n = NumCast::from((stop - start).ceil()).unwrap();
 
         let mut data: Vec<T> = vec![T::default(); n];
@@ -112,20 +110,20 @@ pub trait TensorRangeConstructors<T: NumericDataType> {
 
         unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data) }
     }
-}
 
-impl<T: IntegerDataType> TensorRangeConstructors<T> for Tensor<'static, T>
-where
-    Range<T>: Iterator<Item=T>,
-{
-    fn arange(start: T, stop: T) -> Self {
-        let data: Vec<T> = (start..stop).collect();
+    fn arange_with_step(start: T, stop: T, step: T) -> Tensor<'static, T> {
+        let n = NumCast::from(((stop - start).to_float() / step.to_float()).ceil()).unwrap();
+
+        let mut data: Vec<T> = vec![T::default(); n];
+        for i in 0..n {
+            data[i] = <T as NumCast>::from(i).unwrap() * step + start;
+        }
+
         unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data) }
     }
 }
 
-impl TensorRangeConstructors<f32> for Tensor<'_, f32> {}
-impl TensorRangeConstructors<f64> for Tensor<'_, f64> {}
+impl<T: NumericDataType> TensorRangeConstructors<T> for Tensor<'_, T> {}
 
 
 impl<T: RawDataType> Drop for Tensor<'_, T> {

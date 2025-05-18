@@ -1,7 +1,7 @@
 use chela::*;
 use paste::paste;
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_full, {
         let a = Tensor::full(3 as T, [2, 3]);
 
@@ -23,7 +23,7 @@ fn test_full_bool() {
     assert_eq!(a.has_uniform_stride(), Some(1));
 }
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_ones, {
         let a = Tensor::<T>::ones([3, 5, 3]);
 
@@ -36,7 +36,7 @@ test_for_all_numeric_types!(
 );
 
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_zeros, {
         let a = Tensor::<T>::zeros([3, 5, 3]);
 
@@ -108,7 +108,7 @@ fn random_uniform_f32() {
 }
 
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_scalar, {
         let a = Tensor::scalar(5 as T);
         let _: Vec<_> = a.flatiter().collect();
@@ -120,7 +120,7 @@ test_for_all_numeric_types!(
     }
 );
 
-test_for_all_numeric_types!(
+test_for_all_numeric_dtypes!(
     test_arange, {
         let a = Tensor::<T>::arange(0 as T, 1 as T);
         let expected = Tensor::from([0]).astype::<T>();
@@ -134,6 +134,35 @@ test_for_all_numeric_types!(
         let b = Tensor::<T>::arange(8 as T, 15 as T);
         let expected = Tensor::from([8, 9, 10, 11, 12, 13, 14]).astype::<T>();
         assert_eq!(b, expected);
+    }
+);
+
+test_for_all_numeric_dtypes!(
+    test_arange_with_step, {
+        let a = Tensor::<T>::arange_with_step(0 as T, 1 as T, 2 as T);
+        let expected = Tensor::from([0]).astype::<T>();
+
+        assert_eq!(a, expected);
+        assert_eq!(a.shape(), &[1]);
+        assert!(!a.is_view());
+        assert!(a.is_contiguous());
+        assert_eq!(a.has_uniform_stride(), Some(1));
+
+        let b = Tensor::<T>::arange_with_step(8 as T, 15 as T, 2 as T);
+        let expected = Tensor::from([8, 10, 12, 14]).astype::<T>();
+        assert_eq!(b, expected);
+    }
+);
+
+test_for_signed_dtypes!(
+    test_arange_with_negative_step, {
+        let a = Tensor::<T>::arange_with_step(15 as T, 8 as T, -3 as T);
+        let expected = Tensor::from([15, 12, 9]).astype::<T>();
+        assert_eq!(a, expected);
+
+        let a = Tensor::<T>::arange_with_step(21 as T, -48 as T, -7 as T);
+        let expected = Tensor::from([21, 14, 7, 0, -7, -14, -21, -28, -35, -42]).astype::<T>();
+        assert_eq!(a, expected);
     }
 );
 
