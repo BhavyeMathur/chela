@@ -3,6 +3,46 @@ use paste::paste;
 
 #[test]
 #[should_panic]
+fn test_einsum_non_ascii() {
+    let a = Tensor::from([[1, 2], [0, 0]]);
+    let b = Tensor::from([[3, 4], [5, 5]]);
+    let _ = einsum(&[&a, &b], (["±i", "i-"], "i"));
+}
+
+#[test]
+#[should_panic]
+fn test_einsum_non_ascii_output() {
+    let a = Tensor::from([[1, 2], [0, 0]]);
+    let b = Tensor::from([[3, 4], [5, 5]]);
+    let _ = einsum(&[&a, &b], (["ij", "jk"], "i±"));
+}
+
+#[test]
+#[should_panic]
+fn test_einsum_non_letters() {
+    let a = Tensor::from([[1, 2], [0, 0]]);
+    let b = Tensor::from([[3, 4], [5, 5]]);
+    let _ = einsum(&[&a, &b], (["01", "12"], "02"));
+}
+
+#[test]
+#[should_panic]
+fn test_einsum_invalid_labels() {
+    let a = Tensor::from([[1, 2], [0, 0]]);
+    let b = Tensor::from([[3, 4], [5, 5]]);
+    let _ = einsum(&[&a, &b], (["i", "jk"], "ik"));
+}
+
+#[test]
+#[should_panic]
+fn test_einsum_invalid_output_labels() {
+    let a = Tensor::from([[1, 2], [0, 0]]);
+    let b = Tensor::from([[3, 4], [5, 5]]);
+    let _ = einsum(&[&a, &b], (["i", "jk"], "02"));
+}
+
+#[test]
+#[should_panic]
 fn test_einsum_dimension_mismatch() {
     let a = Tensor::from([[1, 2]]);
     let b = Tensor::from([[3, 4], [5, 6], [7, 8]]);
@@ -22,7 +62,27 @@ fn test_einsum_empty() {
     let _: Tensor<'_, f32> = einsum(&[], ([], ""));
 }
 
+
 test_for_all_numeric_dtypes!(
+    test_einsum_sums, {
+        for n in 1..17 {
+            // sum
+            let a = Tensor::arange(0, n).astype::<T>();
+            let expected = a.sum();
+            let result = chela::einsum(&[&a], (["i"], ""));
+            assert_eq!(result, expected);
+
+            // trace
+            // let a = Tensor::arange(0, n * n).astype::<T>();
+            // let a = a.reshape([n, n]);
+            // let result = chela::einsum(&[&a], (["ii"], ""))
+            // let expected = a.trace();
+            // assert_eq!(result, expected);
+        }
+    }
+);
+
+test_for_common_numeric_dtypes!(
     test_einsum_basic_matmul, {
         let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
         let b = Tensor::from([[5, 6], [7, 8]]).astype::<T>();
@@ -30,8 +90,44 @@ test_for_all_numeric_dtypes!(
         let expected = Tensor::from([[19, 22], [43, 50]]).astype::<T>();
         let result = chela::einsum(&[&a, &b], (["ij", "jk"], "ik"));
         assert_eq!(result, expected);
+
+        // bigger matmul
+        let n: usize = 20;
+        let a = Tensor::arange(0, n * n).astype::<T>();
+        let b = Tensor::arange(n, n + n * n).astype::<T>();
+        let a = a.reshape([n, n]);
+        let b = b.reshape([n, n]);
+
+        let mut expected_data = vec![T::default(); n * n];
+        for i in 0..n {
+            for k in 0..n {
+                let mut sum = T::default();
+                for j in 0..n {
+                    sum = sum + a[[i, j]] * b[[j, k]];
+                }
+                expected_data[i * n + k] = sum;
+            }
+        }
+
+        let expected = Tensor::from(expected_data);
+        let expected = expected.reshape([n, n]);
+        let result = chela::einsum(&[&a, &b], (["ij", "jk"], "ik"));
+
+        assert_eq!(result, expected);
     }
 );
+
+#[test]
+fn test_einsum_basic_matmul() {
+    type T = f32;
+
+    let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
+    let b = Tensor::from([[5, 6], [7, 8]]).astype::<T>();
+
+    let expected = Tensor::from([[19, 22], [43, 50]]).astype::<T>();
+    let result = chela::einsum(&[&a, &b], (["ij", "jk"], "ik"));
+    assert_eq!(result, expected);
+}
 
 test_for_all_numeric_dtypes!(
     test_einsum_pointwise_multiplication, {
@@ -39,6 +135,19 @@ test_for_all_numeric_dtypes!(
         let b = Tensor::from([[5, 6, 7], [10, 20, 30], [3, 6, 9]]).astype::<T>();
 
         let expected = Tensor::from([[5, 12, 21], [0, 20, 60], [12, 30, 54]]).astype::<T>();
+        let result = chela::einsum(&[&a, &b], (["ij", "ij"], "ij"));
+        assert_eq!(result, expected);
+
+        // larger pointwise multiplication
+        let a = Tensor::arange(0i32, 20).astype::<T>();
+        let b = Tensor::arange_with_step(19i32, -1, -1).astype::<T>();
+        let a = a.reshape([2, 10]);
+        let b = b.reshape([2, 10]);
+
+        let expected_data: Vec<T> = a.flatiter().zip(b.flatiter()).map(|(x, y)| x * y).collect();
+        let expected = Tensor::from(expected_data);
+        let expected = expected.reshape([2, 10]);
+
         let result = chela::einsum(&[&a, &b], (["ij", "ij"], "ij"));
         assert_eq!(result, expected);
     }

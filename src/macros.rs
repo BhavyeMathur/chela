@@ -23,10 +23,29 @@ macro_rules! test_for_float_dtypes {
 }
 
 #[macro_export]
-macro_rules! test_for_signed_int_dtypes {
+macro_rules! test_for_common_signed_int_dtypes {
     ($name:ident, $body:tt) => {
         implement_test_for_dtypes!($name, $body,
-            i8, i16, i32, i64, i128
+            i32, i64, i128
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! test_for_common_unsigned_int_dtypes {
+    ($name:ident, $body:tt) => {
+        implement_test_for_dtypes!($name, $body,
+            u32, u64, u128
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! test_for_signed_int_dtypes {
+    ($name:ident, $body:tt) => {
+        test_for_common_signed_int_dtypes!($name, $body);
+        implement_test_for_dtypes!($name, $body,
+            i8, i16
         );
     };
 }
@@ -34,8 +53,9 @@ macro_rules! test_for_signed_int_dtypes {
 #[macro_export]
 macro_rules! test_for_unsigned_int_dtypes {
     ($name:ident, $body:tt) => {
+        test_for_common_unsigned_int_dtypes!($name, $body);
         implement_test_for_dtypes!($name, $body,
-            u8, u16, u32, u64, u128
+            u8, u16
         );
     };
 }
@@ -57,12 +77,29 @@ macro_rules! test_for_integer_dtypes {
 }
 
 #[macro_export]
+macro_rules! test_for_common_integer_dtypes {
+    ($name:ident, $body:tt) => {
+        test_for_common_signed_int_dtypes!($name, $body);
+        test_for_common_unsigned_int_dtypes!($name, $body);
+    };
+}
+
+#[macro_export]
 macro_rules! test_for_all_numeric_dtypes {
     ($name:ident, $body:tt) => {
         test_for_integer_dtypes!($name, $body);
         test_for_float_dtypes!($name, $body);
     };
 }
+
+#[macro_export]
+macro_rules! test_for_common_numeric_dtypes {
+    ($name:ident, $body:tt) => {
+        test_for_common_integer_dtypes!($name, $body);
+        test_for_float_dtypes!($name, $body);
+    };
+}
+
 
 #[macro_export]
 macro_rules! test_for_all_dtypes {
