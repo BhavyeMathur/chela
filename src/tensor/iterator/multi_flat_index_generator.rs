@@ -1,49 +1,53 @@
-use crate::tensor::MAX_DIMS;
+use crate::tensor::{MAX_ARGS, MAX_DIMS};
 
 #[non_exhaustive]
-pub struct MultiFlatIndexGenerator<const N: usize>
+pub struct MultiFlatIndexGenerator
 {
     ndims: usize,
+    nops: usize,
     shape: [usize; MAX_DIMS],
-    strides: [[usize; N]; MAX_DIMS],
+    strides: [[usize; MAX_ARGS]; MAX_DIMS],
 
     size: usize,
     iterator_index: usize,
 
     indices: [usize; MAX_DIMS], // current index along each dimension
-    flat_indices: [usize; N],
+    flat_indices: [usize; MAX_ARGS],
 }
 
-impl<const N: usize> MultiFlatIndexGenerator<N> {
-    pub(crate) fn from<const M: usize>(shape: &[usize], strides: &[[usize; M]; N]) -> Self {
+impl MultiFlatIndexGenerator {
+    pub(crate) fn from<const M: usize>(nops: usize, shape: &[usize], strides: &[[usize; M]]) -> Self {
         let ndims = shape.len();
         assert!(M >= ndims);
+        assert!(nops <= MAX_ARGS);
+        assert!(strides.len() >= nops);
 
         let size = shape.iter().product();
 
         let mut new_shape = [0; MAX_DIMS];
         new_shape[0..ndims].copy_from_slice(&shape);
 
-        let mut new_strides = [[0; N]; MAX_DIMS];
+        let mut new_strides = [[0; MAX_ARGS]; MAX_DIMS];
         for j in 0..ndims {
-            for i in 0..N {
+            for i in 0..nops {
                 new_strides[j][i] = strides[i][j];
             }
         }
 
         Self {
             ndims,
+            nops,
             shape: new_shape.clone(),
             strides: new_strides,
             size,
             iterator_index: 0,
             indices: new_shape,
-            flat_indices: [0; N],
+            flat_indices: [0; MAX_ARGS],
         }
     }
 
     #[inline]
-    pub(crate) unsafe fn cur_indices(&mut self) -> &[usize; N] {
+    pub(crate) unsafe fn cur_indices(&mut self) -> &[usize; MAX_ARGS] {
         &self.flat_indices
     }
 
@@ -62,23 +66,23 @@ impl<const N: usize> MultiFlatIndexGenerator<N> {
                 *idx -= 1;
 
                 if *idx != 0 {
-                    for (i, flat_index) in self.flat_indices.iter_mut().enumerate() {
-                        *flat_index += strides[i];
+                    for i in 0..self.nops {
+                        self.flat_indices[i] += strides[i];
                     }
                     return;
                 }
 
                 *idx = dimension; // reset this dimension and carry over to the next
-                for (i, flat_index) in self.flat_indices.iter_mut().enumerate() {
-                    *flat_index -= strides[i] * (dimension - 1);
+                for i in 0..self.nops {
+                    self.flat_indices[i] -= strides[i] * (dimension - 1);
                 }
             }
         }
     }
 }
 
-impl<const N: usize> Iterator for MultiFlatIndexGenerator<N> {
-    type Item = [usize; N];
+impl Iterator for MultiFlatIndexGenerator {
+    type Item = [usize; MAX_ARGS];
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -94,10 +98,11 @@ impl<const N: usize> Iterator for MultiFlatIndexGenerator<N> {
     }
 }
 
-impl<const N: usize> Clone for MultiFlatIndexGenerator<N> {
+impl Clone for MultiFlatIndexGenerator {
     fn clone(&self) -> Self {
         Self {
             ndims: self.ndims,
+            nops: self.nops,
             shape: self.shape.clone(),
             strides: self.strides.clone(),
 

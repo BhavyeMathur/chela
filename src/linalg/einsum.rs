@@ -4,7 +4,7 @@ use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
 use crate::linalg::sum_of_products::EinsumDataType;
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
-use crate::{Tensor, TensorMethods};
+use crate::{first_n_elements, Tensor, TensorMethods};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -375,31 +375,30 @@ where
 
     // create iterator to traverse operand values in the correct order
 
-    let mut operand_strides = [[0; MAX_DIMS]; MAX_ARGS];
+    let mut strides = [[0; MAX_DIMS]; MAX_ARGS];
     for ((operand, labels), new_stride) in reshaped_operands.iter()
                                                             .zip(operand_labels.iter_mut())
-                                                            .zip(operand_strides.iter_mut()) {
+                                                            .zip(strides.iter_mut()) {
         operand_stride_for_einsum(operand.ndims(), operand.stride(), labels, iter_labels, new_stride)
     }
 
-    let mut output_strides = [0; MAX_DIMS];
-    output_strides[0..output_dims].copy_from_slice(&stride_from_shape(&output_shape));
+    strides[n_operands][0..output_dims].copy_from_slice(&stride_from_shape(&output_shape));
 
     // accelerated loops for specific structures
 
     if n_operands == 2 && iter_ndims == 3 {
         return einsum_2operands_3labels(&operands[0], &operands[1],
-                                        <&[usize; 3]>::try_from(&operand_strides[0][0..3]).unwrap(),
-                                        <&[usize; 3]>::try_from(&operand_strides[1][0..3]).unwrap(),
-                                        <&[usize; 3]>::try_from(&output_strides[0..3]).unwrap(),
-                                        <&[usize; 3]>::try_from(&iter_shape[0..3]).unwrap(),
+                                        first_n_elements!(strides[0], 3),
+                                        first_n_elements!(strides[1], 3),
+                                        first_n_elements!(strides[n_operands], 3),
+                                        first_n_elements!(iter_shape, 3),
                                         output, output_shape);
     }
 
 
     // main einsum calculation loop
 
-    let mut operand_indices = MultiFlatIndexGenerator::from(&iter_shape, &operand_strides);
+    let mut operand_indices = MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape, &strides);
 
     for dst in output.iter_mut() {
         let mut sum = T::zero();

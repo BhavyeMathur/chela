@@ -117,3 +117,10 @@ macro_rules! assert_almost_eq {
         assert!((($left) - ($right)).max() < 0.00001);
     };
 }
+
+#[macro_export]
+macro_rules! first_n_elements {
+    ($arr:expr, $n:expr) => {{
+        &$arr[0..$n].try_into().unwrap()
+    }};
+}
