@@ -1,9 +1,6 @@
 use std::marker::PhantomData;
 use std::ptr::NonNull;
 
-pub mod constructors;
-pub use constructors::*;
-
 pub mod dtype;
 pub use dtype::*;
 
@@ -16,6 +13,7 @@ pub use iterator::*;
 pub mod reduce;
 pub use reduce::*;
 
+pub mod constructors;
 pub mod index_impl;
 pub mod slice;
 pub mod fill;

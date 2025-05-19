@@ -9,6 +9,7 @@ use crate::traits::to_vec::ToVec;
 use num::NumCast;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
+use crate::FloatDataType;
 
 // calculates the stride from the tensor's shape
 // shape [5, 3, 2, 1] -> stride [10, 2, 1, 1]
@@ -99,8 +100,8 @@ impl<T: RawDataType> Tensor<'_, T> {
     }
 }
 
-pub trait TensorRangeConstructors<T: NumericDataType> {
-    fn arange(start: T, stop: T) -> Tensor<'static, T> {
+impl<T: NumericDataType> Tensor<'_, T> {
+    pub fn arange(start: T, stop: T) -> Tensor<'static, T> {
         let n = NumCast::from((stop - start).ceil()).unwrap();
 
         let mut data: Vec<T> = vec![T::default(); n];
@@ -111,7 +112,7 @@ pub trait TensorRangeConstructors<T: NumericDataType> {
         unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data) }
     }
 
-    fn arange_with_step(start: T, stop: T, step: T) -> Tensor<'static, T> {
+    pub fn arange_with_step(start: T, stop: T, step: T) -> Tensor<'static, T> {
         let n = NumCast::from(((stop - start).to_float() / step.to_float()).ceil()).unwrap();
 
         let mut data: Vec<T> = vec![T::default(); n];
@@ -123,8 +124,29 @@ pub trait TensorRangeConstructors<T: NumericDataType> {
     }
 }
 
-impl<T: NumericDataType> TensorRangeConstructors<T> for Tensor<'_, T> {}
+impl<T: FloatDataType> Tensor<'_, T> {
+    pub fn linspace(start: T, stop: T, num: usize) -> Tensor<'static, T> {
+        assert!(num > 0);
 
+        if num == 1 {
+            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start]) };
+        }
+
+        let step = (stop - start) / (T::from(num).unwrap() - T::one());
+        Tensor::arange_with_step(start, stop, step)
+    }
+
+    pub fn linspace_exclusive(start: T, stop: T, num: usize) -> Tensor<'static, T> {
+        assert!(num > 0);
+
+        if num == 1 {
+            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start]) };
+        }
+
+        let step = (stop - start) / T::from(num).unwrap();
+        Tensor::arange_with_step(start, stop, step)
+    }
+}
 
 impl<T: RawDataType> Drop for Tensor<'_, T> {
     fn drop(&mut self) {
