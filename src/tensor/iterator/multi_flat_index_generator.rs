@@ -92,9 +92,7 @@ impl MultiFlatIndexGenerator {
 
         let mut new_strides = [[0; MAX_ARGS]; MAX_DIMS];
         for j in 0..ndims {
-            for i in 0..nops {
-                new_strides[j][i] = strides[j][i];
-            }
+            new_strides[j][0..nops].copy_from_slice(&strides[j][0..nops]);
         }
 
         Self {
@@ -130,14 +128,14 @@ impl MultiFlatIndexGenerator {
 
                 if *idx != 0 {
                     for i in 0..self.nops {
-                        self.flat_indices[i] += strides[i];
+                        *self.flat_indices.get_unchecked_mut(i) += strides.get_unchecked(i);
                     }
                     return;
                 }
 
                 *idx = dimension; // reset this dimension and carry over to the next
                 for i in 0..self.nops {
-                    self.flat_indices[i] -= strides[i] * (dimension - 1);
+                    *self.flat_indices.get_unchecked_mut(i) -= strides.get_unchecked(i) * (dimension - 1);
                 }
             }
         }

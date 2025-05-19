@@ -429,7 +429,7 @@ where
 
     // main einsum calculation loop
 
-    let mut operand_indices = MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape, &strides);
+    let mut operand_indices = MultiFlatIndexGenerator::from(n_operands, &iter_shape, &strides);
 
     for dst in output.iter_mut() {
         let mut sum = T::zero();
@@ -439,12 +439,12 @@ where
             i -= 1;
 
             unsafe {
-                let indices = operand_indices.cur_indices();
+                let indices = &operand_indices.cur_indices()[0..n_operands];
 
                 sum += indices.iter()
                               .zip(operands.iter())
                               .map(|(&i, operand)|
-                                  *operand.ptr.add(i).as_ptr())
+                                  *operand.ptr.as_ptr().add(i))
                               .product();
 
                 operand_indices.increment_flat_indices();

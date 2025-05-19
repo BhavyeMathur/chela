@@ -176,21 +176,21 @@ class Einsum2Operands4(TensorEinsumBase):
 
 if __name__ == "__main__":
     results = profile_all([
-        # TensorEinsum1,
-        # TensorEinsum2,
-        # TensorEinsum3,
-        # TensorEinsum4,
-        # TensorEinsum5,
-        # TensorEinsum6,
-        # TensorEinsum7,
-        # TensorEinsum8,
-        # TensorEinsum9,
-        # TensorEinsum10,
+        TensorEinsum1,
+        TensorEinsum2,
+        TensorEinsum3,
+        TensorEinsum4,
+        TensorEinsum5,
+        TensorEinsum6,
+        TensorEinsum7,
+        TensorEinsum8,
+        TensorEinsum9,
+        TensorEinsum10,
 
-        Einsum2Operands0,
-        Einsum2Operands1,
-        Einsum2Operands2,
-        Einsum2Operands3,
-        Einsum2Operands4,
+        # Einsum2Operands0,
+        # Einsum2Operands1,
+        # Einsum2Operands2,
+        # Einsum2Operands3,
+        # Einsum2Operands4,
     ], n=20)
     plot_barplot(results, "Einstein Summation Benchmark")
