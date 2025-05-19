@@ -1,4 +1,5 @@
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
+use crate::NumericDataType;
 
 #[non_exhaustive]
 pub struct MultiFlatIndexGenerator
@@ -16,11 +17,73 @@ pub struct MultiFlatIndexGenerator
 }
 
 impl MultiFlatIndexGenerator {
-    pub(crate) fn from<const M: usize>(nops: usize, shape: &[usize], strides: &[[usize; M]]) -> Self {
+    pub(crate) fn find_best_axis_ordering<const OPERANDS: usize>(nops: usize,
+                                                                 ndims: usize,
+                                                                 strides: &[[usize; OPERANDS]])
+                                                                 -> Option<Vec<usize>> {
+        assert!(ndims <= MAX_DIMS);
+
+        let mut permuted = false;
+        let mut best_axis_ordering = Vec::with_capacity(ndims);
+        for i in 0..ndims {
+            best_axis_ordering.push(i)
+        }
+
+        for ax_i0 in 1..ndims {
+            let mut ax_ipos = ax_i0;
+            let ax_j0 = best_axis_ordering[ax_i0];
+            let strides0 = strides[ax_j0];
+
+            for ax_i1 in (0..ax_i0).rev() {
+                let mut ambiguous = true;
+                let mut should_swap = false;
+
+                let ax_j1 = best_axis_ordering[ax_i1];
+                let strides1 = strides[ax_j1];
+
+                for iop in 0..nops {
+                    if strides0[iop] != 0 && strides1[iop] != 0 {
+                        if strides1[iop].abs() <= strides0[iop].abs() {
+                            should_swap = false;
+                        } else if ambiguous {
+                            should_swap = true;
+                        }
+
+                        ambiguous = false;
+                    }
+                }
+
+                if !ambiguous {
+                    if should_swap {
+                        ax_ipos = ax_i1;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if ax_ipos != ax_i0 {
+                for ax_i1 in ((ax_ipos + 1)..=ax_i0).rev() {
+                    best_axis_ordering[ax_i1] = best_axis_ordering[ax_i1 - 1];
+                }
+                best_axis_ordering[ax_ipos] = ax_j0;
+                permuted = true;
+            }
+        }
+
+        if permuted { Some(best_axis_ordering) } else { None }
+    }
+
+    pub(crate) fn from<const OPERANDS: usize, const DIMS: usize>(nops: usize,
+                                                                 shape: &[usize],
+                                                                 strides: &[[usize; OPERANDS]; DIMS])
+                                                                 -> Self {
         let ndims = shape.len();
-        assert!(M >= ndims);
-        assert!(nops <= MAX_ARGS);
-        assert!(strides.len() >= nops);
+
+        assert!(OPERANDS <= MAX_ARGS);
+        assert!(DIMS <= MAX_DIMS);
+        assert!(nops <= OPERANDS);
+        assert!(ndims <= DIMS);
 
         let size = shape.iter().product();
 
@@ -30,7 +93,7 @@ impl MultiFlatIndexGenerator {
         let mut new_strides = [[0; MAX_ARGS]; MAX_DIMS];
         for j in 0..ndims {
             for i in 0..nops {
-                new_strides[j][i] = strides[i][j];
+                new_strides[j][i] = strides[j][i];
             }
         }
 

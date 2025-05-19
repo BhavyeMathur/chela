@@ -241,6 +241,30 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
     unsafe { Tensor::reshaped_view(&operand, new_shape, new_stride) }
 }
 
+
+fn transpose_2d_array<T: Default + Copy, const N: usize, const M: usize>(array: [[T; N]; M]) -> [[T; M]; N] {
+    let mut result = [[T::default(); M]; N];
+
+    for i in 0..M {
+        for j in 0..N {
+            result[j][i] = array[i][j];
+        }
+    }
+
+    result
+}
+
+
+pub fn permute_array<T: Clone>(arr: &mut [T], permutation: &[usize]) {
+    assert_eq!(arr.len(), permutation.len(), "Length mismatch between array and permutation");
+
+    let original = arr.to_vec();
+    for (i, &src_idx) in permutation.iter().enumerate() {
+        arr[i] = original[src_idx].clone();
+    }
+}
+
+
 fn operand_stride_for_einsum(ndims: usize,
                              stride: &[usize],
                              operand_labels: &[i8],
@@ -285,7 +309,7 @@ pub fn einsum_view<'b, T: NumericDataType>(operand: &'b Tensor<T>,
     try_reshape_for_einsum(operand, &labels, output_dims, output_labels)
 }
 
-// TODO this is around 2.5x slower than NumPy. We need to speed it up!
+
 pub fn einsum<'a, 'b, T, String, ArrTensor, ArrString>(operands: ArrTensor,
                                                        subscripts: (ArrString, &str))
                                                        -> Tensor<'b, T>
@@ -383,10 +407,17 @@ where
     }
 
     strides[n_operands][0..output_dims].copy_from_slice(&stride_from_shape(&output_shape));
+    let mut strides: [[usize; MAX_ARGS]; MAX_DIMS] = transpose_2d_array(strides);
+
 
     // accelerated loops for specific structures
 
     if n_operands == 2 && iter_ndims == 3 {
+        if let Some(best_axis_ordering) = MultiFlatIndexGenerator::find_best_axis_ordering(n_operands + 1, iter_ndims, &strides) {
+            permute_array(&mut strides[0..iter_ndims], &best_axis_ordering);
+            permute_array(&mut iter_shape, &best_axis_ordering);
+        }
+        
         return einsum_2operands_3labels(&operands[0], &operands[1],
                                         first_n_elements!(strides[0], 3),
                                         first_n_elements!(strides[1], 3),

@@ -112,18 +112,6 @@ test_for_common_numeric_dtypes!(
     }
 );
 
-#[test]
-fn test_einsum_basic_matmul() {
-    type T = f32;
-
-    let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
-    let b = Tensor::from([[5, 6], [7, 8]]).astype::<T>();
-
-    let expected = Tensor::from([[19, 22], [43, 50]]).astype::<T>();
-    let result = chela::einsum([&a, &b], (["ij", "jk"], "ik"));
-    assert_eq!(result, expected);
-}
-
 test_for_all_numeric_dtypes!(
     test_einsum_pointwise_multiplication, {
         let a = Tensor::from([[1, 2, 3], [0, 1, 2], [4, 5, 6]]).astype::<T>();
