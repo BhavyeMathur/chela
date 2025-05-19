@@ -6,14 +6,14 @@ use crate::traits::flatten::Flatten;
 use crate::traits::nested::Nested;
 use crate::traits::shape::Shape;
 use crate::traits::to_vec::ToVec;
+use crate::FloatDataType;
 use num::NumCast;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
-use crate::FloatDataType;
 
 // calculates the stride from the tensor's shape
 // shape [5, 3, 2, 1] -> stride [10, 2, 1, 1]
-fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
+pub(crate) fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
     let ndims = shape.len();
     let mut stride = vec![0; ndims];
 

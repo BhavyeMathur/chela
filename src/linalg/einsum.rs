@@ -1,3 +1,4 @@
+use crate::constructors::stride_from_shape;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
@@ -240,16 +241,17 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
     unsafe { Tensor::reshaped_view(&operand, new_shape, new_stride) }
 }
 
-fn operand_stride_for_einsum<A: TensorMethods>(operand: &A,
-                                               operand_labels: &[i8; MAX_DIMS],
-                                               result: &mut [usize],
-                                               iter_labels: &[i8]) {
+fn operand_stride_for_einsum(ndims: usize,
+                             stride: &[usize],
+                             operand_labels: &[i8],
+                             iter_labels: &[i8],
+                             result: &mut [usize]) {
     for (i, &label) in iter_labels.iter().enumerate() {
         if label == 0 {
             panic!("broadcasting in einsum is currently unsupported");
         } else {
             for (index, &op_label) in operand_labels.iter().enumerate() {
-                if index == operand.ndims() {
+                if index == ndims {
                     break;
                 }
 
@@ -257,7 +259,7 @@ fn operand_stride_for_einsum<A: TensorMethods>(operand: &A,
                     if op_label >= 0 { op_label } else { operand_labels[(index as i8 + op_label) as usize] };
 
                 if label == op_label {
-                    result[i] += operand.stride()[index];
+                    result[i] += stride[index];
                 }
             }
         }
@@ -363,12 +365,14 @@ pub fn einsum<'b, const N: usize, T: EinsumDataType>(operands: &[&Tensor<T>; N],
     // create iterator to traverse operand values in the correct order
 
     let mut operand_strides = [[0; MAX_DIMS]; N];
-    for ((operand, labels), stride) in reshaped_operands.iter()
-                                                        .zip(operand_labels.iter_mut())
-                                                        .zip(operand_strides.iter_mut()) {
-        operand_stride_for_einsum(operand, labels, stride, iter_labels)
+    for ((operand, labels), new_stride) in reshaped_operands.iter()
+                                                            .zip(operand_labels.iter_mut())
+                                                            .zip(operand_strides.iter_mut()) {
+        operand_stride_for_einsum(operand.ndims(), operand.stride(), labels, iter_labels, new_stride)
     }
 
+    let mut output_strides = [0; MAX_DIMS];
+    output_strides[0..output_dims].copy_from_slice(&stride_from_shape(&output_shape));
 
     // accelerated loops for specific structures
 
@@ -376,6 +380,7 @@ pub fn einsum<'b, const N: usize, T: EinsumDataType>(operands: &[&Tensor<T>; N],
         return einsum_2operands_3labels(operands[0], operands[1],
                                         <&[usize; 3]>::try_from(&operand_strides[0][0..3]).unwrap(),
                                         <&[usize; 3]>::try_from(&operand_strides[1][0..3]).unwrap(),
+                                        <&[usize; 3]>::try_from(&output_strides[0..3]).unwrap(),
                                         <&[usize; 3]>::try_from(&iter_shape[0..3]).unwrap(),
                                         output, output_shape);
     }
