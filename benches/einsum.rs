@@ -11,7 +11,7 @@ fn einsum1() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([i]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["i", "i"], ""));
+    _ = einsum([&tensor_a, &tensor_b], (["i", "i"], ""));
     start.elapsed().as_nanos()
 }
 
@@ -23,7 +23,7 @@ fn einsum2() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([j]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["ij", "j"], "i"));
+    _ = einsum([&tensor_a, &tensor_b], (["ij", "j"], "i"));
     start.elapsed().as_nanos()
 }
 
@@ -36,7 +36,7 @@ fn einsum3() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["ij", "jk"], "ik"));
+    _ = einsum([&tensor_a, &tensor_b], (["ij", "jk"], "ik"));
     start.elapsed().as_nanos()
 }
 
@@ -49,7 +49,7 @@ fn einsum4() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["ik", "jk"], "ij"));
+    _ = einsum([&tensor_a, &tensor_b], (["ik", "jk"], "ij"));
     start.elapsed().as_nanos()
 }
 
@@ -65,7 +65,7 @@ fn einsum5() -> u128 {
     let tensor_c: Tensor<f32> = Tensor::rand([d, e]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b, &tensor_c], (["abc", "bd", "de"], "ae"));
+    _ = einsum([&tensor_a, &tensor_b, &tensor_c], (["abc", "bd", "de"], "ae"));
     start.elapsed().as_nanos()
 }
 
@@ -82,7 +82,7 @@ fn einsum6() -> u128 {
     let tensor_d: Tensor<f32> = Tensor::rand([d, e]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b, &tensor_c, &tensor_d], (["abc", "bd", "bc", "de"], "ae"));
+    _ = einsum([&tensor_a, &tensor_b, &tensor_c, &tensor_d], (["abc", "bd", "bc", "de"], "ae"));
     start.elapsed().as_nanos()
 }
 
@@ -95,7 +95,7 @@ fn einsum7() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([k, j]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["ij", "kj"], "ikj"));
+    _ = einsum([&tensor_a, &tensor_b], (["ij", "kj"], "ikj"));
     start.elapsed().as_nanos()
 }
 
@@ -107,7 +107,7 @@ fn einsum8() -> u128 {
     let tensor_a: Tensor<f32> = Tensor::rand([a, b, c]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a], (["abc"], ""));
+    _ = einsum([&tensor_a], (["abc"], ""));
     start.elapsed().as_nanos()
 }
 
@@ -143,7 +143,7 @@ fn einsum_2operands_0() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["ij", "jk"], ""));
+    _ = einsum([&tensor_a, &tensor_b], (["ij", "jk"], ""));
     start.elapsed().as_nanos()
 }
 
@@ -156,7 +156,7 @@ fn einsum_2operands_1() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["ij", "jk"], "i"));
+    _ = einsum([&tensor_a, &tensor_b], (["ij", "jk"], "i"));
     start.elapsed().as_nanos()
 }
 
@@ -169,7 +169,7 @@ fn einsum_2operands_2() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["ij", "jk"], "ij"));
+    _ = einsum([&tensor_a, &tensor_b], (["ij", "jk"], "ij"));
     start.elapsed().as_nanos()
 }
 
@@ -182,7 +182,7 @@ fn einsum_2operands_3() -> u128 {
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
 
     let start = ProcessTime::now();
-    _ = einsum(&[&tensor_a, &tensor_b], (["ij", "jk"], "ijk"));
+    _ = einsum([&tensor_a, &tensor_b], (["ij", "jk"], "ijk"));
     start.elapsed().as_nanos()
 }
 

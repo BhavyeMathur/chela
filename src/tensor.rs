@@ -31,6 +31,7 @@ use flags::TensorFlags;
 mod print;
 
 pub(crate) const MAX_DIMS: usize = 32;
+pub(crate) const MAX_ARGS: usize = 16;
 
 pub struct Tensor<'a, T: RawDataType> {
     pub(crate) ptr: NonNull<T>,
