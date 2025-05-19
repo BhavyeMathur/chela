@@ -1,7 +1,7 @@
 use crate::dtype::RawDataType;
+use crate::slice::update_flags_with_contiguity;
 use crate::tensor::flags::TensorFlags;
 use crate::{Axis, Tensor, TensorMethods};
-use crate::slice::update_flags_with_contiguity;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn flatten<'b>(&self) -> Tensor<'b, T> {
@@ -41,8 +41,8 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         let mut stride = self.stride.clone();
 
         (shape, stride) = shape.iter().zip(stride.iter())
-            .filter(|&(&axis_length, _)| axis_length != 1)
-            .unzip();
+                               .filter(|&(&axis_length, _)| axis_length != 1)
+                               .unzip();
 
         unsafe { self.mut_reshaped_view(shape, stride) }
     }
@@ -63,5 +63,20 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
 
         unsafe { self.mut_reshaped_view(shape, stride) }
+    }
+
+    pub fn reshape<const N: usize>(&'a self, new_shape: [usize; N]) -> Tensor<'a, T> {
+        if self.size() != new_shape.iter().product() {
+            panic!("total number of elements must not change during reshape");
+        }
+
+        let mut new_stride = vec![0; new_shape.len()];
+        let mut acc = 1;
+        for (i, dim) in new_shape.iter().rev().enumerate() {
+            new_stride[new_shape.len() - 1 - i] = acc;
+            acc *= *dim;
+        }
+
+        unsafe { self.mut_reshaped_view(new_shape.to_vec(), new_stride) }
     }
 }
