@@ -378,7 +378,6 @@ where
     // create iterators to iterate over the operands in the correct order
 
     let mut iter_shape = output_shape.clone();
-    let mut nterms = 1;
     for label in 0i8..=127 {
         if label_counts[label as usize] == 0 || output_labels.contains(&label) {
             continue;
@@ -388,8 +387,7 @@ where
         }
 
         let dimension = label_dims[label as usize];
-        nterms *= dimension;
-
+        
         iter_labels[iter_ndims] = label;
         iter_shape.push(dimension);
         iter_ndims += 1;
@@ -409,18 +407,15 @@ where
     strides[n_operands][0..output_dims].copy_from_slice(&stride_from_shape(&output_shape));
     let mut strides: [[usize; MAX_ARGS]; MAX_DIMS] = transpose_2d_array(strides);
 
+    if let Some(best_axis_ordering) = MultiFlatIndexGenerator::find_best_axis_ordering(n_operands + 1, iter_ndims, &strides) {
+        permute_array(&mut strides[0..iter_ndims], &best_axis_ordering);
+        permute_array(&mut iter_shape, &best_axis_ordering);
+    }
+
 
     // accelerated loops for specific structures
 
     if n_operands == 2 {
-        // TODO move this out of this if statement
-        if let Some(best_axis_ordering) = MultiFlatIndexGenerator::find_best_axis_ordering(n_operands + 1, iter_ndims, &strides) {
-            if iter_ndims == 2 || iter_ndims == 3 {
-                permute_array(&mut strides[0..iter_ndims], &best_axis_ordering);
-                permute_array(&mut iter_shape, &best_axis_ordering);
-            }
-        }
-
         if iter_ndims == 2 {
             return einsum_2operands_2labels(&operands[0], &operands[1],
                                             first_n_elements!(strides[0], 3),
@@ -439,30 +434,20 @@ where
 
 
     // main einsum calculation loop
-
-    let mut operand_indices = MultiFlatIndexGenerator::from(n_operands, &iter_shape, &strides);
-
-    for dst in output.iter_mut() {
-        let mut sum = T::zero();
-
-        let mut i = nterms;
-        while i != 0 {
-            i -= 1;
-
-            unsafe {
-                let indices = &operand_indices.cur_indices()[0..n_operands];
-
-                sum += indices.iter()
-                              .zip(operands.iter())
-                              .map(|(&i, operand)|
-                                  *operand.ptr.as_ptr().add(i))
-                              .product();
-
-                operand_indices.increment_flat_indices();
-            }
+    
+    let strides = &strides[0..iter_ndims];
+    
+    for indices in MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape, strides) {
+        unsafe {
+            let dst = output.get_unchecked_mut(indices[n_operands]);
+            *dst += indices.iter()
+                                   .zip(operands.iter())
+                                   .map(|(&i, operand)|
+                                       *operand.ptr.as_ptr().add(i))
+                                   .product();
         }
-        *dst = sum;
     }
+
     unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
 }
 

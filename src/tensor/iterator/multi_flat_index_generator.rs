@@ -74,16 +74,16 @@ impl MultiFlatIndexGenerator {
         if permuted { Some(best_axis_ordering) } else { None }
     }
 
-    pub(crate) fn from<const OPERANDS: usize, const DIMS: usize>(nops: usize,
-                                                                 shape: &[usize],
-                                                                 strides: &[[usize; OPERANDS]; DIMS])
-                                                                 -> Self {
+    pub(crate) fn from<const OPERANDS: usize>(nops: usize,
+                                              shape: &[usize],
+                                              strides: &[[usize; OPERANDS]])
+                                              -> Self {
         let ndims = shape.len();
+        assert_eq!(strides.len(), ndims);
 
         assert!(OPERANDS <= MAX_ARGS);
-        assert!(DIMS <= MAX_DIMS);
         assert!(nops <= OPERANDS);
-        assert!(ndims <= DIMS);
+        assert!(ndims <= MAX_DIMS);
 
         let size = shape.iter().product();
 

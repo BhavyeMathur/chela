@@ -7,30 +7,23 @@ from perfprofiler import *
 class TensorEinsumBase(TimingSuite):
     ID: int
 
-    def __init__(self, einsum_string: str | list[str], shapes: dict[str, int]):
+    def __init__(self, einsum_string: str | list[str], dimensions: dict[str, int], shapes=None, slices=None):
         self.einsum_string = einsum_string
 
-        if isinstance(self.einsum_string, str):
-            shapes = self.tensor_dims_from_einsum_string(einsum_string, shapes)
-            self.ndarrays = rand_ndarrays_with_shape(shapes)
-            self.tensors = rand_tensors_with_shape(shapes)
-        else:
-            shapes = [self.tensor_dims_from_einsum_string(string, shapes) for string in self.einsum_string]
-            self.ndarrays = [rand_ndarrays_with_shape(shape) for shape in shapes]
-            self.tensors = [rand_tensors_with_shape(shape) for shape in shapes]
+        shapes = self.tensor_dims_from_einsum_string(einsum_string, dimensions, shapes=shapes)
+        self.ndarrays = rand_ndarrays_with_shape(shapes, slices=slices)
+        self.tensors = rand_tensors_with_shape(shapes, slices=slices)
 
     @classmethod
-    def tensor_dims_from_einsum_string(cls, einsum_string: str, shapes: dict[str, int]) -> list[tuple[int, ...]]:
+    def tensor_dims_from_einsum_string(cls, einsum_string: str, dimensions: dict[str, int], shapes: list[str] = None) \
+            -> list[tuple[int, ...]]:
         einsum_string = einsum_string.split("->")[0]
-        labels = einsum_string.split(",")
-        return [tuple(shapes[char] for char in label) for label in labels]
+        labels = einsum_string.split(",") if shapes is None else shapes
+        return [tuple(dimensions[char] for char in label) for label in labels]
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        if isinstance(self.einsum_string, str):
-            torch.einsum(self.einsum_string, *self.tensors)
-        else:
-            [torch.einsum(op, *arr) for op, arr in zip(self.einsum_string, self.tensors)]
+        torch.einsum(self.einsum_string, *self.tensors)
 
     @measure_performance("NumPy")
     def run(self):

@@ -34,12 +34,16 @@ def get_class_from_method(method) -> str:
     return method.__qualname__.split(".")[0]
 
 
-def rand_ndarrays_with_shape(shapes: list[tuple[int, ...]], dtype: str = "int32") -> list[np.ndarray]:
-    return [np.random.rand(*shape).astype(dtype) for shape in shapes]
+def rand_ndarrays_with_shape(shapes: list[tuple[int, ...]], dtype: str = "int32", slices=None) -> list[np.ndarray]:
+    if slices is None:
+        return [np.random.rand(*shape).astype(dtype) for shape in shapes]
+    return [np.random.rand(*shape).astype(dtype)[slice] for shape, slice in zip(shapes, slices)]
 
 
-def rand_tensors_with_shape(shapes: list[tuple[int, ...]], dtype=torch.float32, **kwargs) -> list[torch.Tensor]:
-    return [torch.rand(shape, dtype=dtype, **kwargs) for shape in shapes]
+def rand_tensors_with_shape(shapes: list[tuple[int, ...]], dtype=torch.float32, slices=None) -> list[torch.Tensor]:
+    if slices is None:
+        return [torch.rand(shape, dtype=dtype) for shape in shapes]
+    return [torch.rand(shape, dtype=dtype)[*slice] for shape, slice in zip(shapes, slices)]
 
 
 __all__ = ["merge_dicts", "compile_rust", "run_rust", "get_class_from_method",

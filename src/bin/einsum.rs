@@ -223,6 +223,46 @@ fn einsum_2operands_8() -> u128 {
     start.elapsed().as_nanos()
 }
 
+fn einsum_on_slices0() -> u128 {
+    let tensor_a: Tensor<f32> = Tensor::rand([I, J]);
+    let tensor_b: Tensor<f32> = Tensor::rand([J, K, 2]);
+
+    let tensor_b = tensor_b.slice_along(Axis(2), 0);
+
+    let start = ProcessTime::now();
+    _ = einsum([&tensor_a, &tensor_b], (["ij", "jk"], ""));
+    start.elapsed().as_nanos()
+}
+
+fn einsum_on_slices1() -> u128 {
+    let tensor_a: Tensor<f32> = Tensor::rand([10000, 2]);
+    let tensor_a = tensor_a.slice_along(Axis(1), 0);
+
+    let start = ProcessTime::now();
+    _ = einsum([&tensor_a], (["i"], ""));
+    start.elapsed().as_nanos()
+}
+
+fn einsum_3operands_0() -> u128 {
+    let tensor_a: Tensor<f32> = Tensor::rand([I]);
+    let tensor_b: Tensor<f32> = Tensor::rand([J]);
+    let tensor_c: Tensor<f32> = Tensor::rand([K]);
+
+    let start = ProcessTime::now();
+    _ = einsum([&tensor_a, &tensor_b, &tensor_c], (["i", "j", "k"], ""));
+    start.elapsed().as_nanos()
+}
+
+fn einsum_3operands_1() -> u128 {
+    let tensor_a: Tensor<f32> = Tensor::rand([I, J]);
+    let tensor_b: Tensor<f32> = Tensor::rand([J]);
+    let tensor_c: Tensor<f32> = Tensor::rand([K]);
+
+    let start = ProcessTime::now();
+    _ = einsum([&tensor_a, &tensor_b, &tensor_c], (["ij", "j", "k"], ""));
+    start.elapsed().as_nanos()
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let id = args[1].parse::<usize>().unwrap();
@@ -248,6 +288,11 @@ fn main() {
         else if id == 106 { einsum_2operands_6() }
         else if id == 107 { einsum_2operands_7() }
         else if id == 108 { einsum_2operands_8() }
+
+        else if id == 200 { einsum_on_slices0() }
+        else if id == 201 { einsum_on_slices1() }
+        else if id == 202 { einsum_3operands_0() }
+        else if id == 203 { einsum_3operands_1() }
 
         else { panic!("invalid ID") };
 
