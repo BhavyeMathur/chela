@@ -190,6 +190,14 @@ class Einsum2Operands6(TensorEinsumBase):
         super().__init__(self.name, {"i": 100, "j": 1000, "k": 500})
 
 
+class Einsum2Operands7(TensorEinsumBase):
+    ID = 107
+    name = "ij,ki->i"
+
+    def __init__(self):
+        super().__init__(self.name, {"i": 100, "j": 1000, "k": 500})
+
+
 if __name__ == "__main__":
     results = profile_all([
         # TensorEinsum1,
@@ -210,5 +218,6 @@ if __name__ == "__main__":
         Einsum2Operands4,
         Einsum2Operands5,
         Einsum2Operands6,
+        Einsum2Operands7,
     ], n=20)
     plot_barplot(results, "Einstein Summation Benchmark")

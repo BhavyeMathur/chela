@@ -58,6 +58,16 @@ fn test_einsum_invalid_index() {
 }
 
 
+// #[test]
+// fn test_einsum() {
+//     let a = Tensor::from([[1, 2], [3, 4]]);
+//     let b = Tensor::from([[5, 6], [7, 8]]);
+//
+//     let expected = Tensor::from([[19, 22], [43, 50]]);
+//     let result = chela::einsum([&a, &b], (["ij", "ki"], "i"));
+//     assert_eq!(result, expected);
+// }
+
 test_for_all_numeric_dtypes!(
     test_einsum_sums, {
         for n in 1..17 {
@@ -158,6 +168,32 @@ test_for_common_numeric_dtypes!(
         };
 
         let result = chela::einsum(&[&a, &b], (["ij", "ki"], "j"));
+        assert_eq!(result, expected);
+    }
+);
+
+test_for_common_numeric_dtypes!(
+    test_einsum_ij_ki_i, {
+        let a = Tensor::arange(0i32, 46).astype::<T>();
+        let b = Tensor::arange_with_step(19i32, -1, -1).astype::<T>();
+        let a = a.reshape([2, 23]);
+        let b = b.reshape([10, 2]);
+
+        let expected = {
+            let mut out = vec![T::default(); 2];
+
+            for i in 0..2 {
+                for j in 0..23 {
+                    for k in 0..10 {
+                        out[i] += a[[i, j]] * b[[k, i]];
+                    }
+                }
+            }
+
+            Tensor::from(out)
+        };
+
+        let result = chela::einsum(&[&a, &b], (["ij", "ki"], "i"));
         assert_eq!(result, expected);
     }
 );

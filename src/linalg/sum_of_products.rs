@@ -20,6 +20,7 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(st
         match code {
             2 => { return <T as EinsumDataType>::operand_strides_0_1_out_stride_0; }
             3 => { return <T as EinsumDataType>::operand_strides_0_1_out_stride_1; }
+            4 => { return <T as EinsumDataType>::operand_strides_1_0_out_stride_0; }
             5 => { return <T as EinsumDataType>::operand_strides_1_0_out_stride_1; }
             6 => { return <T as EinsumDataType>::operand_strides_1_1_out_stride_0; }
             _ => {}
@@ -30,20 +31,6 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(st
 }
 
 pub(super) trait EinsumDataType: NumericDataType {
-    #[inline(always)]
-    unsafe fn sum_of_products_muladd<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        let mut dst = ptrs[N - 1];
-
-        let scalar = *ptrs[0];
-        let mut data = ptrs[1];
-
-        for _ in 0..count {
-            *dst = scalar.mul_add(*data, *dst);
-            dst = dst.add(1);
-            data = data.add(1);
-        }
-    }
-
     #[inline(always)]
     unsafe fn generic<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
@@ -64,21 +51,40 @@ pub(super) trait EinsumDataType: NumericDataType {
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], _: &[usize; N], count: usize) {
+    unsafe fn sum_of_products_muladd<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
 
-        let dst = ptrs[N - 1];
-        let ptrs = &ptrs[0..N - 1];
+        let mut dst = ptrs[N - 1];
 
-        let value0 = *ptrs[0];
-        let data1 = ptrs[1];
+        let scalar = *ptrs[0];
+        let mut data = ptrs[1];
+
+        for _ in 0..count {
+            *dst = scalar.mul_add(*data, *dst);
+            dst = dst.add(1);
+            data = data.add(1);
+        }
+    }
+
+    #[inline(always)]
+    unsafe fn sum_of_scaled_array<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(count > 0);
+
+        let mut dst = ptrs[N - 1];
+        let scalar = *ptrs[0];
+        let mut data = ptrs[1];
 
         let mut sum = Self::zero();
         for i in 0..count {
-            sum += *data1.add(i);
+            sum += *data.add(i);
         }
 
-        *dst = value0.mul_add(sum, *dst);
+        *dst = scalar.mul_add(sum, *dst);
+    }
+
+    #[inline(always)]
+    unsafe fn operand_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        Self::sum_of_scaled_array(&ptrs, strides, count);
     }
 
     #[inline(always)]
@@ -87,9 +93,17 @@ pub(super) trait EinsumDataType: NumericDataType {
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_1_0_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        assert_unchecked(count > 0);
+    unsafe fn operand_strides_1_0_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        let mut ptrs = *ptrs;
+        let tmp = ptrs[0];
+        ptrs[0] = ptrs[1];
+        ptrs[1] = tmp;
 
+        Self::sum_of_scaled_array(&ptrs, strides, count);
+    }
+
+    #[inline(always)]
+    unsafe fn operand_strides_1_0_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         let mut ptrs = *ptrs;
         let tmp = ptrs[0];
         ptrs[0] = ptrs[1];
@@ -179,53 +193,53 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
         let value0 = *ptrs[0];
         let value0x = simd_dup(value0);
         let mut data1 = ptrs[1];
-    
+
         while count >= 4 * LANES {
             let a = simd_load(data1.add(0 * LANES));
             let b = simd_load(data1.add(1 * LANES));
             let c = simd_load(data1.add(2 * LANES));
             let d = simd_load(data1.add(3 * LANES));
-    
+
             let a_dst = simd_load(dst.add(0 * LANES));
             let b_dst = simd_load(dst.add(1 * LANES));
             let c_dst = simd_load(dst.add(2 * LANES));
             let d_dst = simd_load(dst.add(3 * LANES));
-    
+
             let a_out = simd_muladd(a_dst, value0x, a);
             let b_out = simd_muladd(b_dst, value0x, b);
             let c_out = simd_muladd(c_dst, value0x, c);
             let d_out = simd_muladd(d_dst, value0x, d);
-    
+
             simd_store(dst.add(0 * LANES), a_out);
             simd_store(dst.add(1 * LANES), b_out);
             simd_store(dst.add(2 * LANES), c_out);
             simd_store(dst.add(3 * LANES), d_out);
-    
+
             dst = dst.add(4 * LANES);
             data1 = data1.add(4 * LANES);
             count -= 4 * LANES;
         }
-    
+
         while count >= LANES {
             let a = simd_load(data1);
             let a_dst = simd_load(dst);
             let a_out = simd_muladd(a_dst, value0x, a);
-    
+
             simd_store(dst, a_out);
-    
+
             dst = dst.add(LANES);
             data1 = data1.add(LANES);
             count -= LANES;
         }
-    
+
         for _ in 0..count {
             *dst = value0.mul_add(*data1, *dst);
             dst = dst.add(1);
             data1 = data1.add(1);
         }
     },
-    
-    operand_strides_0_1_out_stride_0, {
+
+    sum_of_scaled_array, {
         let value0 = *ptrs[0];
         let mut data1 = ptrs[1];
 
