@@ -53,6 +53,7 @@ pub(super) trait EinsumDataType: NumericDataType {
     #[inline(always)]
     unsafe fn sum_of_products_muladd<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
+        assert_unchecked(N >= 2);
 
         let mut dst = ptrs[N - 1];
 
@@ -69,6 +70,7 @@ pub(super) trait EinsumDataType: NumericDataType {
     #[inline(always)]
     unsafe fn sum_of_scaled_array<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
+        assert_unchecked(N >= 2);
 
         let mut dst = ptrs[N - 1];
         let scalar = *ptrs[0];
@@ -84,16 +86,20 @@ pub(super) trait EinsumDataType: NumericDataType {
 
     #[inline(always)]
     unsafe fn operand_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(N == 3);
         Self::sum_of_scaled_array(&ptrs, strides, count);
     }
 
     #[inline(always)]
     unsafe fn operand_strides_0_1_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(N == 3);
         Self::sum_of_products_muladd(ptrs, strides, count);
     }
 
     #[inline(always)]
     unsafe fn operand_strides_1_0_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(N == 3);
+
         let mut ptrs = *ptrs;
         let tmp = ptrs[0];
         ptrs[0] = ptrs[1];
@@ -104,6 +110,8 @@ pub(super) trait EinsumDataType: NumericDataType {
 
     #[inline(always)]
     unsafe fn operand_strides_1_0_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(N == 3);
+
         let mut ptrs = *ptrs;
         let tmp = ptrs[0];
         ptrs[0] = ptrs[1];
@@ -113,8 +121,9 @@ pub(super) trait EinsumDataType: NumericDataType {
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_1_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], _: &[usize; N], count: usize) {
+    unsafe fn operand_strides_1_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
+        assert_unchecked(N == 3);
 
         let mut dst = ptrs[N - 1];
 
@@ -221,9 +230,9 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             simd_store(dst.add(2 * LANES), c_out);
             simd_store(dst.add(3 * LANES), d_out);
 
+            count -= 4 * LANES;
             dst = dst.add(4 * LANES);
             data1 = data1.add(4 * LANES);
-            count -= 4 * LANES;
         }
 
         while count >= LANES {
@@ -233,9 +242,9 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
 
             simd_store(dst, a_out);
 
+            count -= LANES;
             dst = dst.add(LANES);
             data1 = data1.add(LANES);
-            count -= LANES;
         }
 
         for _ in 0..count {
@@ -261,16 +270,16 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             let cd = simd_add(c, d);
             sum = simd_add(sum, simd_add(ab, cd));
 
-            data1 = data1.add(4 * LANES);
             count -= 4 * LANES;
+            data1 = data1.add(4 * LANES);
         }
 
         while count >= LANES {
             let a = simd_load(data1);
             sum = simd_add(sum, a);
 
-            data1 = data1.add(LANES);
             count -= LANES;
+            data1 = data1.add(LANES);
         }
 
         let mut sum = simd_sum(sum);
@@ -299,26 +308,32 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             let a3 = simd_load(data0.add(3 * LANES));
             let b3 = simd_load(data1.add(3 * LANES));
 
-            let ab3 = simd_muladd(sum, a3, b3);
-            let ab2 = simd_muladd(ab3, a2, b2);
-            let ab1 = simd_muladd(ab2, a1, b1);
-            sum = simd_muladd(ab1, a0, b0);
+            let ab0 = simd_mul(a0, b0);
+            let ab1 = simd_mul(a1, b1);
+            let ab2 = simd_mul(a2, b2);
+            let ab3 = simd_mul(a3, b3);
 
+            let ab01 = simd_add(ab0, ab1);
+            let ab23 = simd_add(ab2, ab3);
+            let ab0123 = simd_add(ab01, ab23);
+            
+            sum = simd_add(sum, ab0123);
+
+            count -= 4 * LANES;
             data0 = data0.add(4 * LANES);
             data1 = data1.add(4 * LANES);
-            count -= 4 * LANES;
         }
 
         while count >= LANES {
             let a = simd_load(data0);
             let b = simd_load(data1);
             sum = simd_muladd(sum, a, b);
-
+        
+            count -= LANES;
             data0 = data0.add(LANES);
             data1 = data1.add(LANES);
-            count -= LANES;
         }
-        
+
         let mut sum = simd_sum(sum);
         for i in 0..count {
             sum = (*data0).mul_add(*data1, sum);

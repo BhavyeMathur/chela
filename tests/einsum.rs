@@ -112,31 +112,6 @@ test_for_common_numeric_dtypes!(
     }
 );
 
-#[test]
-fn test_einsum_matrix_vector() {
-    type T = f32;
-
-    let n: usize = 20;
-    let a = Tensor::arange(0, n * n).astype::<T>();
-    let b = Tensor::arange(n, 2 * n).astype::<T>();
-    let a = a.reshape([n, n]);
-
-    let expected = {
-        let mut out = vec![T::default(); n];
-
-        for i in 0..n {
-            for j in 0..n {
-                out[i] += a[[i, j]] * b[j];
-            }
-        }
-
-        Tensor::from(out)
-    };
-
-    let result = chela::einsum(&[&a, &b], (&["ij", "j"], "i"));
-    assert_almost_eq!(result, expected);
-}
-
 test_for_common_numeric_dtypes!(
     test_einsum_matrix_vector, {
         let n: usize = 20;
