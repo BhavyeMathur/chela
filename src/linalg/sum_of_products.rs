@@ -142,6 +142,7 @@ macro_rules! simd_kernel_for_dtype {
     $simd_load:ident, $vload:expr,
     $simd_store:ident, $vstore:expr,
     $simd_add:ident, $vadd:expr,
+    $simd_mul:ident, $vmul:expr,
     $simd_muladd:ident, $vmuladd:expr,
     $simd_dup:ident, $vdup:expr,
 
@@ -160,6 +161,7 @@ macro_rules! simd_kernel_for_dtype {
                     let $simd_load = $vload;
                     let $simd_store = $vstore;
                     let $simd_add = $vadd;
+                    let $simd_mul = $vmul;
                     let $simd_muladd = $vmuladd;
                     let $simd_dup = $vdup;
 
@@ -175,20 +177,22 @@ macro_rules! simd_kernel_for_dtype {
 
 macro_rules! simd_kernel {
     ($ptrs:ident, $strides:ident, $count:ident, $dst:ident,
-    $lanes:ident, $simd_load:ident, $simd_store:ident, $simd_add:ident, $simd_muladd:ident, $simd_dup:ident,
+    $lanes:ident, $simd_load:ident, $simd_store:ident, $simd_add:ident, $simd_mul:ident, $simd_muladd:ident, $simd_dup:ident,
     $($func_name:ident, { $($body:tt)* },)+) => {
 
         simd_kernel_for_dtype!(f32, 4, $ptrs, $strides, $count, $dst, $lanes,
-                                $simd_load, vld1q_f32, $simd_store, vst1q_f32, $simd_add, vaddq_f32, $simd_muladd, vfmaq_f32, $simd_dup, vdupq_n_f32,
+                                $simd_load, vld1q_f32, $simd_store, vst1q_f32, $simd_add, vaddq_f32, $simd_mul, vmulq_f32,
+                                $simd_muladd, vfmaq_f32, $simd_dup, vdupq_n_f32,
                                 $($func_name, { $($body)* };)+);
 
         simd_kernel_for_dtype!(f64, 2, $ptrs, $strides, $count, $dst, $lanes,
-                                $simd_load, vld1q_f64, $simd_store, vst1q_f64, $simd_add, vaddq_f64, $simd_muladd, vfmaq_f64, $simd_dup, vdupq_n_f64,
+                                $simd_load, vld1q_f64, $simd_store, vst1q_f64, $simd_add, vaddq_f64, $simd_mul, vmulq_f64,
+                                $simd_muladd, vfmaq_f64, $simd_dup, vdupq_n_f64,
                                 $($func_name, { $($body)* };)+);
     };
 }
 
-simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, simd_muladd, simd_dup,
+simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, simd_mul, simd_muladd, simd_dup,
     sum_of_products_muladd, {
         let value0 = *ptrs[0];
         let value0x = simd_dup(value0);
@@ -295,16 +299,10 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             let a3 = simd_load(data0.add(3 * LANES));
             let b3 = simd_load(data1.add(3 * LANES));
 
-            let sum0 = simd_add(a0, b0);
-            let sum1 = simd_add(a1, b1);
-            let sum2 = simd_add(a2, b2);
-            let sum3 = simd_add(a3, b3);
-            sum = simd_add(simd_add(sum0, sum1), simd_add(sum2, sum3));
-
-            // let ab3 = simd_muladd(sum, a3, b3);  // slower because data hazards!
-            // let ab2 = simd_muladd(ab3, a2, b2);  // (thanks EECS 370)
-            // let ab1 = simd_muladd(ab2, a1, b1);
-            // sum = simd_muladd(ab1, a0, b0);
+            let ab0 = simd_muladd(sum, a0, b0);
+            let ab1 = simd_muladd(ab0, a1, b1);
+            let ab2 = simd_muladd(ab1, a2, b2);
+            sum = simd_muladd(ab2, a3, b3);
 
             data0 = data0.add(4 * LANES);
             data1 = data1.add(4 * LANES);

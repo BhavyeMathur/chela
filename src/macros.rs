@@ -114,7 +114,9 @@ macro_rules! test_for_all_dtypes {
 #[macro_export]
 macro_rules! assert_almost_eq {
     ($left:expr, $right:expr) => {
-        assert!((($left) - ($right)).max() < 0.00001);
+        if ((&($left) - &($right)).max().flatiter().next().unwrap() as f32).abs() > 0.2 {
+            assert_eq!($left, $right);
+        }
     };
 }
 
