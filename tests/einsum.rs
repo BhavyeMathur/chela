@@ -201,6 +201,60 @@ test_for_all_numeric_dtypes!(
     }
 );
 
+test_for_common_integer_dtypes!(
+    test_einsum_sum_product_big, {
+        let n: usize = 23;
+        let a = Tensor::arange(0, n * n).astype::<T>();
+        let b = Tensor::arange(0, n * n).astype::<T>();
+        let a = a.reshape([n, n]);
+        let b = b.reshape([n, n]);
+
+        let expected = {
+            let mut out = T::default();
+
+            for i in 0..n {
+                for j in 0..n {
+                    for k in 0..n {
+                        out += a[[i, j]] * b[[k, j]];
+                    }
+                }
+            }
+
+            Tensor::scalar(out)
+        };
+
+        let result = chela::einsum([&a, &b], (["ij", "kj"], ""));
+        assert_eq!(result, expected);
+    }
+);
+
+test_for_float_dtypes!(
+    test_einsum_sum_product_big_float, {
+        let n: usize = 23;
+        let a = Tensor::arange(0, n * n).astype::<T>() * 0.01;
+        let b = Tensor::arange(0, n * n).astype::<T>() * 0.01;
+        let a = a.reshape([n, n]);
+        let b = b.reshape([n, n]);
+
+        let expected = {
+            let mut out = T::default();
+
+            for i in 0..n {
+                for j in 0..n {
+                    for k in 0..n {
+                        out += a[[i, j]] * b[[k, j]];
+                    }
+                }
+            }
+
+            out
+        };
+
+        let result = chela::einsum([&a, &b], (["ij", "kj"], "")).flatiter().next().unwrap();
+        assert!(result - expected < 0.15);
+    }
+);
+
 test_for_all_numeric_dtypes!(
     test_einsum_2operands_to_3d, {
         let a = Tensor::from([[1, 2], [0, 1]]).astype::<T>();

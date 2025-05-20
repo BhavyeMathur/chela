@@ -20,6 +20,7 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(st
         match code {
             2 => { return <T as EinsumDataType>::operand_strides_0_1_out_stride_0; }
             3 => { return <T as EinsumDataType>::operand_strides_0_1_out_stride_1; }
+            6 => { return <T as EinsumDataType>::operand_strides_1_1_out_stride_0; }
             _ => {}
         }
     }
@@ -80,6 +81,25 @@ pub(super) trait EinsumDataType: NumericDataType {
             dst = dst.add(1);
             data1 = data1.add(1);
         }
+    }
+
+    #[inline(always)]
+    unsafe fn operand_strides_1_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], _: &[usize; N], count: usize) {
+        assert_unchecked(count > 0);
+
+        let mut dst = ptrs[N - 1];
+
+        let mut data0 = ptrs[0];
+        let mut data1 = ptrs[1];
+        let mut sum = Self::default();
+
+        for i in 0..count {
+            sum += (*data0) * (*data1);
+            data0 = data0.add(1);
+            data1 = data1.add(1);
+        }
+
+        *dst += sum;
     }
 }
 
@@ -160,6 +180,14 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             count -= 4 * LANES;
         }
 
+        while count >= LANES {
+            let a = simd_load(data1);
+            sum = simd_add(sum, a);
+
+            data1 = data1.add(LANES);
+            count -= LANES;
+        }
+
         let sum_array: [Self; LANES] = core::mem::transmute(sum);
         let mut sum = sum_array.iter().copied().sum::<Self>();
 
@@ -174,7 +202,7 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
         let value0 = *ptrs[0];
         let value0x = simd_dup(value0);
         let mut data1 = ptrs[1];
-        
+
         while count >= 4 * LANES {
             let a = simd_load(data1.add(0 * LANES));
             let b = simd_load(data1.add(1 * LANES));
@@ -200,14 +228,14 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             data1 = data1.add(4 * LANES);
             count -= 4 * LANES;
         }
-        
+
         while count >= LANES {
             let a = simd_load(data1);
             let a_dst = simd_load(dst);
             let a_out = simd_muladd(a_dst, value0x, a);
-        
+
             simd_store(dst, a_out);
-        
+
             dst = dst.add(LANES);
             data1 = data1.add(LANES);
             count -= LANES;
@@ -218,5 +246,55 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             dst = dst.add(1);
             data1 = data1.add(1);
         }
+    },
+
+    operand_strides_1_1_out_stride_0, {
+        let mut data0 = ptrs[0];
+        let mut data1 = ptrs[1];
+        let mut sum = simd_dup(Self::default());
+
+        while count >= 4 * LANES {
+            let a0 = simd_load(data0.add(0 * LANES));
+            let b0 = simd_load(data1.add(0 * LANES));
+
+            let a1 = simd_load(data0.add(1 * LANES));
+            let b1 = simd_load(data1.add(1 * LANES));
+
+            let a2 = simd_load(data0.add(2 * LANES));
+            let b2 = simd_load(data1.add(2 * LANES));
+
+            let a3 = simd_load(data0.add(3 * LANES));
+            let b3 = simd_load(data1.add(3 * LANES));
+
+            let ab3 = simd_muladd(sum, a3, b3);
+            let ab2 = simd_muladd(ab3, a2, b2);
+            let ab1 = simd_muladd(ab2, a1, b1);
+            sum = simd_muladd(ab1, a0, b0);
+
+            data0 = data0.add(4 * LANES);
+            data1 = data1.add(4 * LANES);
+            count -= 4 * LANES;
+        }
+
+        while count >= LANES {
+            let a = simd_load(data0);
+            let b = simd_load(data1);
+            sum = simd_muladd(sum, a, b);
+
+            data0 = data0.add(LANES);
+            data1 = data1.add(LANES);
+            count -= LANES;
+        }
+
+        let sum_array: [Self; LANES] = core::mem::transmute(sum);
+        let mut sum = sum_array.iter().copied().sum::<Self>();
+
+        for i in 0..count {
+            sum += (*data0) * (*data1);
+            data0 = data0.add(1);
+            data1 = data1.add(1);
+        }
+
+        *dst += sum;
     },
 );
