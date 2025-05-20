@@ -144,6 +144,7 @@ macro_rules! simd_kernel_for_dtype {
     $simd_add:ident, $vadd:expr,
     $simd_mul:ident, $vmul:expr,
     $simd_muladd:ident, $vmuladd:expr,
+    $simd_sum:ident, $vaddv:expr,
     $simd_dup:ident, $vdup:expr,
 
     $($func_name:ident, { $($body:tt)* };)+) => { paste! {
@@ -163,6 +164,7 @@ macro_rules! simd_kernel_for_dtype {
                     let $simd_add = $vadd;
                     let $simd_mul = $vmul;
                     let $simd_muladd = $vmuladd;
+                    let $simd_sum = $vaddv;
                     let $simd_dup = $vdup;
 
                     let mut $dst = $ptrs[N - 1];
@@ -177,22 +179,22 @@ macro_rules! simd_kernel_for_dtype {
 
 macro_rules! simd_kernel {
     ($ptrs:ident, $strides:ident, $count:ident, $dst:ident,
-    $lanes:ident, $simd_load:ident, $simd_store:ident, $simd_add:ident, $simd_mul:ident, $simd_muladd:ident, $simd_dup:ident,
+    $lanes:ident, $simd_load:ident, $simd_store:ident, $simd_add:ident, $simd_mul:ident, $simd_muladd:ident, $simd_sum:ident, $simd_dup:ident,
     $($func_name:ident, { $($body:tt)* },)+) => {
 
         simd_kernel_for_dtype!(f32, 4, $ptrs, $strides, $count, $dst, $lanes,
                                 $simd_load, vld1q_f32, $simd_store, vst1q_f32, $simd_add, vaddq_f32, $simd_mul, vmulq_f32,
-                                $simd_muladd, vfmaq_f32, $simd_dup, vdupq_n_f32,
+                                $simd_muladd, vfmaq_f32, $simd_sum, vaddvq_f32, $simd_dup, vdupq_n_f32,
                                 $($func_name, { $($body)* };)+);
 
         simd_kernel_for_dtype!(f64, 2, $ptrs, $strides, $count, $dst, $lanes,
                                 $simd_load, vld1q_f64, $simd_store, vst1q_f64, $simd_add, vaddq_f64, $simd_mul, vmulq_f64,
-                                $simd_muladd, vfmaq_f64, $simd_dup, vdupq_n_f64,
+                                $simd_muladd, vfmaq_f64, $simd_sum, vaddvq_f64, $simd_dup, vdupq_n_f64,
                                 $($func_name, { $($body)* };)+);
     };
 }
 
-simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, simd_mul, simd_muladd, simd_dup,
+simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, simd_mul, simd_muladd, simd_sum, simd_dup,
     sum_of_products_muladd, {
         let value0 = *ptrs[0];
         let value0x = simd_dup(value0);
@@ -271,9 +273,7 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             count -= LANES;
         }
 
-        let sum_array: [Self; LANES] = core::mem::transmute(sum);
-        let mut sum = sum_array.iter().copied().sum::<Self>();
-
+        let mut sum = simd_sum(sum);
         for i in 0..count {
             sum += *data1.add(i);
         }
@@ -299,10 +299,10 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             let a3 = simd_load(data0.add(3 * LANES));
             let b3 = simd_load(data1.add(3 * LANES));
 
-            let ab0 = simd_muladd(sum, a0, b0);
-            let ab1 = simd_muladd(ab0, a1, b1);
-            let ab2 = simd_muladd(ab1, a2, b2);
-            sum = simd_muladd(ab2, a3, b3);
+            let ab3 = simd_muladd(sum, a3, b3);
+            let ab2 = simd_muladd(ab3, a2, b2);
+            let ab1 = simd_muladd(ab2, a1, b1);
+            sum = simd_muladd(ab1, a0, b0);
 
             data0 = data0.add(4 * LANES);
             data1 = data1.add(4 * LANES);
@@ -318,12 +318,10 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             data1 = data1.add(LANES);
             count -= LANES;
         }
-
-        let sum_array: [Self; LANES] = core::mem::transmute(sum);
-        let mut sum = sum_array.iter().copied().sum::<Self>();
-
+        
+        let mut sum = simd_sum(sum);
         for i in 0..count {
-            sum += (*data0) * (*data1);
+            sum = (*data0).mul_add(*data1, sum);
             data0 = data0.add(1);
             data1 = data1.add(1);
         }

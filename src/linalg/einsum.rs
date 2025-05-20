@@ -415,18 +415,18 @@ where
     if n_operands == 2 {
         // TODO move this out of this if statement
         if let Some(best_axis_ordering) = MultiFlatIndexGenerator::find_best_axis_ordering(n_operands + 1, iter_ndims, &strides) {
-            if iter_ndims == 3 || iter_ndims == 3 {
+            if iter_ndims == 2 || iter_ndims == 3 {
                 permute_array(&mut strides[0..iter_ndims], &best_axis_ordering);
                 permute_array(&mut iter_shape, &best_axis_ordering);
             }
         }
 
         if iter_ndims == 2 {
-            // return einsum_2operands_2labels(&operands[0], &operands[1],
-            //                                 first_n_elements!(strides[0], 3),
-            //                                 first_n_elements!(strides[1], 3),
-            //                                 first_n_elements!(iter_shape, 2),
-            //                                 output, output_shape);
+            return einsum_2operands_2labels(&operands[0], &operands[1],
+                                            first_n_elements!(strides[0], 3),
+                                            first_n_elements!(strides[1], 3),
+                                            first_n_elements!(iter_shape, 2),
+                                            output, output_shape);
         } else if iter_ndims == 3 {
             return einsum_2operands_3labels(&operands[0], &operands[1],
                                             first_n_elements!(strides[0], 3),

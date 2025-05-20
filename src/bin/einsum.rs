@@ -5,8 +5,8 @@ use cpu_time::ProcessTime;
 
 
 const I: usize = 100;
-const J: usize = 50;
-const K: usize = 100;
+const J: usize = 500;
+const K: usize = 1000;
 
 const U: usize = 1000;
 const V: usize = 500;

@@ -2,8 +2,8 @@ from perfprofiler import *
 from einsum import TensorEinsumBase
 
 I = 100
-J = 50
-K = 100
+J = 500
+K = 1000
 
 
 class Einsum2Matrices0(TensorEinsumBase):

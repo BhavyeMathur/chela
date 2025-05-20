@@ -4,35 +4,6 @@ version = "0.1.0"
 edition = "2021"
 build = "build.rs"
 
-[[bin]]
-name = "fill_f32"
-path = "benches/fill_f32.rs"
-
-[[bin]]
-name = "fill_f32_slice"
-path = "benches/fill_f32_slice.rs"
-
-[[bin]]
-name = "ones_f32"
-path = "benches/ones_f32.rs"
-
-[[bin]]
-name = "sum_f32"
-path = "benches/sum_f32.rs"
-
-[[bin]]
-name = "sum_f32_slice"
-path = "benches/sum_f32_slice.rs"
-
-[[bin]]
-name = "sum_f32_slice2"
-path = "benches/sum_f32_slice2.rs"
-
-[[bin]]
-name = "einsum"
-path = "benches/einsum.rs"
-
-
 [dependencies]
 cpu-time = "1.0.0"
 bitflags = "2.6.0"
