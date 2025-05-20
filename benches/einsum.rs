@@ -201,8 +201,8 @@ fn einsum_2operands_4() -> u128 {
 
 fn einsum_2operands_5() -> u128 {
     let i = 100;
-    let j = 50;
-    let k = 100;
+    let j = 1000;
+    let k = 500;
 
     let tensor_a: Tensor<f32> = Tensor::rand([i, k]);
     let tensor_b: Tensor<f32> = Tensor::rand([j, k]);

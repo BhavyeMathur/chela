@@ -266,10 +266,16 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
             let a3 = simd_load(data0.add(3 * LANES));
             let b3 = simd_load(data1.add(3 * LANES));
 
-            let ab3 = simd_muladd(sum, a3, b3);
-            let ab2 = simd_muladd(ab3, a2, b2);
-            let ab1 = simd_muladd(ab2, a1, b1);
-            sum = simd_muladd(ab1, a0, b0);
+            let sum0 = simd_add(a0, b0);
+            let sum1 = simd_add(a1, b1);
+            let sum2 = simd_add(a2, b2);
+            let sum3 = simd_add(a3, b3);
+            sum = simd_add(simd_add(sum0, sum1), simd_add(sum2, sum3));
+
+            // let ab3 = simd_muladd(sum, a3, b3);  // slower because data hazards! 
+            // let ab2 = simd_muladd(ab3, a2, b2);  // (thanks EECS 370)
+            // let ab1 = simd_muladd(ab2, a1, b1);
+            // sum = simd_muladd(ab1, a0, b0);
 
             data0 = data0.add(4 * LANES);
             data1 = data1.add(4 * LANES);
