@@ -91,7 +91,7 @@ impl EinsumDataType for f64 {
     #[inline(always)]
     unsafe fn operand_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], _: &[usize; N], mut count: usize) {
         assert_unchecked(count > 0);
-
+        
         let dst = ptrs[N - 1];
         let value0 = *ptrs[0];
         let mut data1 = ptrs[1];
@@ -100,10 +100,14 @@ impl EinsumDataType for f64 {
 
         while count >= 8 {
             let a = vld1q_f64(data1);
-            let b = vld1q_f64(data1.add(8));
+            let b = vld1q_f64(data1.add(2));
+            let c = vld1q_f64(data1.add(4));
+            let d = vld1q_f64(data1.add(6));
 
             let ab = vaddq_f64(a, b);
-            sum = vaddq_f64(sum, ab);
+            let cd = vaddq_f64(c, d);
+            let abcd = vaddq_f64(ab, cd);
+            sum = vaddq_f64(sum, abcd);
 
             data1 = data1.add(8);
             count -= 8;
@@ -113,7 +117,7 @@ impl EinsumDataType for f64 {
         let mut sum = sum_array.iter().copied().sum::<f64>();
 
         for i in 0..count {
-            sum += *data1.add(i as usize);
+            sum += *data1.add(i);
         }
 
         *dst = value0.mul_add(sum, *dst);
@@ -150,7 +154,7 @@ impl EinsumDataType for f32 {
         let mut sum = sum_array.iter().copied().sum::<f32>();
 
         for i in 0..count {
-            sum += *data1.add(i as usize);
+            sum += *data1.add(i);
         }
 
         *dst = value0.mul_add(sum, *dst);
