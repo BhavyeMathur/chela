@@ -136,6 +136,32 @@ test_for_all_numeric_dtypes!(
     }
 );
 
+test_for_common_numeric_dtypes!(
+    test_einsum_ij_ki_j, {
+        let a = Tensor::arange(0i32, 20).astype::<T>();
+        let b = Tensor::arange_with_step(19i32, -1, -1).astype::<T>();
+        let a = a.reshape([2, 10]);
+        let b = b.reshape([10, 2]);
+
+        let expected = {
+            let mut out = vec![T::default(); 10];
+
+            for i in 0..2 {
+                for j in 0..10 {
+                    for k in 0..10 {
+                        out[j] += a[[i, j]] * b[[k, i]];
+                    }
+                }
+            }
+
+            Tensor::from(out)
+        };
+
+        let result = chela::einsum(&[&a, &b], (["ij", "ki"], "j"));
+        assert_eq!(result, expected);
+    }
+);
+
 test_for_all_numeric_dtypes!(
     test_einsum_sum_along_axes, {
         let a = Tensor::from([[1, 2], [0, 1]]).astype::<T>();
