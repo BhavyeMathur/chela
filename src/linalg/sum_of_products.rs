@@ -10,6 +10,26 @@ use paste::paste;
 #[cfg(target_arch = "aarch64")]
 use std::arch::aarch64::*;
 
+// pub(super) fn get_generic_sum_of_products_function<T: EinsumDataType>(strides: &[usize])
+//                                                                                       -> unsafe fn(ptrs: &[*mut T], stride: &[usize], count: usize) {
+//     if N == 3 { // 2 operands + 1 output
+//         let mut code = if strides[0] == 0 { 0 } else { if strides[0] == 1 { 4 } else { 8 } };
+//         code += if strides[1] == 0 { 0 } else { if strides[1] == 1 { 2 } else { 8 } };
+//         code += if strides[2] == 0 { 0 } else { if strides[2] == 1 { 1 } else { 8 } };
+//
+//         match code {
+//             2 => { return <T as EinsumDataType>::operand_strides_0_1_out_stride_0; }
+//             3 => { return <T as EinsumDataType>::operand_strides_0_1_out_stride_1; }
+//             4 => { return <T as EinsumDataType>::operand_strides_1_0_out_stride_0; }
+//             5 => { return <T as EinsumDataType>::operand_strides_1_0_out_stride_1; }
+//             6 => { return <T as EinsumDataType>::operand_strides_1_1_out_stride_0; }
+//             _ => {}
+//         }
+//     }
+//
+//     <T as EinsumDataType>::generic
+// }
+
 pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(strides: &[usize; N])
                                                                               -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
     if N == 3 { // 2 operands + 1 output
@@ -27,6 +47,10 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(st
         }
     }
 
+    if strides[N - 1] == 0 {
+        return <T as EinsumDataType>::out_stride_0;
+    }
+
     <T as EinsumDataType>::generic
 }
 
@@ -34,7 +58,6 @@ pub(super) trait EinsumDataType: NumericDataType {
     #[inline(always)]
     unsafe fn generic<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
-        assert_unchecked(N > 0 && N <= MAX_DIMS);
 
         let dst = ptrs[N - 1];
         let ptrs = &ptrs[0..N - 1];
@@ -51,9 +74,25 @@ pub(super) trait EinsumDataType: NumericDataType {
     }
 
     #[inline(always)]
+    unsafe fn out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(count > 0);
+
+        let dst = ptrs[N - 1];
+        let ptrs = &ptrs[0..N - 1];
+
+        let mut k = count;
+        while k != 0 {
+            k -= 1;
+
+            *dst += ptrs.iter().zip(strides.iter())
+                        .map(|(ptr, stride)| *ptr.add(k * stride))
+                        .product();
+        }
+    }
+
+    #[inline(always)]
     unsafe fn sum_of_products_muladd<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
-        assert_unchecked(N >= 2);
 
         let mut dst = ptrs[N - 1];
 
@@ -70,7 +109,6 @@ pub(super) trait EinsumDataType: NumericDataType {
     #[inline(always)]
     unsafe fn sum_of_scaled_array<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
-        assert_unchecked(N >= 2);
 
         let mut dst = ptrs[N - 1];
         let scalar = *ptrs[0];
@@ -86,20 +124,16 @@ pub(super) trait EinsumDataType: NumericDataType {
 
     #[inline(always)]
     unsafe fn operand_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        assert_unchecked(N == 3);
         Self::sum_of_scaled_array(&ptrs, strides, count);
     }
 
     #[inline(always)]
     unsafe fn operand_strides_0_1_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        assert_unchecked(N == 3);
         Self::sum_of_products_muladd(ptrs, strides, count);
     }
 
     #[inline(always)]
     unsafe fn operand_strides_1_0_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        assert_unchecked(N == 3);
-
         let mut ptrs = *ptrs;
         let tmp = ptrs[0];
         ptrs[0] = ptrs[1];
@@ -110,8 +144,6 @@ pub(super) trait EinsumDataType: NumericDataType {
 
     #[inline(always)]
     unsafe fn operand_strides_1_0_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        assert_unchecked(N == 3);
-
         let mut ptrs = *ptrs;
         let tmp = ptrs[0];
         ptrs[0] = ptrs[1];
@@ -123,8 +155,7 @@ pub(super) trait EinsumDataType: NumericDataType {
     #[inline(always)]
     unsafe fn operand_strides_1_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
-        assert_unchecked(N == 3);
-
+        
         let mut dst = ptrs[N - 1];
 
         let mut data0 = ptrs[0];

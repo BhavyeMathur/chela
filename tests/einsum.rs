@@ -493,6 +493,57 @@ test_for_all_numeric_dtypes!(
     }
 );
 
+#[test]
+fn test() {
+    type T = f32;
+
+    let n = 20;
+    let a = Tensor::arange(0, n).astype::<T>();
+    let b = Tensor::arange(0, n).astype::<T>();
+    let c = Tensor::arange(0, n).astype::<T>();
+
+    let expected = {
+        let mut out = T::default();
+
+        for i in 0..n {
+            for j in 0..n {
+                for k in 0..n {
+                    out += a[i] * b[j] * c[k];
+                }
+            }
+        }
+
+        Tensor::scalar(out)
+    };
+    let result = einsum([&a, &b, &c], (["i", "j", "k"], ""));
+    assert_almost_eq!(result, expected);
+}
+
+test_for_common_numeric_dtypes!(
+    test_einsum_three_operands_big, {
+        let n = 20;
+        let a = Tensor::arange(0, n).astype::<T>();
+        let b = Tensor::arange(0, n).astype::<T>();
+        let c = Tensor::arange(0, n).astype::<T>();
+
+        let expected = {
+            let mut out = T::default();
+
+            for i in 0..n {
+                for j in 0..n {
+                    for k in 0..n {
+                        out += a[i] * b[j] * c[k];
+                    }
+                }
+            }
+
+            Tensor::scalar(out)
+        };
+        let result = einsum([&a, &b, &c], (["i", "j", "k"], ""));
+        assert_almost_eq!(result, expected);
+    }
+);
+
 test_for_all_numeric_dtypes!(
     test_einsum_scalar_times_tensor,
     {

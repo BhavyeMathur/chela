@@ -2,7 +2,7 @@ use crate::constructors::stride_from_shape;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
-use crate::linalg::sum_of_products::EinsumDataType;
+use crate::linalg::sum_of_products::{get_sum_of_products_function, EinsumDataType};
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::{first_n_elements, Tensor, TensorMethods};
 
@@ -436,6 +436,8 @@ where
     // main einsum calculation loop
     
     let strides = &strides[0..iter_ndims];
+
+    // let sum_of_products = get_sum_of_products_function(&strides[0]);
     
     for indices in MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape, strides) {
         unsafe {
