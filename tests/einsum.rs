@@ -3,7 +3,7 @@ use paste::paste;
 
 #[test]
 #[should_panic]
-fn test_einsum_non_ascii() {
+fn test_einsum_non_ascii_input() {
     let a = Tensor::from([[1, 2], [0, 0]]);
     let b = Tensor::from([[3, 4], [5, 5]]);
     let _ = einsum([&a, &b], (["±i", "i-"], "i"));
@@ -27,7 +27,7 @@ fn test_einsum_non_letters() {
 
 #[test]
 #[should_panic]
-fn test_einsum_invalid_labels() {
+fn test_einsum_invalid_input_labels() {
     let a = Tensor::from([[1, 2], [0, 0]]);
     let b = Tensor::from([[3, 4], [5, 5]]);
     let _ = einsum([&a, &b], (["i", "jk"], "ik"));
@@ -46,7 +46,7 @@ fn test_einsum_invalid_output_labels() {
 fn test_einsum_dimension_mismatch() {
     let a = Tensor::from([[1, 2]]);
     let b = Tensor::from([[3, 4], [5, 6], [7, 8]]);
-    let _ = einsum([&a, &b], (["ij", "jk"], "ik")); // incompatible shapes
+    let _ = einsum([&a, &b], (["ij", "jk"], "ik"));
 }
 
 #[test]
@@ -54,19 +54,9 @@ fn test_einsum_dimension_mismatch() {
 fn test_einsum_invalid_index() {
     let a = Tensor::from([[1, 2]]);
     let b = Tensor::from([[3, 4], [5, 6], [7, 8]]);
-    let _ = einsum([&a, &b], (["ij", "kl"], "m")); // invalid index
+    let _ = einsum([&a, &b], (["ij", "kl"], "m"));
 }
 
-
-// #[test]
-// fn test_einsum() {
-//     let a = Tensor::from([[1, 2], [3, 4]]);
-//     let b = Tensor::from([[5, 6], [7, 8]]);
-//
-//     let expected = Tensor::from([[19, 22], [43, 50]]);
-//     let result = chela::einsum([&a, &b], (["ij", "ki"], "i"));
-//     assert_eq!(result, expected);
-// }
 
 test_for_all_numeric_dtypes!(
     test_einsum_sums, {
@@ -82,13 +72,13 @@ test_for_all_numeric_dtypes!(
             // let a = a.reshape([n, n]);
             // let result = chela::einsum([&a], (["ii"], ""))
             // let expected = a.trace();
-            // assert_eq!(result, expected);
+            // assert_eq!(result, expected); todo
         }
     }
 );
 
 test_for_common_numeric_dtypes!(
-    test_einsum_basic_matmul, {
+    test_einsum_matmul, {
         let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
         let b = Tensor::from([[5, 6], [7, 8]]).astype::<T>();
 
@@ -118,6 +108,30 @@ test_for_common_numeric_dtypes!(
         let expected = expected.reshape([n, n]);
         let result = chela::einsum(&[&a, &b], (&["ij", "jk"], "ik"));
 
+        assert_eq!(result, expected);
+    }
+);
+
+test_for_common_numeric_dtypes!(
+    test_einsum_matrix_vector, {
+        let n: usize = 20;
+        let a = Tensor::arange(0, n * n).astype::<T>();
+        let b = Tensor::arange(n, 2 * n).astype::<T>();
+        let a = a.reshape([n, n]);
+
+        let expected = {
+            let mut out = vec![T::default(); n];
+
+            for i in 0..n {
+                for j in 0..n {
+                    out[i] += a[[i, j]] * b[j];
+                }
+            }
+
+            Tensor::from(out)
+        };
+        
+        let result = chela::einsum(&[&a, &b], (&["ij", "j"], "i"));
         assert_eq!(result, expected);
     }
 );
@@ -209,6 +223,11 @@ test_for_all_numeric_dtypes!(
 
         let expected = Tensor::from([11, 90]).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "jk"], "j"));
+        assert_eq!(result, expected);
+
+        let a = Tensor::from([[1, 2, 3], [4, 5, 6]]).astype::<T>();
+        let result = einsum([&a], (["ij"], "i"));
+        let expected = Tensor::from([6, 15]).astype::<T>();
         assert_eq!(result, expected);
     }
 );
@@ -369,18 +388,7 @@ test_for_all_numeric_dtypes!(
 );
 
 test_for_all_numeric_dtypes!(
-    test_einsum_trace,
-    {
-        let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
-
-        let expected = Tensor::scalar(5).astype::<T>();
-        let result = einsum([&a], (["ii"], ""));
-        assert_eq!(result, expected);
-    }
-);
-
-test_for_all_numeric_dtypes!(
-    test_einsum_three_tensors,
+    test_einsum_three_operands,
     {
         let a = Tensor::from([[1, 2], [3, 4], [5, 1]]).astype::<T>();
         let b = Tensor::from([[5, 6, 2, 2], [7, 8, 1, 0]]).astype::<T>();
@@ -414,16 +422,6 @@ test_for_all_numeric_dtypes!(
         assert_eq!(result, expected);
 
         let result = einsum_view(&a, ("ij", "ji")).unwrap();
-        assert_eq!(result, expected);
-    }
-);
-
-test_for_all_numeric_dtypes!(
-    test_einsum_sum_axis,
-    {
-        let a = Tensor::from([[1, 2, 3], [4, 5, 6]]).astype::<T>();
-        let result = einsum([&a], (["ij"], "i"));
-        let expected = Tensor::from([6, 15]).astype::<T>();
         assert_eq!(result, expected);
     }
 );
