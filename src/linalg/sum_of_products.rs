@@ -1,9 +1,14 @@
+#![allow(unused_mut)]
+#![allow(unused_variables)]
+
 use crate::dtype::{IntegerDataType, NumericDataType};
 use crate::tensor::MAX_DIMS;
 use std::hint::assert_unchecked;
 
+use paste::paste;
+
 #[cfg(target_arch = "aarch64")]
-use core::arch::aarch64::*;
+use std::arch::aarch64::*;
 
 pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(strides: &[usize; N])
                                                                               -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
@@ -78,131 +83,134 @@ pub(super) trait EinsumDataType: NumericDataType {
     }
 }
 
+
 impl<T: IntegerDataType> EinsumDataType for T {}
 
-#[cfg(not(target_arch = "aarch64"))]
-impl EinsumDataType for f32 {}
+macro_rules! simd_kernel_for_dtype {
+    ($dtype:ty, $nlanes:literal,
+    $ptrs:ident, $strides:ident, $count:ident, $dst:ident, $lanes:ident,
 
-#[cfg(not(target_arch = "aarch64"))]
-impl EinsumDataType for f64 {}
+    $simd_load:ident, $vload:expr,
+    $simd_store:ident, $vstore:expr,
+    $simd_add:ident, $vadd:expr,
+    $simd_muladd:ident, $vmuladd:expr,
+    $simd_dup:ident, $vdup:expr,
 
-#[cfg(target_arch = "aarch64")]
-impl EinsumDataType for f64 {
-    #[inline(always)]
-    unsafe fn operand_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], _: &[usize; N], mut count: usize) {
-        assert_unchecked(count > 0);
-        
-        let dst = ptrs[N - 1];
-        let value0 = *ptrs[0];
-        let mut data1 = ptrs[1];
+    $($func_name:ident, { $($body:tt)* };)+) => { paste! {
+            #[cfg(not(target_arch = "aarch64"))]
+            impl EinsumDataType for $dtype {}
 
-        let mut sum = vdupq_n_f64(0.0);
+            #[cfg(target_arch = "aarch64")]
+            impl EinsumDataType for $dtype {
+                $(
+                #[inline(always)]
+                unsafe fn $func_name<const N: usize>($ptrs: &[*mut Self; N], $strides: &[usize; N], mut $count: usize) {
+                    assert_unchecked($count > 0);
 
-        while count >= 8 {
-            let a = vld1q_f64(data1);
-            let b = vld1q_f64(data1.add(2));
-            let c = vld1q_f64(data1.add(4));
-            let d = vld1q_f64(data1.add(6));
+                    const $lanes: usize = $nlanes;
+                    let $simd_load = $vload;
+                    let $simd_store = $vstore;
+                    let $simd_add = $vadd;
+                    let $simd_muladd = $vmuladd;
+                    let $simd_dup = $vdup;
 
-            let ab = vaddq_f64(a, b);
-            let cd = vaddq_f64(c, d);
-            let abcd = vaddq_f64(ab, cd);
-            sum = vaddq_f64(sum, abcd);
+                    let mut $dst = $ptrs[N - 1];
 
-            data1 = data1.add(8);
-            count -= 8;
+                    $($body)*
+                }
+                )+
+            }
         }
-
-        let sum_array: [f64; 2] = core::mem::transmute(sum);
-        let mut sum = sum_array.iter().copied().sum::<f64>();
-
-        for i in 0..count {
-            sum += *data1.add(i);
-        }
-
-        *dst = value0.mul_add(sum, *dst);
     }
 }
 
-#[cfg(target_arch = "aarch64")]
-impl EinsumDataType for f32 {
-    #[inline(always)]
-    unsafe fn operand_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], _: &[usize; N], mut count: usize) {
-        assert_unchecked(count > 0);
+macro_rules! simd_kernel {
+    ($ptrs:ident, $strides:ident, $count:ident, $dst:ident,
+    $lanes:ident, $simd_load:ident, $simd_store:ident, $simd_add:ident, $simd_muladd:ident, $simd_dup:ident,
+    $($func_name:ident, { $($body:tt)* },)+) => {
 
-        let dst = ptrs[N - 1];
+        simd_kernel_for_dtype!(f32, 4, $ptrs, $strides, $count, $dst, $lanes,
+                                $simd_load, vld1q_f32, $simd_store, vst1q_f32, $simd_add, vaddq_f32, $simd_muladd, vfmaq_f32, $simd_dup, vdupq_n_f32,
+                                $($func_name, { $($body)* };)+);
+
+        simd_kernel_for_dtype!(f64, 2, $ptrs, $strides, $count, $dst, $lanes,
+                                $simd_load, vld1q_f64, $simd_store, vst1q_f64, $simd_add, vaddq_f64, $simd_muladd, vfmaq_f64, $simd_dup, vdupq_n_f64,
+                                $($func_name, { $($body)* };)+);
+    };
+}
+
+simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, simd_muladd, simd_dup,
+    operand_strides_0_1_out_stride_0, {
         let value0 = *ptrs[0];
         let mut data1 = ptrs[1];
 
-        let mut sum = vdupq_n_f32(0.0);
+        let mut sum = simd_dup(Self::default());
 
-        while count >= 16 {
-            let a = vld1q_f32(data1);
-            let b = vld1q_f32(data1.add(4));
-            let c = vld1q_f32(data1.add(8));
-            let d = vld1q_f32(data1.add(12));
+        while count >= 4 * LANES {
+            let a = simd_load(data1.add(0 * LANES));
+            let b = simd_load(data1.add(1 * LANES));
+            let c = simd_load(data1.add(2 * LANES));
+            let d = simd_load(data1.add(3 * LANES));
 
-            let ab = vaddq_f32(a, b);
-            let cd = vaddq_f32(c, d);
-            sum = vaddq_f32(sum, vaddq_f32(ab, cd));
+            let ab = simd_add(a, b);
+            let cd = simd_add(c, d);
+            sum = simd_add(sum, simd_add(ab, cd));
 
-            data1 = data1.add(16);
-            count -= 16;
+            data1 = data1.add(4 * LANES);
+            count -= 4 * LANES;
         }
 
-        let sum_array: [f32; 4] = core::mem::transmute(sum);
-        let mut sum = sum_array.iter().copied().sum::<f32>();
+        let sum_array: [Self; LANES] = core::mem::transmute(sum);
+        let mut sum = sum_array.iter().copied().sum::<Self>();
 
         for i in 0..count {
             sum += *data1.add(i);
         }
 
         *dst = value0.mul_add(sum, *dst);
-    }
+    },
 
-    unsafe fn operand_strides_0_1_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], _: &[usize; N], mut count: usize) {
-        assert_unchecked(count > 0);
-
-        let mut dst = ptrs[N - 1];
+    operand_strides_0_1_out_stride_1, {
         let value0 = *ptrs[0];
-        let value0x4 = vdupq_n_f32(value0);
+        let value0x = simd_dup(value0);
         let mut data1 = ptrs[1];
+        
+        while count >= 4 * LANES {
+            let a = simd_load(data1.add(0 * LANES));
+            let b = simd_load(data1.add(1 * LANES));
+            let c = simd_load(data1.add(2 * LANES));
+            let d = simd_load(data1.add(3 * LANES));
 
-        while count >= 16 {
-            let a = vld1q_f32(data1);
-            let b = vld1q_f32(data1.add(4));
-            let c = vld1q_f32(data1.add(8));
-            let d = vld1q_f32(data1.add(12));
+            let a_dst = simd_load(dst.add(0 * LANES));
+            let b_dst = simd_load(dst.add(1 * LANES));
+            let c_dst = simd_load(dst.add(2 * LANES));
+            let d_dst = simd_load(dst.add(3 * LANES));
 
-            let a_dst = vld1q_f32(dst);
-            let b_dst = vld1q_f32(dst.add(4));
-            let c_dst = vld1q_f32(dst.add(8));
-            let d_dst = vld1q_f32(dst.add(12));
+            let a_out = simd_muladd(a_dst, value0x, a);
+            let b_out = simd_muladd(b_dst, value0x, b);
+            let c_out = simd_muladd(c_dst, value0x, c);
+            let d_out = simd_muladd(d_dst, value0x, d);
 
-            let a_out = vfmaq_f32(a_dst, value0x4, a);
-            let b_out = vfmaq_f32(b_dst, value0x4, b);
-            let c_out = vfmaq_f32(c_dst, value0x4, c);
-            let d_out = vfmaq_f32(d_dst, value0x4, d);
+            simd_store(dst.add(0 * LANES), a_out);
+            simd_store(dst.add(1 * LANES), b_out);
+            simd_store(dst.add(2 * LANES), c_out);
+            simd_store(dst.add(3 * LANES), d_out);
 
-            vst1q_f32(dst, a_out);
-            vst1q_f32(dst.add(4), b_out);
-            vst1q_f32(dst.add(8), c_out);
-            vst1q_f32(dst.add(12), d_out);
-
-            dst = dst.add(16);
-            data1 = data1.add(16);
-            count -= 16;
+            dst = dst.add(4 * LANES);
+            data1 = data1.add(4 * LANES);
+            count -= 4 * LANES;
         }
-
-        while count >= 4 {
-            let a = vld1q_f32(data1);
-            let a_dst = vld1q_f32(dst);
-            let a_out = vfmaq_f32(a_dst, value0x4, a);
-
-            vst1q_f32(dst, a_out);
-
-            data1 = data1.add(4);
-            count -= 4;
+        
+        while count >= LANES {
+            let a = simd_load(data1);
+            let a_dst = simd_load(dst);
+            let a_out = simd_muladd(a_dst, value0x, a);
+        
+            simd_store(dst, a_out);
+        
+            dst = dst.add(LANES);
+            data1 = data1.add(LANES);
+            count -= LANES;
         }
 
         for _ in 0..count {
@@ -210,5 +218,5 @@ impl EinsumDataType for f32 {
             dst = dst.add(1);
             data1 = data1.add(1);
         }
-    }
-}
+    },
+);

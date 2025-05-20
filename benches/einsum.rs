@@ -199,6 +199,19 @@ fn einsum_2operands_4() -> u128 {
     start.elapsed().as_nanos()
 }
 
+fn einsum_2operands_5() -> u128 {
+    let i = 100;
+    let j = 50;
+    let k = 100;
+
+    let tensor_a: Tensor<f32> = Tensor::rand([i, k]);
+    let tensor_b: Tensor<f32> = Tensor::rand([j, k]);
+
+    let start = ProcessTime::now();
+    _ = einsum([&tensor_a, &tensor_b], (["ik", "jk"], "ij"));
+    start.elapsed().as_nanos()
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let id = args[1].parse::<usize>().unwrap();
@@ -220,6 +233,7 @@ fn main() {
         else if id == 102 { einsum_2operands_2() }
         else if id == 103 { einsum_2operands_3() }
         else if id == 104 { einsum_2operands_4() }
+        else if id == 105 { einsum_2operands_5() }
 
         else { panic!("invalid ID") };
 
