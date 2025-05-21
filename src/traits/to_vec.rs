@@ -1,20 +1,20 @@
 use std::ops::Range;
 use crate::axes_traits::AxisType;
-use crate::Axis;
+use crate::{Axis, RawDataType};
 
 pub(crate) trait ToVec<T> {
     fn to_vec(self) -> Vec<T>;
 }
 
-impl ToVec<usize> for usize {
-    fn to_vec(self) -> Vec<usize> {
+impl<T: RawDataType> ToVec<T> for T {
+    fn to_vec(self) -> Vec<T> {
         vec![self]
     }
 }
 
-impl ToVec<usize> for Axis {
-    fn to_vec(self) -> Vec<usize> {
-        vec![self.usize()]
+impl ToVec<isize> for Axis {
+    fn to_vec(self) -> Vec<isize> {
+        vec![self.isize()]
     }
 }
 

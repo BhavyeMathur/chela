@@ -48,7 +48,9 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     }
 
     pub fn unsqueeze(&'a self, axis: Axis) -> Tensor<'a, T> {
-        let axis = axis.0;
+        assert!(axis.0 >= 0, "negative axes not supported currently");
+        let axis = axis.0 as usize;
+        
         assert!(axis <= self.ndims(), "Tensor::unsqueeze(), axis out of bounds");
 
         let mut shape = self.shape.clone();

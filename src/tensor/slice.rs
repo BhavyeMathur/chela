@@ -43,7 +43,8 @@ fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn slice_along<S: Indexer>(&'a self, axis: Axis, index: S) -> Tensor<'a, T> {
-        let axis = axis.0;
+        assert!(axis.0 >= 0, "negative axes not supported currently");
+        let axis = axis.0 as usize;
 
         let mut new_shape = self.shape.clone();
         let mut new_stride = self.stride.clone();

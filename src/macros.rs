@@ -26,7 +26,7 @@ macro_rules! test_for_float_dtypes {
 macro_rules! test_for_common_signed_int_dtypes {
     ($name:ident, $body:tt) => {
         implement_test_for_dtypes!($name, $body,
-            i32, i64, i128
+            i32, i64, i128, isize
         );
     };
 }

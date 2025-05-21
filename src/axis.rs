@@ -6,4 +6,4 @@ pub mod index;
 pub mod slice_index;
 pub mod axes_traits;
 
-pub struct Axis(pub usize);
+pub struct Axis(pub isize);

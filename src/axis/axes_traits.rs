@@ -2,23 +2,24 @@ use crate::traits::haslength::HasLength;
 use crate::Axis;
 
 pub trait AxisType {
-    fn usize(&self) -> usize;
+    fn isize(&self) -> isize;
 }
 
 impl AxisType for Axis {
-    fn usize(&self) -> usize {
+    fn isize(&self) -> isize {
         self.0
     }
 }
 
-impl AxisType for usize {
-    fn usize(&self) -> usize {
+impl AxisType for isize {
+    fn isize(&self) -> isize {
         *self
     }
 }
 
-pub trait AxesType: IntoIterator<Item=usize> + HasLength + Clone {}
 
-impl<const N: usize> AxesType for [usize; N] {}
+pub trait AxesType: IntoIterator<Item=isize> + HasLength + Clone {}
 
-impl AxesType for Vec<usize> {}
+impl<const N: usize> AxesType for [isize; N] {}
+
+impl AxesType for Vec<isize> {}

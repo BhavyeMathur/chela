@@ -18,11 +18,14 @@ use crate::accelerate::vdsp::*;
 // map_stride tells reduce() how to iterate over the output tensor
 // to add each element to the correct location.
 // it should now make sense why map_stride contains 0s on every reduced axis
-fn reduced_shape_and_stride(axes: &[usize], shape: &[usize]) -> (Vec<usize>, Vec<usize>) {
+fn reduced_shape_and_stride(axes: &[isize], shape: &[usize]) -> (Vec<usize>, Vec<usize>) {
     let ndims = shape.len();
     let mut axis_mask = vec![false; ndims];
 
     for &axis in axes.iter() {
+        assert!(axis >= 0, "negative axes are not currently supported");
+        let axis = axis as usize;
+        
         if axis_mask[axis] {
             panic!("duplicate axes specified");
         }
@@ -61,13 +64,13 @@ impl<T: RawDataType> Tensor<'_, T> {
 }
 
 pub trait TensorReduce<T: RawDataType> {
-    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T>;
+    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> Tensor<T>;
 
     fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T>;
 }
 
 impl<T: RawDataType> TensorReduce<T> for Tensor<'_, T> {
-    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<usize>, default: T) -> Tensor<T> {
+    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> Tensor<T> {
         let (out_shape, map_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
         let (map_shape, map_stride) = collapse_to_uniform_stride(&self.shape, &map_stride);
 
@@ -107,7 +110,7 @@ pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
         self.reduce(|val, acc| acc + val, T::zero())
     }
 
-    fn sum_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+    fn sum_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
         self.reduce_along(|val, acc| acc + val, axes, T::zero())
     }
 
@@ -115,7 +118,7 @@ pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
         self.reduce(|val, acc| acc * val, T::one())
     }
 
-    fn product_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+    fn product_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
         self.reduce_along(|val, acc| acc * val, axes, T::one())
     }
 
@@ -127,11 +130,11 @@ pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
         self.reduce(partial_min, T::max_value())
     }
 
-    fn max_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+    fn max_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
         self.reduce_along(partial_max, axes, T::min_value())
     }
 
-    fn min_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+    fn min_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
         self.reduce_along(partial_min, axes, T::max_value())
     }
 
@@ -143,11 +146,11 @@ pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
         self.reduce(partial_min_magnitude, T::zero())
     }
 
-    fn max_magnitude_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+    fn max_magnitude_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
         self.reduce_along(partial_max_magnitude, axes, T::zero())
     }
 
-    fn min_magnitude_along(&self, axes: impl ToVec<usize>) -> Tensor<T> {
+    fn min_magnitude_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
         self.reduce_along(partial_min_magnitude, axes, T::zero())
     }
 }
@@ -286,12 +289,13 @@ where
         self.sum() / (self.size() as f32).into()
     }
 
-    pub fn mean_along(&self, axes: impl ToVec<usize>) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
+    pub fn mean_along(&self, axes: impl ToVec<isize>) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
         let axes = axes.to_vec();
 
         let mut n = 1;
         for &axis in axes.iter() {
-            n *= self.shape[axis];
+            assert!(axis >= 0, "negative axes are not currently supported");
+            n *= self.shape[axis as usize];
         }
         let n: T::AsFloatType = (n as f32).into();
 

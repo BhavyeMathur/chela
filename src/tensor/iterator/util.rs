@@ -4,7 +4,7 @@ use crate::traits::haslength::HasLength;
 pub(super) fn split_by_indices<T, I>(data: &[T], indices: I) -> (Vec<T>, Vec<T>)
 where
     T: Copy,
-    I: HasLength + IntoIterator<Item=usize>,
+    I: HasLength + IntoIterator<Item=isize>,
 {
     let max_index = data.len();
     let mut bitset = vec![false; max_index];
@@ -13,11 +13,11 @@ where
     let mut remaining = Vec::with_capacity(max_index - indices.len());
 
     for index in indices {
-        if bitset[index] {
+        if bitset[index as usize] {
             panic!("duplicate index encountered");
         }
         
-        bitset[index] = true;
+        bitset[index as usize] = true;
     }
 
     for (&value, &bit) in data.iter().zip(bitset.iter()) {

@@ -18,6 +18,7 @@ impl RawDataType for i16 {}
 impl RawDataType for i32 {}
 impl RawDataType for i64 {}
 impl RawDataType for i128 {}
+impl RawDataType for isize {}
 
 impl RawDataType for f32 {}
 impl RawDataType for f64 {}
@@ -70,7 +71,7 @@ impl NumericDataType for u32 {
 }
 
 impl NumericDataType for u64 {
-    type AsFloatType = f32;
+    type AsFloatType = f64;
 
     fn abs(&self) -> Self {
         self.clone()
@@ -78,7 +79,7 @@ impl NumericDataType for u64 {
 }
 
 impl NumericDataType for u128 {
-    type AsFloatType = f32;
+    type AsFloatType = f64;
 
     fn abs(&self) -> Self {
         self.clone()
@@ -86,7 +87,7 @@ impl NumericDataType for u128 {
 }
 
 impl NumericDataType for usize {
-    type AsFloatType = f32;
+    type AsFloatType = f64;
 
     fn abs(&self) -> Self {
         self.clone()
@@ -118,7 +119,7 @@ impl NumericDataType for i32 {
 }
 
 impl NumericDataType for i64 {
-    type AsFloatType = f32;
+    type AsFloatType = f64;
 
     fn abs(&self) -> Self {
         num::Signed::abs(self)
@@ -126,7 +127,15 @@ impl NumericDataType for i64 {
 }
 
 impl NumericDataType for i128 {
-    type AsFloatType = f32;
+    type AsFloatType = f64;
+
+    fn abs(&self) -> Self {
+        num::Signed::abs(self)
+    }
+}
+
+impl NumericDataType for isize {
+    type AsFloatType = f64;
 
     fn abs(&self) -> Self {
         num::Signed::abs(self)
@@ -179,6 +188,7 @@ impl IntegerDataType for i16 {}
 impl IntegerDataType for i32 {}
 impl IntegerDataType for i64 {}
 impl IntegerDataType for i128 {}
+impl IntegerDataType for isize {}
 
 pub trait FloatDataType: NumericDataType {}
 

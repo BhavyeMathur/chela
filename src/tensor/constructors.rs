@@ -31,14 +31,13 @@ use std::ptr::NonNull;
 /// # Example
 ///
 /// ```
-///
 /// let shape = vec![5, 3, 2, 1];
-/// let stride = stride_from_shape(&shape);
 ///
-/// // Axis 0 (size 5): stride = 3 * 2 * 1 = 10
-/// // Axis 1 (size 3): stride = 2 * 1 = 2
-/// // Axis 2 (size 2): stride = 1
-/// assert_eq!(stride, vec![10, 2, 1, 1]);
+/// // stride would be [10, 2, 1, 1]
+/// // Axis 0 (size 5): stride = 3 * 2 * 1 * 1 = 10
+/// // Axis 1 (size 3): stride = 2 * 1 * 1 = 2
+/// // Axis 2 (size 2): stride = 1 * 1
+/// // Axis 3 (size 1): stride is always 1
 /// ```
 pub(crate) fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
     let ndims = shape.len();
@@ -64,15 +63,6 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// # Safety
     /// - `data` must remain valid and not be used elsewhere after being passed to this function.
     /// - `stride` and `shape` must describe a valid (not necessarily contiguous) memory layout for `data`
-    ///
-    /// # Example
-    /// ```rust
-    /// let shape = vec![2, 3];
-    /// let stride = vec![3, 1];
-    /// let data = vec![1, 2, 3, 4, 5, 6];
-    ///
-    /// unsafe { let tensor = Tensor::from_owned_buffer(shape, stride, data); }
-    /// ```
     pub(super) unsafe fn from_owned_buffer(
         shape: Vec<usize>,
         stride: Vec<usize>,
@@ -103,14 +93,6 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// # Safety
     /// - `data` must remain valid and not be used elsewhere after being passed to this function.
     /// - `shape.iter().product()` must equal `data.len()`
-    ///
-    /// # Example
-    /// ```rust
-    /// let shape = vec![2, 3];
-    /// let data = vec![1, 2, 3, 4, 5, 6];
-    ///
-    /// unsafe { let tensor = Tensor::from_contiguous_owned_buffer(shape, data); }
-    /// ```
     pub(crate) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>, data: Vec<T>) -> Self {
         let stride = stride_from_shape(&shape);
         Self::from_owned_buffer(shape, stride, data)
@@ -127,7 +109,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use chela::*;
+    /// # use chela::*;
     ///
     /// let tensor: Tensor<i32> = Tensor::from([[1, 2], [3, 4]]);
     /// assert_eq!(tensor.shape(), &[2, 2]);
@@ -165,7 +147,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// # Examples
     ///
     /// ```
-    /// use chela::*;
+    /// # use chela::*;
     ///
     /// let tensor = Tensor::full(5i32, [2, 3]); // creates a 2x3 tensor filled with the value 5.
     /// let tensor = Tensor::full(true, [2, 3, 5]); // creates a 2x3x5 tensor filled with 'true'
@@ -189,7 +171,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// # Examples
     /// ```
-    /// use chela::*;
+    /// # use chela::*;
     ///
     /// let tensor = Tensor::<i32>::zeros([2, 3]);
     /// let tensor = Tensor::<bool>::zeros([2, 3]);  // creates a tensor filled with 'false'
@@ -211,7 +193,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// # Examples
     /// ```
-    /// use chela::*;
+    /// # use chela::*;
     ///
     /// let tensor = Tensor::<i32>::ones([2, 3]);
     /// let tensor = Tensor::<bool>::ones([2, 3]);  // creates a tensor filled with 'true'
@@ -231,7 +213,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// # Example
     /// ```rust
-    /// use chela::*;
+    /// # use chela::*;
     ///
     /// let scalar_tensor = Tensor::scalar(42);
     /// assert_eq!(scalar_tensor.shape(), []);
@@ -249,7 +231,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use chela::*;
+    /// # use chela::*;
     ///
     /// let tensor = Tensor::scalar(50f32);
     /// let value = tensor.value();
@@ -261,7 +243,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// exactly one element. For tensors with multiple elements, consider using
     /// appropriate methods to access individual elements or slices safely.
     pub fn value(&self) -> T {
-        assert_eq!(self.len(), 1, "cannot get value of a tensor with more than one element");
+        assert_eq!(self.size(), 1, "cannot get value of a tensor with more than one element");
         unsafe { self.ptr.read() }
     }
 }
@@ -282,6 +264,7 @@ impl<T: NumericDataType> Tensor<'_, T> {
     /// # Examples
     ///
     /// ```rust
+    /// # use chela::*;
     /// let tensor = Tensor::arange(0i32, 5); // [0, 1, 2, 3, 4].
     /// ```
     pub fn arange(start: T, stop: T) -> Tensor<'static, T> {
@@ -306,10 +289,12 @@ impl<T: NumericDataType> Tensor<'_, T> {
     /// # Examples
     ///
     /// ```rust
+    /// # use chela::*;
     /// let tensor = Tensor::arange_with_step(0i32, 5, 2); // [0, 2, 4].
     /// ```
     pub fn arange_with_step(start: T, stop: T, step: T) -> Tensor<'static, T> {
-        let n = NumCast::from(((stop - start).to_float() / step.to_float()).ceil()).unwrap();
+        let n = ((stop - start).to_float() / step.to_float()).ceil();
+        let n = NumCast::from(n).unwrap();
 
         let mut data: Vec<T> = vec![T::default(); n];
         for i in 0..n {
@@ -337,7 +322,9 @@ impl<T: FloatDataType> Tensor<'_, T> {
     /// # Example
     ///
     /// ```
-    /// let result = Tensor::linspace(0.0f32, 1.0, 5);  // [0.0, 0.25, 0.5, 0.75, 1.0]
+    /// # use chela::*;
+    /// let result = Tensor::linspace(0f32, 1.0, 5);  // [0.0, 0.25, 0.5, 0.75, 1.0]
+    /// assert_eq!(result, Tensor::from([0f32, 0.25, 0.5, 0.75, 1.0]));
     /// ```
     pub fn linspace(start: T, stop: T, num: usize) -> Tensor<'static, T> {
         assert!(num > 0);
@@ -347,7 +334,9 @@ impl<T: FloatDataType> Tensor<'_, T> {
         }
 
         let step = (stop - start) / (T::from(num).unwrap() - T::one());
-        Tensor::arange_with_step(start, stop, step)
+
+        // from start to (stop + step) to make the range inclusive
+        Tensor::arange_with_step(start, stop + step, step)
     }
 
     /// Generates a 1-dimensional tensor with `num `evenly spaced values between `start` and `stop`
@@ -366,7 +355,9 @@ impl<T: FloatDataType> Tensor<'_, T> {
     /// # Example
     ///
     /// ```
-    /// let result = Tensor::linspace_exclusive(0.0f32, 1.0, 5);  // [0.0, 0.2, 0.4, 0.6, 0.8]
+    /// # use chela::*;
+    /// let result = Tensor::linspace_exclusive(0.0f32, 1.0, 5);
+    /// assert_eq!(result, Tensor::from([0f32, 0.2, 0.4, 0.6, 0.8]));
     /// ```
     pub fn linspace_exclusive(start: T, stop: T, num: usize) -> Tensor<'static, T> {
         assert!(num > 0);
