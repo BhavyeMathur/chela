@@ -9,9 +9,8 @@ use paste::paste;
 #[cfg(target_arch = "aarch64")]
 use std::arch::aarch64::*;
 
-pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(strides: &[usize; N])
-                                                                              -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
-
+pub(super) fn get_sum_of_products_function<const N: usize, T: SumOfProductsType>(strides: &[usize; N])
+                                                                                 -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
     if N == 2 { // 1 operand + 1 output
         if strides[0] == 1 && strides[1] == 0 {
             // return <T as EinsumDataType>::operand_strides_1_out_stride_0;
@@ -24,39 +23,39 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(st
         code += if strides[2] == 0 { 0 } else { if strides[2] == 1 { 1 } else { 8 } };
 
         match code {
-            2 => { return <T as EinsumDataType>::operand_strides_0_1_out_stride_0; }
-            3 => { return <T as EinsumDataType>::operand_strides_0_1_out_stride_1; }
-            4 => { return <T as EinsumDataType>::operand_strides_1_0_out_stride_0; }
-            5 => { return <T as EinsumDataType>::operand_strides_1_0_out_stride_1; }
-            6 => { return <T as EinsumDataType>::operand_strides_1_1_out_stride_0; }
-            7 => { return <T as EinsumDataType>::operand_strides_1_1_out_stride_1; }
+            2 => { return <T as SumOfProductsType>::operand_strides_0_1_out_stride_0; }
+            3 => { return <T as SumOfProductsType>::operand_strides_0_1_out_stride_1; }
+            4 => { return <T as SumOfProductsType>::operand_strides_1_0_out_stride_0; }
+            5 => { return <T as SumOfProductsType>::operand_strides_1_0_out_stride_1; }
+            6 => { return <T as SumOfProductsType>::operand_strides_1_1_out_stride_0; }
+            7 => { return <T as SumOfProductsType>::operand_strides_1_1_out_stride_1; }
             _ => {}
         }
     }
 
     if strides[N - 1] == 0 {
-        return <T as EinsumDataType>::out_stride_0;
+        return <T as SumOfProductsType>::out_stride_0;
     }
 
-    <T as EinsumDataType>::generic
+    <T as SumOfProductsType>::generic
 }
 
 // called when the number of operands cannot be provided as a const generic
-pub(super) fn get_sum_of_products_function_generic_nops<T: EinsumDataType>(strides: &[usize])
-                                                                           -> unsafe fn(ptrs: &[*mut T], stride: &[usize], count: usize) {
+pub(super) fn get_sum_of_products_function_generic_nops<T: SumOfProductsType>(strides: &[usize])
+                                                                              -> unsafe fn(ptrs: &[*mut T], stride: &[usize], count: usize) {
     let nops = strides.len() - 1;
 
     if strides[nops - 1] == 0 {
         return match nops {
-            3 => { <T as EinsumDataType>::operand_strides_n_n_n_out_stride_0 },
-            _ => { <T as EinsumDataType>::operand_strides_nx_out_stride_0 }
+            3 => { <T as SumOfProductsType>::operand_strides_n_n_n_out_stride_0 },
+            _ => { <T as SumOfProductsType>::operand_strides_nx_out_stride_0 }
         }
     }
 
-    <T as EinsumDataType>::generic_unknown_nops
+    <T as SumOfProductsType>::generic_unknown_nops
 }
 
-pub(super) trait EinsumDataType: NumericDataType {
+pub(super) trait SumOfProductsType: NumericDataType {
     #[inline(always)]
     unsafe fn generic_unknown_nops(ptrs: &[*mut Self], strides: &[usize], count: usize) {
         let nops = ptrs.len();
@@ -270,7 +269,7 @@ pub(super) trait EinsumDataType: NumericDataType {
     }
 }
 
-impl<T: IntegerDataType> EinsumDataType for T {}
+impl<T: IntegerDataType> SumOfProductsType for T {}
 
 macro_rules! simd_kernel_for_dtype {
     ($dtype:ty, $nlanes:literal,
@@ -286,10 +285,10 @@ macro_rules! simd_kernel_for_dtype {
 
     $($func_name:ident, { $($body:tt)* };)+) => { paste! {
             #[cfg(not(target_arch = "aarch64"))]
-            impl EinsumDataType for $dtype {}
+            impl SumOfProductsType for $dtype {}
 
             #[cfg(target_arch = "aarch64")]
-            impl EinsumDataType for $dtype {
+            impl SumOfProductsType for $dtype {
                 $(
                 #[inline(always)]
                 unsafe fn $func_name<const N: usize>($ptrs: &[*mut Self; N], $strides: &[usize; N], mut $count: usize) {

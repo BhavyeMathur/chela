@@ -2,9 +2,10 @@ use crate::constructors::stride_from_shape;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
-use crate::linalg::sum_of_products::{get_sum_of_products_function_generic_nops, EinsumDataType};
+use crate::linalg::sum_of_products::{get_sum_of_products_function_generic_nops, SumOfProductsType};
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::{first_n_elements, Tensor, TensorMethods};
+use crate::linalg::util::{permute_array, transpose_2d_array};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -242,29 +243,6 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
 }
 
 
-fn transpose_2d_array<T: Default + Copy, const N: usize, const M: usize>(array: [[T; N]; M]) -> [[T; M]; N] {
-    let mut result = [[T::default(); M]; N];
-
-    for i in 0..M {
-        for j in 0..N {
-            result[j][i] = array[i][j];
-        }
-    }
-
-    result
-}
-
-
-pub fn permute_array<T: Clone>(arr: &mut [T], permutation: &[usize]) {
-    assert_eq!(arr.len(), permutation.len(), "Length mismatch between array and permutation");
-
-    let original = arr.to_vec();
-    for (i, &src_idx) in permutation.iter().enumerate() {
-        arr[i] = original[src_idx].clone();
-    }
-}
-
-
 fn operand_stride_for_einsum(ndims: usize,
                              stride: &[usize],
                              operand_labels: &[i8],
@@ -314,7 +292,7 @@ pub fn einsum<'a, 'b, T, String, ArrTensor, ArrString>(operands: ArrTensor,
                                                        subscripts: (ArrString, &str))
                                                        -> Tensor<'b, T>
 where
-    T: EinsumDataType + 'a,
+    T: SumOfProductsType + 'a,
     ArrTensor: AsRef<[&'a Tensor<'a, T>]>,
 
     String: AsRef<str>,

@@ -3,12 +3,12 @@ use crate::Tensor;
 use std::hint::assert_unchecked;
 
 
-pub(super) fn einsum_1operand_2labels<'b, T: EinsumDataType>(operand: &Tensor<T>,
-                                                             strides_dim0: &[usize; 2],
-                                                             strides_dim1: &[usize; 2],
-                                                             iter_shape: &[usize; 2],
-                                                             mut output: Vec<T>,
-                                                             output_shape: Vec<usize>) -> Tensor<'b, T>
+pub(super) fn einsum_1operand_2labels<'b, T: SumOfProductsType>(operand: &Tensor<T>,
+                                                                strides_dim0: &[usize; 2],
+                                                                strides_dim1: &[usize; 2],
+                                                                iter_shape: &[usize; 2],
+                                                                mut output: Vec<T>,
+                                                                output_shape: Vec<usize>) -> Tensor<'b, T>
 {
     unsafe {
         assert_unchecked(iter_shape[0] > 0);
@@ -32,13 +32,13 @@ pub(super) fn einsum_1operand_2labels<'b, T: EinsumDataType>(operand: &Tensor<T>
     unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
 }
 
-pub(super) fn einsum_1operand_3labels<'b, T: EinsumDataType>(operand: &Tensor<T>,
-                                                             strides_dim0: &[usize; 2],
-                                                             strides_dim1: &[usize; 2],
-                                                             strides_dim2: &[usize; 2],
-                                                             iter_shape: &[usize; 3],
-                                                             mut output: Vec<T>,
-                                                             output_shape: Vec<usize>) -> Tensor<'b, T>
+pub(super) fn einsum_1operand_3labels<'b, T: SumOfProductsType>(operand: &Tensor<T>,
+                                                                strides_dim0: &[usize; 2],
+                                                                strides_dim1: &[usize; 2],
+                                                                strides_dim2: &[usize; 2],
+                                                                iter_shape: &[usize; 3],
+                                                                mut output: Vec<T>,
+                                                                output_shape: Vec<usize>) -> Tensor<'b, T>
 {
     unsafe {
         assert_unchecked(iter_shape[0] > 0);
@@ -65,13 +65,13 @@ pub(super) fn einsum_1operand_3labels<'b, T: EinsumDataType>(operand: &Tensor<T>
     unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
 }
 
-pub(super) fn einsum_2operands_2labels<'b, T: EinsumDataType>(operand1: &Tensor<T>,
-                                                              operand2: &Tensor<T>,
-                                                              strides_dim0: &[usize; 3],
-                                                              strides_dim1: &[usize; 3],
-                                                              iter_shape: &[usize; 2],
-                                                              mut output: Vec<T>,
-                                                              output_shape: Vec<usize>) -> Tensor<'b, T>
+pub(super) fn einsum_2operands_2labels<'b, T: SumOfProductsType>(operand1: &Tensor<T>,
+                                                                 operand2: &Tensor<T>,
+                                                                 strides_dim0: &[usize; 3],
+                                                                 strides_dim1: &[usize; 3],
+                                                                 iter_shape: &[usize; 2],
+                                                                 mut output: Vec<T>,
+                                                                 output_shape: Vec<usize>) -> Tensor<'b, T>
 {
     unsafe {
         assert_unchecked(iter_shape[0] > 0);
@@ -97,14 +97,14 @@ pub(super) fn einsum_2operands_2labels<'b, T: EinsumDataType>(operand1: &Tensor<
     unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
 }
 
-pub(super) fn einsum_2operands_3labels<'b, T: EinsumDataType>(operand1: &Tensor<T>,
-                                                              operand2: &Tensor<T>,
-                                                              strides_dim0: &[usize; 3],
-                                                              strides_dim1: &[usize; 3],
-                                                              strides_dim2: &[usize; 3],
-                                                              iter_shape: &[usize; 3],
-                                                              mut output: Vec<T>,
-                                                              output_shape: Vec<usize>) -> Tensor<'b, T>
+pub(super) fn einsum_2operands_3labels<'b, T: SumOfProductsType>(operand1: &Tensor<T>,
+                                                                 operand2: &Tensor<T>,
+                                                                 strides_dim0: &[usize; 3],
+                                                                 strides_dim1: &[usize; 3],
+                                                                 strides_dim2: &[usize; 3],
+                                                                 iter_shape: &[usize; 3],
+                                                                 mut output: Vec<T>,
+                                                                 output_shape: Vec<usize>) -> Tensor<'b, T>
 {
     unsafe {
         assert_unchecked(iter_shape[0] > 0);
