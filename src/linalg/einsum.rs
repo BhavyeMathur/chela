@@ -2,7 +2,7 @@ use crate::constructors::stride_from_shape;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
-use crate::linalg::sum_of_products::{get_sum_of_products_function, EinsumDataType};
+use crate::linalg::sum_of_products::{get_sum_of_products_function_generic_nops, EinsumDataType};
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::{first_n_elements, Tensor, TensorMethods};
 
@@ -387,7 +387,7 @@ where
         }
 
         let dimension = label_dims[label as usize];
-        
+
         iter_labels[iter_ndims] = label;
         iter_shape.push(dimension);
         iter_ndims += 1;
@@ -411,7 +411,7 @@ where
         permute_array(&mut strides[0..iter_ndims], &best_axis_ordering);
         permute_array(&mut iter_shape, &best_axis_ordering);
     }
-
+    
 
     // accelerated loops for specific structures
 
@@ -434,19 +434,32 @@ where
 
 
     // main einsum calculation loop
-    
-    let strides = &strides[0..iter_ndims];
 
-    // let sum_of_products = get_sum_of_products_function(&strides[0]);
+    let strides = &strides[0..iter_ndims];
+    let inner_stride = &strides[0][..n_operands + 1];
+
+    let mut base_ptrs = [0 as *mut T; MAX_ARGS];
+    let mut ptrs = base_ptrs.clone();
+    let ptrs = &mut ptrs[0..n_operands + 1];
+
+    for (i, &operand) in operands.iter().enumerate() {
+        base_ptrs[i] = operand.ptr.as_ptr();
+    }
+    base_ptrs[n_operands] = output.as_mut_ptr();
     
-    for indices in MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape, strides) {
+    let sum_of_products = get_sum_of_products_function_generic_nops(inner_stride);
+    let mut indices_iter = MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape[1..], &strides[1..]);
+
+    for _ in 0..iter_shape[1..].iter().product() {
         unsafe {
-            let dst = output.get_unchecked_mut(indices[n_operands]);
-            *dst += indices.iter()
-                                   .zip(operands.iter())
-                                   .map(|(&i, operand)|
-                                       *operand.ptr.as_ptr().add(i))
-                                   .product();
+            let indices = indices_iter.cur_indices();
+            
+            for (i, &index) in indices[..n_operands + 1].iter().enumerate() {
+                ptrs[i] = base_ptrs[i].add(index);
+            }
+
+            sum_of_products(&ptrs, inner_stride, iter_shape[0]);
+            indices_iter.increment_flat_indices();
         }
     }
 

@@ -80,7 +80,7 @@ impl MultiFlatIndexGenerator {
                                               -> Self {
         let ndims = shape.len();
         assert_eq!(strides.len(), ndims);
-
+        
         assert!(OPERANDS <= MAX_ARGS);
         assert!(nops <= OPERANDS);
         assert!(ndims <= MAX_DIMS);
@@ -108,7 +108,7 @@ impl MultiFlatIndexGenerator {
     }
 
     #[inline]
-    pub(crate) unsafe fn cur_indices(&mut self) -> &[usize; MAX_ARGS] {
+    pub(crate) unsafe fn cur_indices(&self) -> &[usize; MAX_ARGS] {
         &self.flat_indices
     }
 
