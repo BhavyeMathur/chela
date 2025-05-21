@@ -11,7 +11,7 @@ const K: usize = 1000;
 const U: usize = 1000;
 const V: usize = 500;
 
-type T = i32;
+type T = f32;
 
 
 fn einsum1() -> u128 {
@@ -87,6 +87,16 @@ fn einsum6() -> u128 {
     start.elapsed().as_nanos()
 }
 
+fn einsum1006() -> u128 {
+    let i = 1000;
+
+    let tensor_a = Tensor::<f32>::rand([i, i]).astype::<T>();
+
+    let start = ProcessTime::now();
+    _ = tensor_a.trace();
+    start.elapsed().as_nanos()
+}
+
 fn einsum7() -> u128 {
     let i = 128;
     let j = 64;
@@ -119,6 +129,16 @@ fn einsum9() -> u128 {
 
     let start = ProcessTime::now();
     _ = einsum_view(&tensor_a, ("ii", "i")).unwrap();
+    start.elapsed().as_nanos()
+}
+
+fn einsum1009() -> u128 {
+    let i = 1000;
+
+    let tensor_a = Tensor::<f32>::rand([i, i]).astype::<T>();
+
+    let start = ProcessTime::now();
+    _ = tensor_a.diagonal();
     start.elapsed().as_nanos()
 }
 
@@ -360,6 +380,9 @@ fn main() {
         else if id == 202 { einsum_3operands_0() }
         else if id == 203 { einsum_3operands_1() }
         else if id == 204 { einsum_4operands_0() }
+
+        else if id == 1006 { einsum1006() }
+        else if id == 1009 { einsum1009() }
 
         else { panic!("invalid ID") };
 

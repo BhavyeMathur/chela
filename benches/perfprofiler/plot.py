@@ -23,10 +23,11 @@ def scale_lightness(hex_color: str, scale_l: float) -> tuple[float, float, float
 
 
 colors = {
-    "NumPy":       "#4dabcf",
-    "PyTorch CPU": "#f2765d",
-    "PyTorch MPS": "#812ce5",
-    "Chela CPU":   "#ce422b"
+    "NumPy":        "#4dabcf",
+    "PyTorch CPU":  "#f2765d",
+    "PyTorch MPS":  "#812ce5",
+    "Chela CPU":    "#ce422b",
+    "Chela Einsum": "#ba2323"
 }
 
 
@@ -98,7 +99,7 @@ def plot_barplot(results: dict[str, dict[str, Result]],
 
         rects = ax.bar(x + offset, height=measurement, width=width, color=color, label=series,
                        yerr=error, error_kw={"elinewidth": 1, "mew": 1, "capsize": 4, "ecolor": ecolor,
-                                             "mfc":    ecolor, "mec": ecolor, "ms": 4, "fmt": "o"})
+                                             "mfc":        ecolor, "mec": ecolor, "ms": 4, "fmt": "o"})
         ax.bar_label(rects, fmt="{:.2f}x", padding=3, size=6)
         multiplier += 1
 

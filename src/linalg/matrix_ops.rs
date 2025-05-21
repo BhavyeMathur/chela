@@ -2,6 +2,91 @@ use crate::axes_traits::AxisType;
 use crate::{NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
 use std::cmp::min;
 
+
+impl<'a, T: NumericDataType> Tensor<'a, T>
+where
+    Tensor<'a, T>: TensorNumericReduce<T>
+{
+    /// Returns the trace of the tensor along its first 2 axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// assert_eq!(tensor.trace(), Tensor::scalar(1 + 5 + 9));
+    pub fn trace<'b>(&'a self) -> Tensor<'b, T> {
+        self.offset_trace(0)
+    }
+
+    /// Returns the sum of an offset tensor diagonal along its first 2 axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// assert_eq!(tensor.offset_trace(-1), Tensor::scalar(4 + 8));
+    pub fn offset_trace<'b>(&'a self, offset: isize) -> Tensor<'b, T> {
+        self.offset_trace_along(offset, 0, 1)
+    }
+
+    /// Returns the trace of a tensor along the specified axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    /// - if `axis1` and `axis2` are the same or are out-of-bounds
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// assert_eq!(tensor.trace_along(0, 1), Tensor::scalar(1 + 5 + 9));
+    pub fn trace_along<'b>(&'a self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'b, T> {
+        self.offset_trace_along(0, axis1, axis2)
+    }
+
+    /// Returns the sum of an offset tensor diagonal along the specified axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    /// - if `axis1` and `axis2` are the same or are out-of-bounds
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// assert_eq!(tensor.offset_trace_along(1, 0, 1), Tensor::scalar(2 + 6));
+    pub fn offset_trace_along<'b>(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'b, T> {
+        let diagonal = self.offset_diagonal_along(offset, axis1, axis2);
+        diagonal.sum_along(-1)
+    }
+}
+
 impl<T: RawDataType> Tensor<'_, T> {
     /// Returns a diagonal view of the tensor along its first 2 axes.
     ///

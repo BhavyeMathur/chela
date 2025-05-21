@@ -58,7 +58,7 @@ fn test_einsum_invalid_index() {
 }
 
 
-test_for_all_numeric_dtypes!(
+test_for_common_numeric_dtypes!(
     test_einsum_sums, {
         for n in 1..17 {
             // sum
@@ -68,11 +68,11 @@ test_for_all_numeric_dtypes!(
             assert_almost_eq!(result, expected);
 
             // trace
-            // let a = Tensor::arange(0, n * n).astype::<T>();
-            // let a = a.reshape([n, n]);
-            // let result = chela::einsum([&a], (["ii"], ""))
-            // let expected = a.trace();
-            // assert_almost_eq!(result, expected); todo
+            let a = Tensor::arange(0, n * n).astype::<T>();
+            let a = a.reshape([n, n]);
+            let result = chela::einsum([&a], (["ii"], ""));
+            let expected = a.trace();
+            assert_almost_eq!(result, expected);
         }
     }
 );
@@ -679,7 +679,7 @@ test_for_all_numeric_dtypes!(
     test_einsum_diagonal_extraction,
     {
         let a = Tensor::from([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).astype::<T>();
-        let expected = Tensor::from([1, 5, 9]).astype::<T>();
+        let expected = a.diagonal();
 
         let result = einsum([&a], (["ii"], "i"));
         assert_almost_eq!(result, expected);

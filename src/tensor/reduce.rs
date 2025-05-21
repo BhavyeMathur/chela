@@ -1,13 +1,13 @@
+#[cfg(use_apple_accelerate)]
+use crate::accelerate::vdsp::*;
 use crate::dtype::{IntegerDataType, NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::traits::to_vec::ToVec;
-use crate::{Tensor, TensorMethods};
+use crate::{AxisType, Tensor, TensorMethods};
+use num::Bounded;
 use std::collections::VecDeque;
 use std::ops::Div;
-use num::Bounded;
-#[cfg(use_apple_accelerate)]
-use crate::accelerate::vdsp::*;
 
 // returns a tuple (output_shape, map_stride)
 // output_shape is simply the shape of the output tensor after the reduction operation
@@ -23,9 +23,7 @@ fn reduced_shape_and_stride(axes: &[isize], shape: &[usize]) -> (Vec<usize>, Vec
     let mut axis_mask = vec![false; ndims];
 
     for &axis in axes.iter() {
-        assert!(axis >= 0, "negative axes are not currently supported");
-        let axis = axis as usize;
-        
+        let axis = axis.get_absolute(ndims);
         if axis_mask[axis] {
             panic!("duplicate axes specified");
         }
@@ -50,7 +48,7 @@ fn reduced_shape_and_stride(axes: &[isize], shape: &[usize]) -> (Vec<usize>, Vec
 }
 
 impl<T: RawDataType> Tensor<'_, T> {
-    unsafe fn reduce_contiguous(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
+    unsafe fn reduce_contiguous<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> Tensor<'b, T> {
         let mut output = default;
 
         let mut src: *mut T = self.ptr.as_ptr();
@@ -64,13 +62,13 @@ impl<T: RawDataType> Tensor<'_, T> {
 }
 
 pub trait TensorReduce<T: RawDataType> {
-    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> Tensor<T>;
+    fn reduce_along<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> Tensor<'b, T>;
 
-    fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T>;
+    fn reduce<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> Tensor<'b, T>;
 }
 
 impl<T: RawDataType> TensorReduce<T> for Tensor<'_, T> {
-    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> Tensor<T> {
+    fn reduce_along<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> Tensor<'b, T> {
         let (out_shape, map_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
         let (map_shape, map_stride) = collapse_to_uniform_stride(&self.shape, &map_stride);
 
@@ -90,7 +88,7 @@ impl<T: RawDataType> TensorReduce<T> for Tensor<'_, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(out_shape, output) }
     }
 
-    fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> Tensor<T> {
+    fn reduce<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> Tensor<'b, T> {
         if self.is_contiguous() {
             return unsafe { self.reduce_contiguous(func, default) };
         }
@@ -106,51 +104,51 @@ impl<T: RawDataType> TensorReduce<T> for Tensor<'_, T> {
 }
 
 pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
-    fn sum(&self) -> Tensor<T> {
+    fn sum<'a, 'b>(&'a self) -> Tensor<'b, T> {
         self.reduce(|val, acc| acc + val, T::zero())
     }
 
-    fn sum_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
+    fn sum_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
         self.reduce_along(|val, acc| acc + val, axes, T::zero())
     }
 
-    fn product(&self) -> Tensor<T> {
+    fn product<'a, 'b>(&'a self) -> Tensor<'b, T> {
         self.reduce(|val, acc| acc * val, T::one())
     }
 
-    fn product_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
+    fn product_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
         self.reduce_along(|val, acc| acc * val, axes, T::one())
     }
 
-    fn max(&self) -> Tensor<T> {
+    fn max<'a, 'b>(&'a self) -> Tensor<'b, T> {
         self.reduce(partial_max, T::min_value())
     }
 
-    fn min(&self) -> Tensor<T> {
+    fn min<'a, 'b>(&'a self) -> Tensor<'b, T> {
         self.reduce(partial_min, T::max_value())
     }
 
-    fn max_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
+    fn max_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
         self.reduce_along(partial_max, axes, T::min_value())
     }
 
-    fn min_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
+    fn min_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
         self.reduce_along(partial_min, axes, T::max_value())
     }
 
-    fn max_magnitude(&self) -> Tensor<T> {
+    fn max_magnitude<'a, 'b>(&'a self) -> Tensor<'b, T> {
         self.reduce(partial_max_magnitude, T::zero())
     }
 
-    fn min_magnitude(&self) -> Tensor<T> {
+    fn min_magnitude<'a, 'b>(&'a self) -> Tensor<'b, T> {
         self.reduce(partial_min_magnitude, T::zero())
     }
 
-    fn max_magnitude_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
+    fn max_magnitude_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
         self.reduce_along(partial_max_magnitude, axes, T::zero())
     }
 
-    fn min_magnitude_along(&self, axes: impl ToVec<isize>) -> Tensor<T> {
+    fn min_magnitude_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
         self.reduce_along(partial_min_magnitude, axes, T::zero())
     }
 }
@@ -166,7 +164,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {}
 
 #[cfg(use_apple_accelerate)]
 impl TensorNumericReduce<f32> for Tensor<'_, f32> {
-    fn sum(&self) -> Tensor<f32> {
+    fn sum<'a, 'b>(&'a self) -> Tensor<'b, f32> {
         match self.has_uniform_stride() {
             None => { self.reduce(|val, acc| acc + val, 0.0) }
             Some(stride) => {
@@ -177,7 +175,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
         }
     }
 
-    fn max(&self) -> Tensor<f32> {
+    fn max<'a, 'b>(&'a self) -> Tensor<'b, f32> {
         match self.has_uniform_stride() {
             None => { self.reduce(partial_max, f32::min_value()) }
             Some(stride) => {
@@ -188,7 +186,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
         }
     }
 
-    fn min(&self) -> Tensor<f32> {
+    fn min<'a, 'b>(&'a self) -> Tensor<'b, f32> {
         match self.has_uniform_stride() {
             None => { self.reduce(partial_min, f32::max_value()) }
             Some(stride) => {
@@ -199,7 +197,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
         }
     }
 
-    fn max_magnitude(&self) -> Tensor<f32> {
+    fn max_magnitude<'a, 'b>(&'a self) -> Tensor<'b, f32> {
         match self.has_uniform_stride() {
             None => { self.reduce(partial_max_magnitude, 0.0) }
             Some(stride) => {
@@ -210,7 +208,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
         }
     }
 
-    fn min_magnitude(&self) -> Tensor<f32> {
+    fn min_magnitude<'a, 'b>(&'a self) -> Tensor<'b, f32> {
         match self.has_uniform_stride() {
             None => { self.reduce(partial_min_magnitude, 0.0) }
             Some(stride) => {
@@ -224,7 +222,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
 
 #[cfg(use_apple_accelerate)]
 impl TensorNumericReduce<f64> for Tensor<'_, f64> {
-    fn sum(&self) -> Tensor<f64> {
+    fn sum<'a, 'b>(&'a self) -> Tensor<'b, f64> {
         match self.has_uniform_stride() {
             None => { self.reduce(|val, acc| acc + val, 0.0) }
             Some(stride) => {
@@ -235,7 +233,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
         }
     }
 
-    fn max(&self) -> Tensor<f64> {
+    fn max<'a, 'b>(&'a self) -> Tensor<'b, f64> {
         match self.has_uniform_stride() {
             None => { self.reduce(partial_max, f64::min_value()) }
             Some(stride) => {
@@ -246,7 +244,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
         }
     }
 
-    fn min(&self) -> Tensor<f64> {
+    fn min<'a, 'b>(&'a self) -> Tensor<'b, f64> {
         match self.has_uniform_stride() {
             None => { self.reduce(partial_min, f64::max_value()) }
             Some(stride) => {
@@ -257,7 +255,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
         }
     }
 
-    fn max_magnitude(&self) -> Tensor<f64> {
+    fn max_magnitude<'a, 'b>(&'a self) -> Tensor<'b, f64> {
         match self.has_uniform_stride() {
             None => { self.reduce(partial_max_magnitude, 0.0) }
             Some(stride) => {
@@ -268,7 +266,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
         }
     }
 
-    fn min_magnitude(&self) -> Tensor<f64> {
+    fn min_magnitude<'a, 'b>(&'a self) -> Tensor<'b, f64> {
         match self.has_uniform_stride() {
             None => { self.reduce(partial_min_magnitude, 0.0) }
             Some(stride) => {
@@ -285,11 +283,11 @@ impl<T: NumericDataType> Tensor<'_, T>
 where
         for<'a> Tensor<'a, T>: Div<T::AsFloatType> + TensorNumericReduce<T>,
 {
-    pub fn mean(&self) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
+    pub fn mean<'a, 'b>(&'a self) -> <Tensor<'b, T> as Div<T::AsFloatType>>::Output {
         self.sum() / (self.size() as f32).into()
     }
 
-    pub fn mean_along(&self, axes: impl ToVec<isize>) -> <Tensor<T> as Div<T::AsFloatType>>::Output {
+    pub fn mean_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> <Tensor<'b, T> as Div<T::AsFloatType>>::Output {
         let axes = axes.to_vec();
 
         let mut n = 1;

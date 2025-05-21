@@ -4,8 +4,8 @@ import numpy as np
 from perfprofiler import *
 
 
-TORCH_DTYPE = torch.int32
-NUMPY_DTYPE = np.int32
+TORCH_DTYPE = torch.float32
+NUMPY_DTYPE = np.float32
 
 
 class TensorOpTimingSuite(TimingSuite):
@@ -116,7 +116,7 @@ class TensorOp5(TensorOpTimingSuite):
 
 
 class TensorOp6(TensorOpTimingSuite):
-    ID = 6
+    ID = 1006
     name = "Trace"
 
     def __init__(self):
@@ -150,7 +150,7 @@ class TensorOp8(TensorOpTimingSuite):
 
 
 class TensorOp9(TensorOpTimingSuite):
-    ID = 9
+    ID = 1009
     name = "Diagonal"
 
     def __init__(self):

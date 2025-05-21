@@ -1,12 +1,15 @@
 use crate::dtype::RawDataType;
 use crate::Tensor;
+use crate::tensor::flags::TensorFlags;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn broadcast_to(&'a self, shape: &[usize]) -> Tensor<'a, T> {
         let broadcast_shape = broadcast_shape(&self.shape, shape);
         let broadcast_stride = broadcast_stride(&self.stride, &broadcast_shape, &self.shape);
 
-        unsafe { self.reshaped_view(broadcast_shape, broadcast_stride) }
+        let mut result = unsafe { self.reshaped_view(broadcast_shape, broadcast_stride) };
+        result.flags -= TensorFlags::Writeable;
+        result
     }
 }
 
