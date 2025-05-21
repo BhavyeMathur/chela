@@ -1,12 +1,12 @@
 from perfprofiler import *
-from einsum import EinsumAutoTimingSuite
+from einsum import EinsumTimingSuite
 
 I = 100
 J = 500
 K = 1000
 
 
-class Einsum2Operands0(EinsumAutoTimingSuite):
+class Einsum2Operands0(EinsumTimingSuite):
     ID = 100
     name = "ij,jk->"
 
@@ -14,7 +14,7 @@ class Einsum2Operands0(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum2Operands1(EinsumAutoTimingSuite):
+class Einsum2Operands1(EinsumTimingSuite):
     ID = 101
     name = "ij,jk->i"
 
@@ -22,7 +22,7 @@ class Einsum2Operands1(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum2Operands2(EinsumAutoTimingSuite):
+class Einsum2Operands2(EinsumTimingSuite):
     ID = 107
     name = "ij,ki->i"
 
@@ -30,7 +30,7 @@ class Einsum2Operands2(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum2Operands3(EinsumAutoTimingSuite):
+class Einsum2Operands3(EinsumTimingSuite):
     ID = 106
     name = "ij,ki->j"
 
@@ -38,7 +38,7 @@ class Einsum2Operands3(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum2Operands4(EinsumAutoTimingSuite):
+class Einsum2Operands4(EinsumTimingSuite):
     ID = 102
     name = "ij,jk->ij"
 
@@ -46,7 +46,7 @@ class Einsum2Operands4(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum2Operands5(EinsumAutoTimingSuite):
+class Einsum2Operands5(EinsumTimingSuite):
     ID = 104
     name = "ij,jk->ik"
 
@@ -54,7 +54,7 @@ class Einsum2Operands5(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum2Operands6(EinsumAutoTimingSuite):
+class Einsum2Operands6(EinsumTimingSuite):
     ID = 105
     name = "ik,jk->ij"
 
@@ -62,7 +62,7 @@ class Einsum2Operands6(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum2Operands7(EinsumAutoTimingSuite):
+class Einsum2Operands7(EinsumTimingSuite):
     ID = 103
     name = "ij,jk->ijk"
 
@@ -70,7 +70,7 @@ class Einsum2Operands7(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum2Operands8(EinsumAutoTimingSuite):
+class Einsum2Operands8(EinsumTimingSuite):
     ID = 108
     name = "ij,j->i"
 

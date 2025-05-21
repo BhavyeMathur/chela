@@ -103,7 +103,7 @@ def plot_barplot(results: dict[str, dict[str, Result]],
         multiplier += 1
 
     ax.set_xticks(x + width, suites, size=7)
-    ax.set_ylim(0, 1.1 * max_)
+    ax.set_ylim(0, min(1.1 * max_, 10))
     ax.legend(loc="best", ncols=3)
     ax.yaxis.set_major_formatter(StrMethodFormatter("{x:.1f}x"))
 

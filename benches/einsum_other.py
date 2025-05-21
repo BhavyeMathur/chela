@@ -1,5 +1,5 @@
 from perfprofiler import *
-from einsum import EinsumAutoTimingSuite
+from einsum import EinsumTimingSuite
 
 I = 100
 J = 500
@@ -8,7 +8,7 @@ K = 1000
 C = 2
 
 
-class EinsumOnSlices0(EinsumAutoTimingSuite):
+class EinsumOnSlices0(EinsumTimingSuite):
     ID = 200
     name = "ij,jk->"
 
@@ -17,7 +17,7 @@ class EinsumOnSlices0(EinsumAutoTimingSuite):
                          shapes=["ij", "jkC"], slices=[tuple(), (slice(None), slice(None), 0)])
 
 
-class EinsumOnSlices1(EinsumAutoTimingSuite):
+class EinsumOnSlices1(EinsumTimingSuite):
     ID = 201
     name = "i->"
 
@@ -26,7 +26,7 @@ class EinsumOnSlices1(EinsumAutoTimingSuite):
                          shapes=["iC"], slices=[(slice(None), 0)])
 
 
-class Einsum3Operands0(EinsumAutoTimingSuite):
+class Einsum3Operands0(EinsumTimingSuite):
     ID = 202
     name = "i,j,k->"
 
@@ -34,7 +34,7 @@ class Einsum3Operands0(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum3Operands1(EinsumAutoTimingSuite):
+class Einsum3Operands1(EinsumTimingSuite):
     ID = 203
     name = "ij,j,k->"
 
@@ -42,7 +42,7 @@ class Einsum3Operands1(EinsumAutoTimingSuite):
         super().__init__(self.name, {"i": I, "j": J, "k": K})
 
 
-class Einsum4Operands0(EinsumAutoTimingSuite):
+class Einsum4Operands0(EinsumTimingSuite):
     ID = 204
     name = "4 Operands"
 
