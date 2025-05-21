@@ -51,7 +51,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     unsafe fn reduce_contiguous<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> Tensor<'b, T> {
         let mut output = default;
 
-        let mut src: *mut T = self.ptr.as_ptr();
+        let mut src = self.ptr();
         for _ in 0..self.len {
             output = func(*src, output);
             src = src.add(1);
@@ -169,7 +169,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
             None => { self.reduce(|val, acc| acc + val, 0.0) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_sve(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_sve(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -180,7 +180,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
             None => { self.reduce(partial_max, f32::min_value()) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_maxv(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_maxv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -191,7 +191,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
             None => { self.reduce(partial_min, f32::max_value()) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_minv(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_minv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -202,7 +202,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
             None => { self.reduce(partial_max_magnitude, 0.0) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_maxmgv(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_maxmgv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -213,7 +213,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
             None => { self.reduce(partial_min_magnitude, 0.0) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_minmg(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_minmg(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -227,7 +227,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
             None => { self.reduce(|val, acc| acc + val, 0.0) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_sveD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_sveD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -238,7 +238,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
             None => { self.reduce(partial_max, f64::min_value()) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_maxvD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_maxvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -249,7 +249,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
             None => { self.reduce(partial_min, f64::max_value()) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_minvD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_minvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -260,7 +260,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
             None => { self.reduce(partial_max_magnitude, 0.0) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_maxmgvD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_maxmgvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }
@@ -271,7 +271,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
             None => { self.reduce(partial_min_magnitude, 0.0) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_minmgD(self.ptr.as_ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_minmgD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar(output)
             }
         }

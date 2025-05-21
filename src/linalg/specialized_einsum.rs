@@ -10,26 +10,24 @@ pub(super) fn einsum_1operand_2labels<'b, T: SumOfProductsType>(operand: &Tensor
                                                                 mut output: Vec<T>,
                                                                 output_shape: Vec<usize>) -> Tensor<'b, T>
 {
-    unsafe {
-        assert_unchecked(iter_shape[0] > 0);
-        assert_unchecked(iter_shape[1] > 0);
-    }
-
-    let op = operand.ptr.as_ptr();
-    let dst = output.as_mut_ptr();
-
     let sum_of_products = get_sum_of_products_function(strides_dim0);
 
     unsafe {
+        let op = operand.mut_ptr();
+        let dst = output.as_mut_ptr();
+
+        assert_unchecked(iter_shape[0] > 0);
+        assert_unchecked(iter_shape[1] > 0);
+        
         for i in 0..iter_shape[1] {
             let src = op.add(i * strides_dim1[0]);
             let dst = dst.add(i * strides_dim1[1]);
 
             sum_of_products(&[src, dst], &strides_dim0, iter_shape[0]);
         }
-    }
 
-    unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
+        Tensor::from_contiguous_owned_buffer(output_shape, output)
+    }
 }
 
 pub(super) fn einsum_1operand_3labels<'b, T: SumOfProductsType>(operand: &Tensor<T>,
@@ -40,18 +38,16 @@ pub(super) fn einsum_1operand_3labels<'b, T: SumOfProductsType>(operand: &Tensor
                                                                 mut output: Vec<T>,
                                                                 output_shape: Vec<usize>) -> Tensor<'b, T>
 {
-    unsafe {
-        assert_unchecked(iter_shape[0] > 0);
-        assert_unchecked(iter_shape[1] > 0);
-        assert_unchecked(iter_shape[2] > 0);
-    }
-
-    let op = operand.ptr.as_ptr();
-    let dst = output.as_mut_ptr();
-
     let sum_of_products = get_sum_of_products_function(strides_dim0);
 
     unsafe {
+        let op = operand.mut_ptr();
+        let dst = output.as_mut_ptr();
+
+        assert_unchecked(iter_shape[0] > 0);
+        assert_unchecked(iter_shape[1] > 0);
+        assert_unchecked(iter_shape[2] > 0);
+        
         for i in 0..iter_shape[2] {
             for j in 0..iter_shape[1] {
                 let src = op.add(i * strides_dim2[0] + j * strides_dim1[0]);
@@ -60,9 +56,9 @@ pub(super) fn einsum_1operand_3labels<'b, T: SumOfProductsType>(operand: &Tensor
                 sum_of_products(&[src, dst], &strides_dim0, iter_shape[0]);
             }
         }
-    }
 
-    unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
+        Tensor::from_contiguous_owned_buffer(output_shape, output)
+    }
 }
 
 pub(super) fn einsum_2operands_2labels<'b, T: SumOfProductsType>(operand1: &Tensor<T>,
@@ -73,18 +69,16 @@ pub(super) fn einsum_2operands_2labels<'b, T: SumOfProductsType>(operand1: &Tens
                                                                  mut output: Vec<T>,
                                                                  output_shape: Vec<usize>) -> Tensor<'b, T>
 {
-    unsafe {
-        assert_unchecked(iter_shape[0] > 0);
-        assert_unchecked(iter_shape[1] > 0);
-    }
-
-    let op1 = operand1.ptr.as_ptr();
-    let op2 = operand2.ptr.as_ptr();
-    let dst = output.as_mut_ptr();
-
     let sum_of_products = get_sum_of_products_function(strides_dim0);
 
     unsafe {
+        let op1 = operand1.mut_ptr();
+        let op2 = operand2.mut_ptr();
+        let dst = output.as_mut_ptr();
+        
+        assert_unchecked(iter_shape[0] > 0);
+        assert_unchecked(iter_shape[1] > 0);
+        
         for i in 0..iter_shape[1] {
             let ptr1 = op1.add(i * strides_dim1[0]);
             let ptr2 = op2.add(i * strides_dim1[1]);
@@ -92,9 +86,9 @@ pub(super) fn einsum_2operands_2labels<'b, T: SumOfProductsType>(operand1: &Tens
 
             sum_of_products(&[ptr1, ptr2, dst], &strides_dim0, iter_shape[0]);
         }
-    }
 
-    unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
+        Tensor::from_contiguous_owned_buffer(output_shape, output)
+    }
 }
 
 pub(super) fn einsum_2operands_3labels<'b, T: SumOfProductsType>(operand1: &Tensor<T>,
@@ -106,19 +100,17 @@ pub(super) fn einsum_2operands_3labels<'b, T: SumOfProductsType>(operand1: &Tens
                                                                  mut output: Vec<T>,
                                                                  output_shape: Vec<usize>) -> Tensor<'b, T>
 {
-    unsafe {
-        assert_unchecked(iter_shape[0] > 0);
-        assert_unchecked(iter_shape[1] > 0);
-        assert_unchecked(iter_shape[2] > 0);
-    }
-
-    let op1 = operand1.ptr.as_ptr();
-    let op2 = operand2.ptr.as_ptr();
-    let dst = output.as_mut_ptr();
-
     let sum_of_products = get_sum_of_products_function(strides_dim0);
 
     unsafe {
+        let op1 = operand1.mut_ptr();
+        let op2 = operand2.mut_ptr();
+        let dst = output.as_mut_ptr();
+
+        assert_unchecked(iter_shape[0] > 0);
+        assert_unchecked(iter_shape[1] > 0);
+        assert_unchecked(iter_shape[2] > 0);
+        
         for i in 0..iter_shape[2] {
             for j in 0..iter_shape[1] {
                 let ptr1 = op1.add(i * strides_dim2[0] + j * strides_dim1[0]);
@@ -128,7 +120,7 @@ pub(super) fn einsum_2operands_3labels<'b, T: SumOfProductsType>(operand1: &Tens
                 sum_of_products(&[ptr1, ptr2, dst], &strides_dim0, iter_shape[0]);
             }
         }
-    }
 
-    unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
+        Tensor::from_contiguous_owned_buffer(output_shape, output)
+    }
 }

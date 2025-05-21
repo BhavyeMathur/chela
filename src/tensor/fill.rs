@@ -23,10 +23,10 @@ unsafe fn fill_shape_and_stride<T: Copy>(mut start: *mut T, value: T, shape: &[u
 impl<T: RawDataType> Tensor<'_, T> {
     pub fn fill(&mut self, value: T) {
         if self.is_contiguous() {
-            return unsafe { fill_strided(self.ptr.as_ptr(), value, 1, self.len); };
+            return unsafe { fill_strided(self.mut_ptr(), value, 1, self.len); };
         }
 
         let (shape, stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
-        unsafe { fill_shape_and_stride(self.ptr.as_ptr(), value, &shape, &stride); }
+        unsafe { fill_shape_and_stride(self.mut_ptr(), value, &shape, &stride); }
     }
 }

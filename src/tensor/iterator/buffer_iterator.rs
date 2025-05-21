@@ -11,14 +11,14 @@ pub struct BufferIterator<T: RawDataType> {
 impl<T: RawDataType> BufferIterator<T> {
     pub(crate) fn from(tensor: &Tensor<T>) -> Self {
         Self {
-            ptr: tensor.ptr.as_ptr(),
+            ptr: unsafe { tensor.mut_ptr() },
             indices: FlatIndexGenerator::from(&tensor.shape, &tensor.stride),
         }
     }
 
     pub(crate) unsafe fn from_reshaped_view(tensor: &Tensor<T>, shape: &[usize], stride: &[usize]) -> Self {
         Self {
-            ptr: tensor.ptr.as_ptr(),
+            ptr: tensor.mut_ptr(),
             indices: FlatIndexGenerator::from(shape, stride),
         }
     }

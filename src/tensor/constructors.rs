@@ -384,7 +384,7 @@ impl<T: RawDataType> Drop for Tensor<'_, T> {
     fn drop(&mut self) {
         if self.flags.contains(TensorFlags::Owned) {
             // drops the data
-            unsafe { Vec::from_raw_parts(self.ptr.as_ptr(), self.len, self.capacity) };
+            unsafe { Vec::from_raw_parts(self.mut_ptr(), self.len, self.capacity) };
         }
 
         self.len = 0;

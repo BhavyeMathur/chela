@@ -3,9 +3,9 @@ use crate::dtype::{NumericDataType, RawDataType};
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
 use crate::linalg::sum_of_products::{get_sum_of_products_function_generic_nops, SumOfProductsType};
+use crate::linalg::util::{permute_array, transpose_2d_array};
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::{first_n_elements, Tensor, TensorMethods};
-use crate::linalg::util::{permute_array, transpose_2d_array};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -430,21 +430,22 @@ where
 
     let strides = &strides[0..iter_ndims];
     let inner_stride = &strides[0][..n_operands + 1];
+    let mut indices_iter = MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape[1..], &strides[1..]);
+
+    let sum_of_products = get_sum_of_products_function_generic_nops(inner_stride);
 
     let mut base_ptrs = [0 as *mut T; MAX_ARGS];
     let mut ptrs = base_ptrs.clone();
     let ptrs = &mut ptrs[0..n_operands + 1];
 
-    for (i, &operand) in operands.iter().enumerate() {
-        base_ptrs[i] = operand.ptr.as_ptr();
-    }
     base_ptrs[n_operands] = output.as_mut_ptr();
 
-    let sum_of_products = get_sum_of_products_function_generic_nops(inner_stride);
-    let mut indices_iter = MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape[1..], &strides[1..]);
+    unsafe {
+        for (i, &operand) in operands.iter().enumerate() {
+            base_ptrs[i] = operand.mut_ptr();
+        }
 
-    for _ in 0..iter_shape[1..].iter().product() {
-        unsafe {
+        for _ in 0..iter_shape[1..].iter().product() {
             let indices = indices_iter.cur_indices();
 
             for (i, &index) in indices[..n_operands + 1].iter().enumerate() {
@@ -454,9 +455,9 @@ where
             sum_of_products(&ptrs, inner_stride, iter_shape[0]);
             indices_iter.increment_flat_indices();
         }
-    }
 
-    unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) }
+        Tensor::from_contiguous_owned_buffer(output_shape, output)
+    }
 }
 
 #[cfg(test)]

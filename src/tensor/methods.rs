@@ -69,3 +69,13 @@ impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
         self.flags
     }
 }
+
+impl<T: RawDataType> Tensor<'_, T> {
+    pub(crate) unsafe fn mut_ptr(&self) -> *mut T {
+        self.ptr.as_ptr()
+    }
+
+    pub(crate) unsafe fn ptr(&self) -> *const T {
+        self.ptr.as_ptr()
+    }
+}

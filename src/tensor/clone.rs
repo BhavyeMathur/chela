@@ -20,7 +20,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     unsafe fn clone_data_contiguous(&self) -> Vec<T> {
         let mut data = Vec::with_capacity(self.len);
 
-        copy_nonoverlapping(self.ptr.as_ptr(), data.as_mut_ptr(), self.len);
+        copy_nonoverlapping(self.ptr(), data.as_mut_ptr(), self.len);
         data.set_len(self.len);
         data
     }
@@ -50,7 +50,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             contiguous_stride = 1;
         }
 
-        let src = self.ptr.as_ptr() as *const T;
+        let src = self.ptr() as *const T;
         let mut dst = data.as_mut_ptr();
 
         for i in FlatIndexGenerator::from(&shape, &stride) {
