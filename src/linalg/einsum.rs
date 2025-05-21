@@ -411,11 +411,26 @@ where
         permute_array(&mut strides[0..iter_ndims], &best_axis_ordering);
         permute_array(&mut iter_shape, &best_axis_ordering);
     }
-    
+
 
     // accelerated loops for specific structures
 
-    if n_operands == 2 {
+    if n_operands == 1 {
+        if iter_ndims == 2 {
+            return einsum_1operand_2labels(&operands[0],
+                                           first_n_elements!(strides[0], 2),
+                                           first_n_elements!(strides[1], 2),
+                                           first_n_elements!(iter_shape, 2),
+                                           output, output_shape);
+        } else if iter_ndims == 3 {
+            return einsum_1operand_3labels(&operands[0],
+                                           first_n_elements!(strides[0], 2),
+                                           first_n_elements!(strides[1], 2),
+                                           first_n_elements!(strides[2], 2),
+                                           first_n_elements!(iter_shape, 3),
+                                           output, output_shape);
+        }
+    } else if n_operands == 2 {
         if iter_ndims == 2 {
             return einsum_2operands_2labels(&operands[0], &operands[1],
                                             first_n_elements!(strides[0], 3),
@@ -426,7 +441,7 @@ where
             return einsum_2operands_3labels(&operands[0], &operands[1],
                                             first_n_elements!(strides[0], 3),
                                             first_n_elements!(strides[1], 3),
-                                            first_n_elements!(strides[n_operands], 3),
+                                            first_n_elements!(strides[2], 3),
                                             first_n_elements!(iter_shape, 3),
                                             output, output_shape);
         }
@@ -446,14 +461,14 @@ where
         base_ptrs[i] = operand.ptr.as_ptr();
     }
     base_ptrs[n_operands] = output.as_mut_ptr();
-    
+
     let sum_of_products = get_sum_of_products_function_generic_nops(inner_stride);
     let mut indices_iter = MultiFlatIndexGenerator::from(n_operands + 1, &iter_shape[1..], &strides[1..]);
 
     for _ in 0..iter_shape[1..].iter().product() {
         unsafe {
             let indices = indices_iter.cur_indices();
-            
+
             for (i, &index) in indices[..n_operands + 1].iter().enumerate() {
                 ptrs[i] = base_ptrs[i].add(index);
             }

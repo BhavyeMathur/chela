@@ -139,7 +139,6 @@ pub(super) trait EinsumDataType: NumericDataType {
 
     #[inline(always)]
     unsafe fn out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        assert_unchecked(N == 3);
         assert_unchecked(count > 0);
 
         let dst = ptrs[N - 1];
@@ -259,6 +258,8 @@ pub(super) trait EinsumDataType: NumericDataType {
             data0 = data0.add(1);
             data1 = data1.add(1);
         }
+        
+        // TODO specialised SIMD implementation
     }
 }
 

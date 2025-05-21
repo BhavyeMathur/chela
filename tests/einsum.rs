@@ -125,6 +125,43 @@ test_for_common_numeric_dtypes!(
             let result = chela::einsum([&a], (["ij"], "i"));
             assert_almost_eq!(result, expected);
         }
+
+        for n in (3..24).step_by(5) {
+            let a = Tensor::arange(0, 2 * 2 * n * n).astype::<T>();
+            let a = a.reshape([n, 2, n, 2]);
+            let a = a.slice(s!(.., .., .., 0));
+
+            let expected = a.sum();
+            let result = chela::einsum([&a], (["ijk"], ""));
+            assert_almost_eq!(result, expected);
+
+            let expected = a.sum_along(Axis(0));
+            let result = chela::einsum([&a], (["ijk"], "jk"));
+            assert_almost_eq!(result, expected);
+
+            let expected = a.sum_along(Axis(1));
+            let result = chela::einsum([&a], (["ijk"], "ik"));
+            assert_almost_eq!(result, expected);
+
+            let expected = a.sum_along(Axis(2));
+            let result = chela::einsum([&a], (["ijk"], "ij"));
+            assert_almost_eq!(result, expected);
+
+            let expected = a.sum_along(Axis(2));
+            let expected = expected.sum_along(Axis(1));
+            let result = chela::einsum([&a], (["ijk"], "i"));
+            assert_almost_eq!(result, expected);
+
+            let expected = a.sum_along(Axis(2));
+            let expected = expected.sum_along(Axis(0));
+            let result = chela::einsum([&a], (["ijk"], "j"));
+            assert_almost_eq!(result, expected);
+
+            let expected = a.sum_along(Axis(1));
+            let expected = expected.sum_along(Axis(0));
+            let result = chela::einsum([&a], (["ijk"], "k"));
+            assert_almost_eq!(result, expected);
+        }
     }
 );
 
@@ -332,37 +369,6 @@ test_for_all_numeric_dtypes!(
         assert_almost_eq!(result, expected);
     }
 );
-
-#[test]
-fn test() {
-    type T = f64;
-
-    let n = 17;
-
-    let a = Tensor::arange(0, 2 * 2 * n * n).astype::<T>();
-    let a = a.reshape([n, 2, n, 2]);
-    let a = a.slice(s!(.., 0, .., 0));
-
-    let b = Tensor::arange(0, 2 * 2 * n * n).astype::<T>();
-    let b = b.reshape([n, 2, n, 2]);
-    let b = b.slice(s!(.., 0, .., 0));
-
-    let expected = {
-        let mut out = T::default();
-
-        for i in 0..n {
-            for j in 0..n {
-                for k in 0..n {
-                    out += a[[i, j]] * b[[j, k]];
-                }
-            }
-        }
-
-        Tensor::scalar(out)
-    };
-    let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
-    assert_almost_eq!(result, expected);
-}
 
 test_for_common_integer_dtypes!(
     test_einsum_sum_product_slice, {
