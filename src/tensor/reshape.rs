@@ -8,11 +8,11 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data()) }
     }
 
-    pub(super) unsafe fn reshaped_view_with_flags(&self, shape: Vec<usize>, stride: Vec<usize>, mut flags: TensorFlags) -> Tensor<T> {
+    pub(super) unsafe fn reshaped_view_with_flags_and_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>, mut flags: TensorFlags) -> Tensor<T> {
         flags = update_flags_with_contiguity(flags, &shape, &stride);
 
         Tensor {
-            ptr: self.ptr,
+            ptr: self.ptr.add(offset),
             len: shape.iter().product(),
             capacity: 0,
 
@@ -24,16 +24,16 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
     }
 
-    pub(crate) unsafe fn reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
-        self.reshaped_view_with_flags(shape, stride, self.flags - TensorFlags::Owned - TensorFlags::Writeable)
+    pub(crate) unsafe fn reshaped_view_with_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
+        self.reshaped_view_with_flags_and_offset(offset, shape, stride, self.flags - TensorFlags::Owned)
     }
 
-    pub(crate) unsafe fn mut_reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
-        self.reshaped_view_with_flags(shape, stride, self.flags - TensorFlags::Owned)
+    pub(crate) unsafe fn reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
+        self.reshaped_view_with_flags_and_offset(0, shape, stride, self.flags - TensorFlags::Owned)
     }
 
     pub fn view(&'a self) -> Tensor<'a, T> {
-        unsafe { self.mut_reshaped_view(self.shape.clone(), self.stride.clone()) }
+        unsafe { self.reshaped_view(self.shape.clone(), self.stride.clone()) }
     }
 
     pub fn squeeze(&'a self) -> Tensor<'a, T> {
@@ -44,13 +44,13 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
                                .filter(|&(&axis_length, _)| axis_length != 1)
                                .unzip();
 
-        unsafe { self.mut_reshaped_view(shape, stride) }
+        unsafe { self.reshaped_view(shape, stride) }
     }
 
     pub fn unsqueeze(&'a self, axis: Axis) -> Tensor<'a, T> {
         assert!(axis.0 >= 0, "negative axes not supported currently");
         let axis = axis.0 as usize;
-        
+
         assert!(axis <= self.ndims(), "Tensor::unsqueeze(), axis out of bounds");
 
         let mut shape = self.shape.clone();
@@ -64,7 +64,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             stride.insert(axis, stride[axis] * shape[axis + 1]);
         }
 
-        unsafe { self.mut_reshaped_view(shape, stride) }
+        unsafe { self.reshaped_view(shape, stride) }
     }
 
     pub fn reshape<const N: usize>(&'a self, new_shape: [usize; N]) -> Tensor<'a, T> {
@@ -79,6 +79,6 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             acc *= *dim;
         }
 
-        unsafe { self.mut_reshaped_view(new_shape.to_vec(), new_stride) }
+        unsafe { self.reshaped_view(new_shape.to_vec(), new_stride) }
     }
 }

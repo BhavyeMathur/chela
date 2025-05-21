@@ -222,6 +222,11 @@ impl<T: RawDataType> Tensor<'_, T> {
     pub fn scalar(n: T) -> Self {
         Tensor::full(n, [])
     }
+    
+    // Maybe we should support empty tensors one day.
+    // pub fn empty() -> Self {
+    //     unsafe { Tensor::from_contiguous_owned_buffer(vec![0], vec![]) }
+    // }
 
     /// Retrieves the single value contained within a tensor with a singular element.
     ///
