@@ -120,6 +120,29 @@ pub(super) trait SumOfProductsType: NumericDataType {
     }
 
     #[inline(always)]
+    unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+        const NOPS: usize = 2;
+        assert_unchecked(count > 0);
+        assert_unchecked(ptrs.len() - 1 == NOPS);
+
+        let dst = ptrs[NOPS];
+        let mut ptrs = [ptrs[0], ptrs[1]];
+
+        let mut sum = Self::default();
+
+        let mut k = count;
+        while k != 0 {
+            sum += (*ptrs[0]) * (*ptrs[1]);
+
+            k -= 1;
+            ptrs[0] = ptrs[0].add(strides[0]);
+            ptrs[1] = ptrs[1].add(strides[1]);
+        }
+
+        *dst += sum;
+    }
+
+    #[inline(always)]
     unsafe fn operand_strides_nx_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
         let nops = ptrs.len() - 1;
         assert_unchecked(count > 0);

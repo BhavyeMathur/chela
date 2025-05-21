@@ -25,6 +25,17 @@ fn einsum1() -> u128 {
     start.elapsed().as_nanos()
 }
 
+fn einsum1001() -> u128 {
+    let i = 10000;
+
+    let tensor_a = Tensor::<f32>::rand([i]).astype::<T>();
+    let tensor_b = Tensor::<f32>::rand([i]).astype::<T>();
+
+    let start = ProcessTime::now();
+    _ = tensor_a.dot(tensor_b);
+    start.elapsed().as_nanos()
+}
+
 fn einsum2() -> u128 {
     let i = 1000;
     let j = 500;
@@ -381,6 +392,7 @@ fn main() {
         else if id == 203 { einsum_3operands_1() }
         else if id == 204 { einsum_4operands_0() }
 
+        else if id == 1001 { einsum1001() }
         else if id == 1006 { einsum1006() }
         else if id == 1009 { einsum1009() }
 

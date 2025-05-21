@@ -1,5 +1,5 @@
 use crate::dtype::NumericDataType;
-use crate::{Tensor, TensorMethods};
+use crate::{RawDataType, Tensor, TensorMethods};
 use num::NumCast;
 
 impl<T: NumericDataType> Tensor<'_, T> {
@@ -12,5 +12,11 @@ impl<T: NumericDataType> Tensor<'_, T> {
         }
 
         unsafe { Tensor::from_contiguous_owned_buffer(self.shape().to_vec(), data) }
+    }
+}
+
+impl<'a, T: RawDataType> AsRef<Tensor<'a, T>> for Tensor<'a, T> {
+    fn as_ref(&self) -> &Tensor<'a, T> {
+        self
     }
 }

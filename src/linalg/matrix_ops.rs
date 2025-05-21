@@ -1,7 +1,29 @@
 use crate::axes_traits::AxisType;
+use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::{NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
 use std::cmp::min;
 
+impl<T: SumOfProductsType> Tensor<'_, T>
+where
+    T: 'static // always satisfied because T is a primitive data type
+{
+    pub fn dot<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
+        let other = other.as_ref();
+        assert_eq!(self.ndims(), 1, "dot product requires a tensor with 1 dimension");
+        assert_eq!(other.ndims(), 1, "dot product requires a tensor with 1 dimension");
+        assert_eq!(self.len(), other.len(), "dot product requires tensors with the same length");
+
+        let result = Tensor::scalar(T::default());
+
+        unsafe {
+            <T as SumOfProductsType>::operand_strides_n_n_out_stride_0(&[self.mut_ptr(), other.mut_ptr(), result.mut_ptr()],
+                                                                       &[self.stride()[0], other.stride()[0]],
+                                                                       self.len())
+        };
+
+        result
+    }
+}
 
 impl<'a, T: NumericDataType> Tensor<'a, T>
 where

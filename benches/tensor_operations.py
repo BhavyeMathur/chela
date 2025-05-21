@@ -31,7 +31,7 @@ class TensorOpTimingSuite(TimingSuite):
 
 
 class TensorOp1(TensorOpTimingSuite):
-    ID = 1
+    ID = 1001
     name = "Dot Product"
 
     def __init__(self):

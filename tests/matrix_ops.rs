@@ -26,6 +26,74 @@ fn test_diagonal_invalid_axes() {
     a.diagonal_along(0, 0);
 }
 
+#[test]
+#[should_panic]
+fn test_dot_invalid_dimensions1() {
+    let a = Tensor::arange(0, 12);
+    let a = a.reshape([3, 4]);
+
+    let b = Tensor::arange(0, 12);
+    a.dot(b);
+}
+
+#[test]
+#[should_panic]
+fn test_dot_invalid_dimensions2() {
+    let a = Tensor::arange(0, 12);
+    let b = Tensor::arange(0, 12);
+    let b = b.reshape([3, 4]);
+
+    a.dot(b);
+}
+
+#[test]
+#[should_panic]
+fn test_dot_invalid_shapes() {
+    let a = Tensor::arange(0, 12);
+    let b = Tensor::arange(0, 11);
+    a.dot(b);
+}
+
+test_for_all_numeric_dtypes!(
+    test_dot_basic, {
+        let a = Tensor::from([5, 8, 1, 2]).astype::<T>();
+        let b = Tensor::from([4, 2, 7, 3]).astype::<T>();
+
+        let expected = Tensor::scalar(20 + 16 + 7 + 6).astype::<T>();
+        assert_eq!(a.dot(&b), expected);
+        assert_eq!(b.dot(&a), expected);
+        assert_eq!(a.dot(b), expected);
+    }
+);
+
+test_for_common_numeric_dtypes!(
+    test_dot, {
+        for n in (1..30).step_by(3) {
+            let a = (Tensor::arange(0, n) * 6).astype::<T>();
+            let b = Tensor::arange(5, 5 + n).astype::<T>();
+
+            let expected = Tensor::scalar((n - 1) * n * (2 * n + 14)).astype::<T>();
+            assert_eq!(a.dot(&b), expected);
+            assert_eq!(b.dot(&a), expected);
+            assert_eq!(a.dot(b), expected);
+        }
+    }
+);
+
+test_for_common_numeric_dtypes!(
+    test_dot_mem_overlap, {
+        for n in (1..30).step_by(3) {
+            let a = Tensor::arange(0, n).astype::<T>();
+            let b = a.view();
+
+            let expected = Tensor::scalar((n - 1) * n * (2 * n - 1)).astype::<T>();
+            assert_eq!(a.dot(&b) * Tensor::scalar(6).astype::<T>(), expected);
+            assert_eq!(b.dot(&a), a.dot(&b));
+            assert_eq!(a.dot(&b), a.dot(b));
+        }
+    }
+);
+
 test_for_all_numeric_dtypes!(
     test_diagonal, {
         let a = Tensor::arange(0, 12).astype::<T>();
