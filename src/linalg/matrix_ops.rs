@@ -17,7 +17,7 @@ where
 
         unsafe {
             <T as SumOfProductsType>::operand_strides_n_n_out_stride_0(&[self.mut_ptr(), other.mut_ptr(), result.mut_ptr()],
-                                                                       &[self.stride()[0], other.stride()[0]],
+                                                                       &[self.stride()[0], other.stride()[0], 0],
                                                                        self.len())
         };
 

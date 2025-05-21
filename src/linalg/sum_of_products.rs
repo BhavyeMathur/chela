@@ -13,7 +13,7 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: SumOfProductsType>
                                                                                  -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
     if N == 2 { // 1 operand + 1 output
         if strides[0] == 1 && strides[1] == 0 {
-            // return <T as EinsumDataType>::operand_strides_1_out_stride_0;
+            // return <T as EinsumDataType>::operand_strides_1_out_stride_0;  // can be implemented later if needed
         }
     }
 
@@ -78,75 +78,32 @@ pub(super) trait SumOfProductsType: NumericDataType {
 
     #[inline(always)]
     unsafe fn generic<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        assert_unchecked(count > 0);
-
-        let dst = ptrs[N - 1];
-        let ptrs = &ptrs[0..N - 1];
-
-        let mut k = count;
-        while k != 0 {
-            k -= 1;
-
-            let dst = dst.add(k * strides[N - 1]);
-            *dst += ptrs.iter().zip(strides.iter())
-                        .map(|(ptr, stride)| *ptr.add(k * stride))
-                        .product();
-        }
+        Self::generic_unknown_nops(ptrs, strides, count);
     }
 
     #[inline(always)]
     unsafe fn operand_strides_n_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
-        const NOPS: usize = 3;
-        assert_unchecked(count > 0);
-        assert_unchecked(ptrs.len() - 1 == NOPS);
-
-        let dst = ptrs[NOPS];
-        let ptrs = &ptrs[..NOPS];
-
-        let mut sum = Self::default();
-
-        let mut k = count;
-        while k != 0 {
-            k -= 1;
-
-            let mut product = Self::one();
-            for i in 0..NOPS {
-                product *= *ptrs[i].add(k * strides[i]);
-            }
-            sum += product;
-        }
-
-        *dst += sum;
+        assert_unchecked(ptrs.len() == 4);
+        assert_unchecked(strides.len() == 4);
+        Self::operand_strides_nx_out_stride_0(ptrs, strides, count);
     }
 
     #[inline(always)]
     unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
-        const NOPS: usize = 2;
-        assert_unchecked(count > 0);
-        assert_unchecked(ptrs.len() - 1 == NOPS);
+        assert_unchecked(ptrs.len() == 3);
+        assert_unchecked(strides.len() == 3);
+        Self::operand_strides_nx_out_stride_0(ptrs, strides, count);
+    }
 
-        let dst = ptrs[NOPS];
-        let mut ptrs = [ptrs[0], ptrs[1]];
-
-        let mut sum = Self::default();
-
-        let mut k = count;
-        while k != 0 {
-            sum += (*ptrs[0]) * (*ptrs[1]);
-
-            k -= 1;
-            ptrs[0] = ptrs[0].add(strides[0]);
-            ptrs[1] = ptrs[1].add(strides[1]);
-        }
-
-        *dst += sum;
+    #[inline(always)]
+    unsafe fn out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        Self::operand_strides_nx_out_stride_0(ptrs, strides, count);
     }
 
     #[inline(always)]
     unsafe fn operand_strides_nx_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
-        let nops = ptrs.len() - 1;
         assert_unchecked(count > 0);
-
+        let nops = ptrs.len() - 1;
         let dst = ptrs[nops];
         let ptrs = &ptrs[..nops];
 
@@ -156,31 +113,12 @@ pub(super) trait SumOfProductsType: NumericDataType {
         while k != 0 {
             k -= 1;
 
-            let mut product = Self::one();
-            for i in 0..nops {
-                product *= *ptrs[i].add(k * strides[i]);
-            }
-            sum += product;
-        }
-
-        *dst += sum;
-    }
-
-    #[inline(always)]
-    unsafe fn out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        assert_unchecked(count > 0);
-
-        let dst = ptrs[N - 1];
-        let ptrs = &ptrs[0..N - 1];
-
-        let mut k = count;
-        while k != 0 {
-            k -= 1;
-
-            *dst += ptrs.iter().zip(strides.iter())
+            sum += ptrs.iter().zip(strides.iter())
                         .map(|(ptr, stride)| *ptr.add(k * stride))
                         .product();
         }
+
+        *dst += sum;
     }
 
     #[inline(always)]
