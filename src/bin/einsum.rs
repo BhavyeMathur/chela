@@ -62,35 +62,26 @@ fn einsum4() -> u128 {
 }
 
 fn einsum5() -> u128 {
-    let a = 100;
-    let b = 5;
-    let c = 20;
-    let d = 50;
-    let e = 100;
+    let i = 100;
+    let j = 500;
+    let k = 100;
+    let l = 3;
 
-    let tensor_a: Tensor<f32> = Tensor::rand([a, b, c]);
-    let tensor_b: Tensor<f32> = Tensor::rand([b, d]);
-    let tensor_c: Tensor<f32> = Tensor::rand([d, e]);
+    let tensor_a: Tensor<f32> = Tensor::rand([i, j, l]);
+    let tensor_b: Tensor<f32> = Tensor::rand([j, k, l]);
 
     let start = ProcessTime::now();
-    _ = einsum([&tensor_a, &tensor_b, &tensor_c], (["abc", "bd", "de"], "ae"));
+    _ = einsum([&tensor_a, &tensor_b], (["ijl", "jkl"], "ikl"));
     start.elapsed().as_nanos()
 }
 
 fn einsum6() -> u128 {
-    let a = 100;
-    let b = 5;
-    let c = 20;
-    let d = 50;
-    let e = 100;
+    let i = 1000;
 
-    let tensor_a: Tensor<f32> = Tensor::rand([a, b, c]);
-    let tensor_b: Tensor<f32> = Tensor::rand([b, d]);
-    let tensor_c: Tensor<f32> = Tensor::rand([b, c]);
-    let tensor_d: Tensor<f32> = Tensor::rand([d, e]);
+    let tensor_a: Tensor<f32> = Tensor::rand([i, i]);
 
     let start = ProcessTime::now();
-    _ = einsum([&tensor_a, &tensor_b, &tensor_c, &tensor_d], (["abc", "bd", "bc", "de"], "ae"));
+    _ = einsum([&tensor_a], (["ii"], ""));
     start.elapsed().as_nanos()
 }
 
@@ -120,7 +111,7 @@ fn einsum8() -> u128 {
 }
 
 fn einsum9() -> u128 {
-    let i = 4096;
+    let i = 1000;
 
     let tensor_a: Tensor<f32> = Tensor::rand([i, i]);
 
@@ -139,6 +130,19 @@ fn einsum10() -> u128 {
 
     let start = ProcessTime::now();
     _ = einsum_view(&tensor_a, ("abcd", "dcba")).unwrap();
+    start.elapsed().as_nanos()
+}
+
+fn einsum11() -> u128 {
+    let i = 100;
+    let j = 100;
+    let k = 100;
+
+    let tensor_a: Tensor<f32> = Tensor::rand([i, j, k]);
+    let tensor_b: Tensor<f32> = Tensor::rand([i, j, k]);
+
+    let start = ProcessTime::now();
+    _ = einsum([&tensor_a, &tensor_b], (["ijk", "ijk"], "ijk"));
     start.elapsed().as_nanos()
 }
 
@@ -263,6 +267,23 @@ fn einsum_3operands_1() -> u128 {
     start.elapsed().as_nanos()
 }
 
+fn einsum_4operands_0() -> u128 {
+    let a = 100;
+    let b = 5;
+    let c = 20;
+    let d = 50;
+    let e = 100;
+
+    let tensor_a: Tensor<f32> = Tensor::rand([a, b, c]);
+    let tensor_b: Tensor<f32> = Tensor::rand([b, d]);
+    let tensor_c: Tensor<f32> = Tensor::rand([b, c]);
+    let tensor_d: Tensor<f32> = Tensor::rand([d, e]);
+
+    let start = ProcessTime::now();
+    _ = einsum([&tensor_a, &tensor_b, &tensor_c, &tensor_d], (["abc", "bd", "bc", "de"], "ae"));
+    start.elapsed().as_nanos()
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let id = args[1].parse::<usize>().unwrap();
@@ -278,6 +299,7 @@ fn main() {
         else if id == 8 { einsum8() }
         else if id == 9 { einsum9() }
         else if id == 10 { einsum10() }
+        else if id == 11 { einsum11() }
 
         else if id == 100 { einsum_2operands_0() }
         else if id == 101 { einsum_2operands_1() }
@@ -293,6 +315,7 @@ fn main() {
         else if id == 201 { einsum_on_slices1() }
         else if id == 202 { einsum_3operands_0() }
         else if id == 203 { einsum_3operands_1() }
+        else if id == 204 { einsum_4operands_0() }
 
         else { panic!("invalid ID") };
 

@@ -4,7 +4,7 @@ import torch
 from perfprofiler import *
 
 
-class TensorEinsumBase(TimingSuite):
+class EinsumTimingSuite(TimingSuite):
     ID: int
 
     def __init__(self, einsum_string: str | list[str], dimensions: dict[str, int], shapes=None, slices=None):
@@ -27,17 +27,14 @@ class TensorEinsumBase(TimingSuite):
 
     @measure_performance("NumPy")
     def run(self):
-        if isinstance(self.einsum_string, str):
-            np.einsum(self.einsum_string, *self.ndarrays)
-        else:
-            [np.einsum(op, *arr) for op, arr in zip(self.einsum_string, self.tensors)]
+        np.einsum(self.einsum_string, *self.ndarrays)
 
     @measure_rust_performance("Chela CPU", target="einsum")
     def run(self, executable):
         return run_rust(executable, self.ID)
 
 
-class TensorEinsum1(TensorEinsumBase):
+class TensorEinsum1(EinsumTimingSuite):
     ID = 1
     name = "Dot Product"
 
@@ -46,7 +43,7 @@ class TensorEinsum1(TensorEinsumBase):
                          {"i": 10000})
 
 
-class TensorEinsum2(TensorEinsumBase):
+class TensorEinsum2(EinsumTimingSuite):
     ID = 2
     name = "Matrix-Vector"
 
@@ -55,7 +52,7 @@ class TensorEinsum2(TensorEinsumBase):
                          {"i": 1000, "j": 500})
 
 
-class TensorEinsum3(TensorEinsumBase):
+class TensorEinsum3(EinsumTimingSuite):
     ID = 3
     name = "Matrix Mult"
 
@@ -64,7 +61,7 @@ class TensorEinsum3(TensorEinsumBase):
                          {"i": 100, "j": 1000, "k": 500})
 
 
-class TensorEinsum4(TensorEinsumBase):
+class TensorEinsum4(EinsumTimingSuite):
     ID = 4
     name = "Outer Product"
 
@@ -73,25 +70,25 @@ class TensorEinsum4(TensorEinsumBase):
                          {"i": 100, "j": 1000, "k": 500})
 
 
-class TensorEinsum5(TensorEinsumBase):
+class TensorEinsum5(EinsumTimingSuite):
     ID = 5
-    name = "3 Operands"
+    name = "Batch Matrices"
 
     def __init__(self):
-        super().__init__("abc,bd,de->ae",
-                         {"a": 100, "b": 5, "c": 20, "d": 50, "e": 100})
+        super().__init__("ijl,jkl->ikl",
+                         {"i": 100, "j": 500, "k": 100, "l": 3})
 
 
-class TensorEinsum6(TensorEinsumBase):
+class TensorEinsum6(EinsumTimingSuite):
     ID = 6
-    name = "4 Operands"
+    name = "Trace"
 
     def __init__(self):
-        super().__init__("abc,bd,bc,ce->ae",
-                         {"a": 100, "b": 5, "c": 20, "d": 50, "e": 100})
+        super().__init__("ii->",
+                         {"i": 1000})
 
 
-class TensorEinsum7(TensorEinsumBase):
+class TensorEinsum7(EinsumTimingSuite):
     ID = 7
     name = "Broadcasting"
 
@@ -100,7 +97,7 @@ class TensorEinsum7(TensorEinsumBase):
                          {"i": 128, "j": 64, "k": 32})
 
 
-class TensorEinsum8(TensorEinsumBase):
+class TensorEinsum8(EinsumTimingSuite):
     ID = 8
     name = "Sum"
 
@@ -109,16 +106,16 @@ class TensorEinsum8(TensorEinsumBase):
                          {"a": 100, "b": 100, "c": 100})
 
 
-class TensorEinsum9(TensorEinsumBase):
+class TensorEinsum9(EinsumTimingSuite):
     ID = 9
     name = "Diagonal"
 
     def __init__(self):
         super().__init__("ii->i",
-                         {"i": 4096})
+                         {"i": 1000})
 
 
-class TensorEinsum10(TensorEinsumBase):
+class TensorEinsum10(EinsumTimingSuite):
     ID = 10
     name = "Reshape"
 
@@ -127,17 +124,30 @@ class TensorEinsum10(TensorEinsumBase):
                          {"a": 10, "b": 20, "c": 30, "d": 40})
 
 
+class TensorEinsum11(EinsumTimingSuite):
+    ID = 11
+    name = "Hadamard Product"
+
+    def __init__(self):
+        super().__init__("ijk,ijk->ijk",
+                         {"i": 100, "j": 100, "k": 100})
+
+
 if __name__ == "__main__":
     results = profile_all([
-        TensorEinsum1,
-        TensorEinsum2,
-        TensorEinsum3,
-        TensorEinsum4,
-        TensorEinsum5,
-        TensorEinsum6,
-        TensorEinsum7,
-        TensorEinsum8,
-        TensorEinsum9,
-        TensorEinsum10,
+        TensorEinsum1,  # dot product
+        TensorEinsum2,  # matrix-vector
+        TensorEinsum3,  # matrix mult
+        TensorEinsum5,  # batch matrices
+
+        TensorEinsum4,  # outer product
+        TensorEinsum11,  # hadamard product
+
+        TensorEinsum7,  # broadcasting
+        TensorEinsum8,  # sum
+
+        TensorEinsum6,  # trace
+        TensorEinsum9,  # diagonal
+        TensorEinsum10,  # reshape
     ], n=20)
     plot_barplot(results, "Einstein Summation Benchmark")

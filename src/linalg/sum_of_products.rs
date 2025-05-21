@@ -11,6 +11,13 @@ use std::arch::aarch64::*;
 
 pub(super) fn get_sum_of_products_function<const N: usize, T: EinsumDataType>(strides: &[usize; N])
                                                                               -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
+
+    if N == 2 { // 1 operand + 1 output
+        if strides[0] == 1 && strides[1] == 0 {
+            // return <T as EinsumDataType>::operand_strides_1_out_stride_0;
+        }
+    }
+
     if N == 3 { // 2 operands + 1 output
         let mut code = if strides[0] == 0 { 0 } else { if strides[0] == 1 { 4 } else { 8 } };
         code += if strides[1] == 0 { 0 } else { if strides[1] == 1 { 2 } else { 8 } };
@@ -109,7 +116,7 @@ pub(super) trait EinsumDataType: NumericDataType {
             }
             sum += product;
         }
-        
+
         *dst += sum;
     }
 
@@ -201,7 +208,7 @@ pub(super) trait EinsumDataType: NumericDataType {
     #[inline(always)]
     unsafe fn operand_strides_1_0_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(N == 3);
-        
+
         let mut ptrs = *ptrs;
         let tmp = ptrs[0];
         ptrs[0] = ptrs[1];
@@ -213,7 +220,7 @@ pub(super) trait EinsumDataType: NumericDataType {
     #[inline(always)]
     unsafe fn operand_strides_1_0_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(N == 3);
-        
+
         let mut ptrs = *ptrs;
         let tmp = ptrs[0];
         ptrs[0] = ptrs[1];
@@ -258,7 +265,7 @@ pub(super) trait EinsumDataType: NumericDataType {
             data0 = data0.add(1);
             data1 = data1.add(1);
         }
-        
+
         // TODO specialised SIMD implementation
     }
 }
