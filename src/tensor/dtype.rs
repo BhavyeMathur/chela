@@ -1,8 +1,9 @@
 use num::traits::MulAdd;
-use num::{Bounded, NumCast, One, ToPrimitive, Zero};
+use num::{Bounded, Float, NumCast, One, ToPrimitive, Zero};
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
+use rand::distributions::uniform::SampleUniform;
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync {}
 
@@ -29,7 +30,7 @@ pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Ze
 + Sum + Product + AddAssign + SubAssign + MulAssign + From<bool>
 + Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self>
 {
-    type AsFloatType: NumericDataType + From<f32>;
+    type AsFloatType: FloatDataType;
 
     fn to_float(&self) -> Self::AsFloatType {
         self.to_f32().unwrap().into()
@@ -190,7 +191,7 @@ impl IntegerDataType for i64 {}
 impl IntegerDataType for i128 {}
 impl IntegerDataType for isize {}
 
-pub trait FloatDataType: NumericDataType {}
+pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform {}
 
 impl FloatDataType for f32 {}
 impl FloatDataType for f64 {}
