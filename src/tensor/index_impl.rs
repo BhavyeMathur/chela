@@ -1,6 +1,6 @@
 use crate::dtype::RawDataType;
 use crate::{Tensor, TensorMethods};
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 
 impl<T: RawDataType, const D: usize> Index<[usize; D]> for Tensor<'_, T> {
     type Output = T;
@@ -13,6 +13,19 @@ impl<T: RawDataType, const D: usize> Index<[usize; D]> for Tensor<'_, T> {
             .sum();
 
         assert!(i < self.len, "[] index out of bounds!");
+        unsafe { self.ptr.add(i).as_ref() }
+    }
+}
+
+impl<T: RawDataType, const D: usize> IndexMut<[usize; D]> for Tensor<'_, T> {
+    fn index_mut(&mut self, index: [usize; D]) -> &mut Self::Output {
+        assert_eq!(D, self.ndims(), "[] index must equal number of tensor dimensions!");
+
+        let i: usize = index.iter().zip(self.stride.iter())
+                            .map(|(idx, stride)| idx * stride)
+                            .sum();
+
+        assert!(i < self.len, "[] index out of bounds!");
         unsafe { self.ptr.add(i).as_mut() }
     }
 }
@@ -22,5 +35,11 @@ impl<T: RawDataType> Index<usize> for Tensor<'_, T> {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self[[index]]
+    }
+}
+
+impl<T: RawDataType> IndexMut<usize> for Tensor<'_, T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self[[index]]
     }
 }
