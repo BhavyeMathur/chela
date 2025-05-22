@@ -1,5 +1,6 @@
 use chela::*;
 use paste::paste;
+use rand_distr::num_traits::NumCast;
 
 #[test]
 #[should_panic]
@@ -765,18 +766,16 @@ test_for_all_numeric_dtypes!(
 
 test_for_common_numeric_dtypes!(
     test_einsum_batched_matmul, {
+        let low = T::default();
+        let high = <T as NumCast>::from(10).unwrap();
+
         for b in (1..37).step_by(9) {
             for m in 1..4 {
                 for k in (1..25).step_by(8) {
                     for n in (1..25).step_by(6) {
-                        let lhs = Tensor::arange(0, b * m * k)
-                            .reshape([b, m, k])
-                            .astype::<T>();
 
-                        let rhs = Tensor::arange(0, b * k * n)
-                            .reshape([b, k, n])
-                            .astype::<T>();
-
+                        let lhs = Tensor::<T>::randint([b, m, k], low, high);
+                        let rhs = Tensor::<T>::randint([b, k, n], low, high);
                         let result = einsum([&lhs, &rhs], (["bik", "bkj"], "bij"));
 
                         let mut expected_data = vec![];

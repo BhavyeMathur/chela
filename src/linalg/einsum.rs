@@ -32,9 +32,15 @@ fn parse_operand_subscripts<A: TensorMethods>(subscripts: &str,
     if !subscripts.is_ascii() {
         panic!("einsum subscripts must be ascii");
     }
-    let subscripts = subscripts.as_bytes();
 
-    *broadcast_dims = operand.ndims() - subscripts.iter().filter(|c| c.is_ascii_alphanumeric()).count();
+    let alphanum_chars = subscripts.chars().filter(|c| c.is_ascii_alphanumeric()).count();
+    if alphanum_chars > operand.ndims() {
+        panic!("invalid subscripts '{}' for operand with {} dimension/s", subscripts, operand.ndims());
+    }
+
+    let subscripts = subscripts.as_bytes();
+    
+    *broadcast_dims = operand.ndims() - alphanum_chars;
 
     let mut first_occurrence = [(MAX_DIMS + 3) as i8; 128];
     let mut ellipsis_index: isize = -1;
@@ -477,11 +483,11 @@ where
 
     prepare_einsum(operands, subscripts,
                    &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
-    
+
     if let Some(stride) = has_uniform_stride(&output_shape, result_stride) {
         assert_eq!(stride, 1, "only contiguous result tensors are currently supported");
     }
-    
+
     fill_shape_and_stride(result, T::zero(), &output_shape, result_stride);
 
     unsafe {
