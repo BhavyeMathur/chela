@@ -26,7 +26,7 @@ extern {
 
     pub(crate) fn vDSP_minmgv(__A: *const c_float, __IA: isize, __C: *mut c_float, __N: isize);
 
-    pub(crate) fn vDSP_minmgD(__A: *const c_double, __IA: isize, __C: *mut c_double, __N: isize);
+    pub(crate) fn vDSP_minmgvD(__A: *const c_double, __IA: isize, __C: *mut c_double, __N: isize);
 
     // vector dot product
     pub(crate) fn vDSP_dotpr(__A: *const c_float, __IA: isize, __B: *const c_float, __IB: isize, __C: *mut c_float, __N: isize);

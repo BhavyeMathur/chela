@@ -169,7 +169,7 @@ pub trait TensorMethods {
     fn requires_grad(&self) -> bool {
         self.flags().contains(TensorFlags::RequiresGrad)
     }
-    
+
     fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self;
 }
 
@@ -197,7 +197,7 @@ impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
         else {
             self.flags -= TensorFlags::RequiresGrad;
         }
-        
+
         self
     }
 }

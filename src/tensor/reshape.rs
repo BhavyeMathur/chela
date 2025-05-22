@@ -9,7 +9,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     }
 
     pub(super) unsafe fn reshaped_view_with_flags_and_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>, mut flags: TensorFlags) -> Tensor<T> {
-        flags = update_flags_with_contiguity(flags, &shape, &stride);
+        flags = update_flags_with_contiguity(flags, &shape, &stride) - TensorFlags::UserCreated;
 
         Tensor {
             ptr: self.ptr.add(offset),

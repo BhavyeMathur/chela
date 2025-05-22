@@ -271,7 +271,7 @@ impl TensorNumericReduce<f64> for Tensor<'_, f64> {
             None => { self.reduce(partial_min_magnitude, 0.0) }
             Some(stride) => {
                 let mut output = 0.0;
-                unsafe { vDSP_minmgD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+                unsafe { vDSP_minmgvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
                 Tensor::scalar_requires_grad(output, self.requires_grad())
             }
         }
