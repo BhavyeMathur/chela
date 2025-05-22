@@ -52,8 +52,8 @@ impl AxisType for isize {
 }
 
 
-pub trait AxesType: IntoIterator<Item=isize> + HasLength + Clone {}
+pub trait AxesType: IntoIterator<Item=usize> + HasLength + Clone {}
 
-impl<const N: usize> AxesType for [isize; N] {}
+impl<const N: usize> AxesType for [usize; N] {}
 
-impl AxesType for Vec<isize> {}
+impl AxesType for Vec<usize> {}

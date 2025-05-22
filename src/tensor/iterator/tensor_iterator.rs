@@ -25,7 +25,7 @@ impl<T: RawDataType> Tensor<'_, T> {
 impl<'a, T: RawDataType> NdIterator<'a, T> {
     pub(super) fn from<I>(tensor: &'a Tensor<T>, axes: I) -> Self
     where
-        I: IntoIterator<Item=isize> + HasLength + Clone,
+        I: IntoIterator<Item=usize> + HasLength + Clone,
     {
         let ndims = axes.len();
         let (shape, output_shape) = split_by_indices(&tensor.shape, axes.clone());

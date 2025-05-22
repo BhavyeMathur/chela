@@ -21,7 +21,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     }
 
     pub fn iter_along(&self, axis: impl AxisType) -> NdIterator<T> {
-        NdIterator::from(self, [axis.isize()])
+        NdIterator::from(self, [axis.get_absolute(self.shape.len())])
     }
 
     pub fn nditer(&self, axes: impl AxesType) -> NdIterator<T> {

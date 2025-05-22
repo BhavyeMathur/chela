@@ -4,7 +4,7 @@ use crate::axis::Axis;
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::tensor::flags::TensorFlags;
-use crate::{Tensor, TensorMethods};
+use crate::{AxisType, Tensor, TensorMethods};
 
 pub(super) fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
     flags -= TensorFlags::Owned;
@@ -46,8 +46,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     where
         'a: 'out,
     {
-        assert!(axis.0 >= 0, "negative axes not supported currently");
-        let axis = axis.0 as usize;
+        let axis = axis.get_absolute(self.ndims());
 
         let mut new_shape = self.shape.clone();
         let mut new_stride = self.stride.clone();
