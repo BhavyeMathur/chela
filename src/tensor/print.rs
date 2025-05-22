@@ -25,13 +25,13 @@ impl<T: RawDataType> fmt::Debug for Tensor<'_, T> {
                 write!(f, "[")?;
                 for i in 0..shape[0] {
                     if i > 0 {
-                        write!(f, ",\n{:indent$}", "", indent = (level + 1) * 2)?;
+                        write!(f, ",{:indent$}", "", indent = (level + 1) * 2)?;
                     } else {
-                        write!(f, "\n{:indent$}", "", indent = (level + 1) * 2)?;
+                        write!(f, "{:indent$}", "", indent = (level + 1) * 2)?;
                     }
                     fmt_inner(f, &shape[1..], iter, level + 1)?;
                 }
-                write!(f, "\n{:indent$}]", "", indent = level * 2)
+                write!(f, "{:indent$}]", "", indent = level * 2)
             }
         }
 

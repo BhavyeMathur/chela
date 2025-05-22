@@ -12,10 +12,13 @@ rand = "0.8.5"
 rand_distr = "0.4"
 paste = "1.0.15"
 
+[build-dependencies]
+pkg-config = "0.3.32"
+
 [lints.rust]
 private_bounds = "allow"
 dead_code = "allow"
-unexpected_cfgs = { level = "warn", check-cfg = ["cfg(use_apple_accelerate)", "cfg(use_neon_simd)", "cfg(use_apple_blas)", "cfg(use_apple_vdsp)"] }
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(use_apple_accelerate)", "cfg(use_neon_simd)", "cfg(use_apple_blas)", "cfg(use_apple_vdsp)", "cfg(use_openblas)"] }
 
 [profile.release]
 overflow-checks = false

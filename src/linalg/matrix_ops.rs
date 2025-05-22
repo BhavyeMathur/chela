@@ -5,6 +5,22 @@ use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorM
 use std::cmp::min;
 
 trait MatrixOps: SumOfProductsType {
+    unsafe fn batch_matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
+                                                      rhs: &Tensor<'b, Self>,
+                                                      result_stride: &[usize],
+                                                      mut result: *mut Self) {
+        let mut lhs_slice = lhs.slice_along(Axis(0), 0);
+        let mut rhs_slice = rhs.slice_along(Axis(0), 0);
+
+        for _ in 0..lhs.len() {
+            Self::matrix_matrix_product(&lhs_slice, &rhs_slice, &result_stride[1..], result);
+
+            result = result.add(result_stride[0]);
+            lhs_slice.offset_ptr(lhs.stride()[0] as isize);
+            rhs_slice.offset_ptr(rhs.stride()[0] as isize);
+        }
+    }
+
     unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
                                                 rhs: &Tensor<'b, Self>,
                                                 result_stride: &[usize],
@@ -205,20 +221,7 @@ where
         assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
 
         let result = Tensor::zeros([self.len(), self.shape()[1], other.shape()[2]]);
-        unsafe {
-            let mut lhs = self.slice_along(Axis(0), 0);
-            let mut rhs = other.slice_along(Axis(0), 0);
-            let mut out = result.mut_ptr();
-
-            for _ in 0..self.len() {
-                <T as MatrixOps>::matrix_matrix_product(&lhs, &rhs, &result.stride()[1..], out);
-                
-                out = out.add(result.stride()[0]);
-                lhs.offset_ptr(self.stride()[0] as isize);
-                rhs.offset_ptr(other.stride()[0] as isize);
-            }
-        }
-
+        unsafe { <T as MatrixOps>::batch_matrix_matrix_product(self, other, result.stride(), result.mut_ptr()); }
         result
     }
 }
