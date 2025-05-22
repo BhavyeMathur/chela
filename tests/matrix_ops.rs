@@ -81,6 +81,65 @@ test_for_common_numeric_dtypes!(
 );
 
 test_for_common_numeric_dtypes!(
+    test_matvec, {
+        for m in 1..6 {
+            for n in (1..30).step_by(3) {
+                // Matrix: shape [m, n], values = 1 * 6, 2 * 6, ..., (m*n - 1) * 6
+                let a = (Tensor::arange(0, m * n) * 6).reshape([m, n]).astype::<T>();
+
+                // Vector: shape [n], values = [5, 6, ..., 5 + n - 1]
+                let b = Tensor::arange(5, 5 + n).astype::<T>();
+
+                // Compute matrix-vector product: [m] = [m, n] @ [n]
+                let result = a.matmul(&b);
+
+                // Manually compute expected result:
+                let mut expected_data = vec![];
+                for i in 0..m {
+                    let mut sum = 0;
+                    for j in 0..n {
+                        let a_ij = (i * n + j) * 6;
+                        let b_j = 5 + j;
+                        sum += a_ij * b_j;
+                    }
+                    expected_data.push(sum);
+                }
+
+                let expected = Tensor::from(expected_data).astype::<T>();
+                assert_eq!(result, expected);
+            }
+        }
+    }
+);
+
+
+test_for_common_numeric_dtypes!(
+    test_matvec_strided_views, {
+        for m in 1..6 {
+            for n in (1..30).step_by(3) {
+                let a = (Tensor::arange(0, m * (n + 2) * 2) * 6)
+                    .reshape([m, n + 2, 2])
+                    .astype::<T>();
+                let a = a.slice(s![.., 2.., 0]);
+                assert_eq!(a.has_uniform_stride(), None);
+
+                let b = Tensor::arange(0, n * 2)
+                    .reshape([n, 2])
+                    .astype::<T>();
+                let b = b.slice_along(Axis(1), 0);
+                assert!(!b.is_contiguous());
+
+                let result = a.matmul(&b);
+                let expected = einsum([&a, &b], (["ij", "j"], "i"));
+                assert_eq!(result, expected);
+            }
+        }
+    }
+);
+
+
+
+test_for_common_numeric_dtypes!(
     test_dot_mem_overlap, {
         for n in (1..30).step_by(3) {
             let a = Tensor::arange(0, n).astype::<T>();

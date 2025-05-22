@@ -1,7 +1,102 @@
 use crate::axes_traits::AxisType;
 use crate::linalg::sum_of_products::SumOfProductsType;
-use crate::{NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
+use crate::{IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
 use std::cmp::min;
+
+trait MatrixOps: SumOfProductsType {
+    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
+                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        let rows = matrix.shape()[0];
+        let cols = matrix.shape()[1];
+        let mut result = vec![Self::default(); rows];
+
+        let strides = &[matrix.stride()[1], vector.stride()[0], 0];
+
+        let mut matrix_row = matrix.mut_ptr();
+        let mut dst = result.as_mut_ptr();
+
+        for _ in 0..rows {
+            Self::sum_of_products_in_strides_n_n_out_stride_0(&[matrix_row, vector.mut_ptr(), dst], strides, cols);
+            matrix_row = matrix_row.add(matrix.stride()[0]);
+            dst = dst.add(1);
+        }
+
+        Tensor::from_contiguous_owned_buffer(vec![rows], result)
+    }
+}
+
+impl<T: IntegerDataType> MatrixOps for T {}
+
+impl MatrixOps for f32 {
+    #[cfg(all(use_apple_blas, not(use_neon_simd)))]
+    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
+                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        // BLAS does not support matrices that don't have contiguous rows
+        if matrix.stride()[1] != 1 {
+            return einsum([matrix, vector], (["ij", "j"], "i"));
+        }
+
+        let rows = matrix.shape()[0];
+        let cols = matrix.shape()[1] as i32;
+        let mut result = vec![Self::default(); rows];
+
+        unsafe {
+            cblas_sgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
+                        rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
+                        vector.ptr(), vector.stride()[0] as i32,
+                        0.0, result.as_mut_ptr(), 1
+            );
+
+            Tensor::from_contiguous_owned_buffer(vec![rows], result);
+        };
+    }
+}
+
+impl MatrixOps for f64 {
+    #[cfg(all(use_apple_blas, not(use_neon_simd)))]
+    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
+                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        // BLAS does not support matrices that don't have contiguous rows
+        if matrix.stride()[1] != 1 {
+            return einsum([matrix, vector], (["ij", "j"], "i"));
+        }
+
+        let rows = matrix.shape()[0] as i32;
+        let cols = matrix.shape()[1] as i32;
+        let result = Tensor::zeros([rows as usize]);
+
+        unsafe {
+            cblas_dgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
+                        rows, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
+                        vector.ptr(), vector.stride()[0] as i32,
+                        0.0, result.mut_ptr(), 1
+            )
+        };
+
+        result
+    }
+}
+
+impl<T: MatrixOps> Tensor<'_, T>
+where
+    T: 'static // always satisfied because T is a primitive data type
+{
+    pub fn matmul<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
+        let other = other.as_ref();
+        assert_eq!(self.ndims(), 2, "matmul requires a tensor with 2 dimensions");
+        assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matmul");
+
+        if other.ndims() == 1 {
+            return unsafe { <T as MatrixOps>::matrix_vector_product(self, other) };
+        }
+
+        // if other.ndims() == 2 {
+        //     return unsafe { <T as MatrixOps>::matrix_matrix_product(self, other) };
+        // }
+
+        panic!("matmul requires a tensor with 1 or 2 dimensions");
+    }
+}
 
 impl<T: SumOfProductsType> Tensor<'_, T>
 where
@@ -12,14 +107,14 @@ where
     /// # Panics
     /// - Panics if either tensor is not 1D
     /// - Panics if the lengths of the two tensors are not equal
-    /// 
+    ///
     /// # Examples
     /// ```
     /// # use chela::*;
     /// let tensor1 = Tensor::from([1, 2, 3]);
     /// let tensor2 = Tensor::from([4, 5, 6]);
     /// let result = tensor1.dot(tensor2);
-    /// assert_eq!(result.value(), 32.0); // 1*4 + 2*5 + 3*6 = 32
+    /// assert_eq!(result.value(), 32); // 1*4 + 2*5 + 3*6 = 32
     /// ```
     pub fn dot<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
@@ -30,9 +125,9 @@ where
         let result = Tensor::scalar(T::default());
 
         unsafe {
-            <T as SumOfProductsType>::operand_strides_n_n_out_stride_0(&[self.mut_ptr(), other.mut_ptr(), result.mut_ptr()],
-                                                                       &[self.stride()[0], other.stride()[0], 0],
-                                                                       self.len())
+            <T as SumOfProductsType>::sum_of_products_in_strides_n_n_out_stride_0(&[self.mut_ptr(), other.mut_ptr(), result.mut_ptr()],
+                                                                                  &[self.stride()[0], other.stride()[0], 0],
+                                                                                  self.len())
         };
 
         result

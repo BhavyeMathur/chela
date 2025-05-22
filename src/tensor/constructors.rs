@@ -222,7 +222,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     pub fn scalar(n: T) -> Self {
         Tensor::full(n, [])
     }
-    
+
     // Maybe we should support empty tensors one day.
     // pub fn empty() -> Self {
     //     unsafe { Tensor::from_contiguous_owned_buffer(vec![0], vec![]) }
@@ -338,7 +338,7 @@ impl<T: FloatDataType> Tensor<'_, T> {
             return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start]) };
         }
 
-        let step = (stop - start) / (T::from(num).unwrap() - T::one());
+        let step = (stop - start) / (<T as NumCast>::from(num).unwrap() - T::one());
 
         // from start to (stop + step) to make the range inclusive
         Tensor::arange_with_step(start, stop + step, step)
@@ -371,7 +371,7 @@ impl<T: FloatDataType> Tensor<'_, T> {
             return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start]) };
         }
 
-        let step = (stop - start) / T::from(num).unwrap();
+        let step = (stop - start) / <T as NumCast>::from(num).unwrap();
         Tensor::arange_with_step(start, stop, step)
     }
 }

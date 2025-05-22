@@ -23,21 +23,21 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: SumOfProductsType>
         code += if strides[2] == 0 { 0 } else { if strides[2] == 1 { 1 } else { 8 } };
 
         match code {
-            2 => { return <T as SumOfProductsType>::operand_strides_0_1_out_stride_0; }
-            3 => { return <T as SumOfProductsType>::operand_strides_0_1_out_stride_1; }
-            4 => { return <T as SumOfProductsType>::operand_strides_1_0_out_stride_0; }
-            5 => { return <T as SumOfProductsType>::operand_strides_1_0_out_stride_1; }
-            6 => { return <T as SumOfProductsType>::operand_strides_1_1_out_stride_0; }
-            7 => { return <T as SumOfProductsType>::operand_strides_1_1_out_stride_1; }
+            2 => { return <T as SumOfProductsType>::sum_of_products_in_strides_0_1_out_stride_0; }
+            3 => { return <T as SumOfProductsType>::sum_of_products_in_strides_0_1_out_stride_1; }
+            4 => { return <T as SumOfProductsType>::sum_of_products_in_strides_1_0_out_stride_0; }
+            5 => { return <T as SumOfProductsType>::sum_of_products_in_strides_1_0_out_stride_1; }
+            6 => { return <T as SumOfProductsType>::sum_of_products_in_strides_1_1_out_stride_0; }
+            7 => { return <T as SumOfProductsType>::sum_of_products_in_strides_1_1_out_stride_1; }
             _ => {}
         }
     }
 
     if strides[N - 1] == 0 {
-        return <T as SumOfProductsType>::out_stride_0;
+        return <T as SumOfProductsType>::sum_of_products_out_stride_0;
     }
 
-    <T as SumOfProductsType>::generic
+    <T as SumOfProductsType>::sum_of_products_generic
 }
 
 // called when the number of operands cannot be provided as a const generic
@@ -47,18 +47,18 @@ pub(super) fn get_sum_of_products_function_generic_nops<T: SumOfProductsType>(st
 
     if strides[nops - 1] == 0 {
         return match nops {
-            3 => { <T as SumOfProductsType>::operand_strides_n_n_n_out_stride_0 },
-            _ => { <T as SumOfProductsType>::operand_strides_nx_out_stride_0 }
+            3 => { <T as SumOfProductsType>::sum_of_products_in_strides_n_n_n_out_stride_0 },
+            _ => { <T as SumOfProductsType>::sum_of_products_out_stride_0_ }
         }
     }
 
-    <T as SumOfProductsType>::generic_unknown_nops
+    <T as SumOfProductsType>::sum_of_products_generic_
 }
 
 
 pub(super) trait SumOfProductsType: NumericDataType {
     #[inline(always)]
-    unsafe fn generic_unknown_nops(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+    unsafe fn sum_of_products_generic_(ptrs: &[*mut Self], strides: &[usize], count: usize) {
         let nops = ptrs.len();
         assert_unchecked(count > 0);
         assert_unchecked(nops > 0);
@@ -78,32 +78,34 @@ pub(super) trait SumOfProductsType: NumericDataType {
     }
 
     #[inline(always)]
-    unsafe fn generic<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        Self::generic_unknown_nops(ptrs, strides, count);
+    unsafe fn sum_of_products_generic<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        Self::sum_of_products_generic_(ptrs, strides, count);
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_n_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+    unsafe fn sum_of_products_in_strides_n_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
         assert_unchecked(ptrs.len() == 4);
         assert_unchecked(strides.len() == 4);
-        Self::operand_strides_nx_out_stride_0(ptrs, strides, count);
+        Self::sum_of_products_out_stride_0_(ptrs, strides, count);
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+    unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
         assert_unchecked(ptrs.len() == 3);
         assert_unchecked(strides.len() == 3);
-        Self::operand_strides_nx_out_stride_0(ptrs, strides, count);
+        Self::sum_of_products_out_stride_0_(ptrs, strides, count);
     }
 
     #[inline(always)]
-    unsafe fn out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
-        Self::operand_strides_nx_out_stride_0(ptrs, strides, count);
+    unsafe fn sum_of_products_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        Self::sum_of_products_out_stride_0_(ptrs, strides, count);
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_nx_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+    unsafe fn sum_of_products_out_stride_0_(ptrs: &[*mut Self], strides: &[usize], count: usize) {
         assert_unchecked(count > 0);
+        assert_unchecked(strides[strides.len() - 1] == 0);
+        
         let nops = ptrs.len() - 1;
         let dst = ptrs[nops];
         let ptrs = &ptrs[..nops];
@@ -125,6 +127,7 @@ pub(super) trait SumOfProductsType: NumericDataType {
     #[inline(always)]
     unsafe fn sum_of_products_muladd<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(count > 0);
+        assert_unchecked(N == 3);
 
         let mut dst = ptrs[N - 1];
 
@@ -155,19 +158,28 @@ pub(super) trait SumOfProductsType: NumericDataType {
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+    unsafe fn sum_of_products_in_strides_0_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(N == 3);
+        assert_unchecked(strides[0] == 0);
+        assert_unchecked(strides[1] == 1);
+        assert_unchecked(strides[2] == 0);
         Self::sum_of_scaled_array(&ptrs, strides, count);
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_0_1_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+    unsafe fn sum_of_products_in_strides_0_1_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
         assert_unchecked(N == 3);
+        assert_unchecked(strides[0] == 0);
+        assert_unchecked(strides[1] == 1);
+        assert_unchecked(strides[2] == 1);
         Self::sum_of_products_muladd(ptrs, strides, count);
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_1_0_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+    unsafe fn sum_of_products_in_strides_1_0_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(strides[0] == 1);
+        assert_unchecked(strides[1] == 0);
+        assert_unchecked(strides[2] == 0);
         assert_unchecked(N == 3);
 
         let mut ptrs = *ptrs;
@@ -179,7 +191,10 @@ pub(super) trait SumOfProductsType: NumericDataType {
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_1_0_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+    unsafe fn sum_of_products_in_strides_1_0_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(strides[0] == 1);
+        assert_unchecked(strides[1] == 0);
+        assert_unchecked(strides[2] == 1);
         assert_unchecked(N == 3);
 
         let mut ptrs = *ptrs;
@@ -191,7 +206,10 @@ pub(super) trait SumOfProductsType: NumericDataType {
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_1_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+    unsafe fn sum_of_products_in_strides_1_1_out_stride_0<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(strides[0] == 1);
+        assert_unchecked(strides[1] == 1);
+        assert_unchecked(strides[2] == 0);
         assert_unchecked(N == 3);
         assert_unchecked(count > 0);
 
@@ -211,7 +229,10 @@ pub(super) trait SumOfProductsType: NumericDataType {
     }
 
     #[inline(always)]
-    unsafe fn operand_strides_1_1_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+    unsafe fn sum_of_products_in_strides_1_1_out_stride_1<const N: usize>(ptrs: &[*mut Self; N], strides: &[usize; N], count: usize) {
+        assert_unchecked(strides[0] == 1);
+        assert_unchecked(strides[1] == 1);
+        assert_unchecked(strides[2] == 1);
         assert_unchecked(N == 3);
         assert_unchecked(count > 0);
 
@@ -285,14 +306,14 @@ macro_rules! simd_kernel {
 
             #[cfg(use_apple_vdsp)]
             #[inline(always)]
-            unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+            unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
                 use crate::accelerate::vdsp::vDSP_dotpr;
                 vDSP_dotpr(ptrs[0], strides[0] as isize, ptrs[1], strides[1] as isize, ptrs[2], count as isize);
             }
 
             #[cfg(all(not(use_apple_vdsp), not(use_neon_simd), use_apple_blas))]
             #[inline(always)]
-            unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+            unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
                 use crate::accelerate::cblas::cblas_sdot;
                 *ptrs[2] = cblas_sdot(count as i32, ptrs[0], strides[0] as i32, ptrs[1], strides[1] as i32);
             }
@@ -307,14 +328,14 @@ macro_rules! simd_kernel {
 
             #[cfg(use_apple_vdsp)]
             #[inline(always)]
-            unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+            unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
                 use crate::accelerate::vdsp::vDSP_dotprD;
                 vDSP_dotprD(ptrs[0], strides[0] as isize, ptrs[1], strides[1] as isize, ptrs[2], count as isize);
             }
             
             #[cfg(all(not(use_apple_vdsp), not(use_neon_simd), use_apple_blas))]
             #[inline(always)]
-            unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+            unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
                 use crate::accelerate::cblas::cblas_ddot;
                 *ptrs[2] = cblas_ddot(count as i32, ptrs[0], strides[0] as i32, ptrs[1], strides[1] as i32);
             }
@@ -409,7 +430,7 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
         *dst = value0.mul_add(sum, *dst);
     },
 
-    operand_strides_1_1_out_stride_0, {
+    sum_of_products_in_strides_1_1_out_stride_0, {
         let mut data0 = ptrs[0];
         let mut data1 = ptrs[1];
         let mut sum = simd_dup(Self::default());

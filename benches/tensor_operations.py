@@ -48,7 +48,7 @@ class TensorOp1(TensorOpTimingSuite):
 
 
 class TensorOp2(TensorOpTimingSuite):
-    ID = 2
+    ID = 1002
     name = "Matrix-Vector"
 
     def __init__(self):

@@ -26,7 +26,7 @@ impl RawDataType for f64 {}
 impl RawDataType for bool {}
 
 pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Zero + One + NumCast
-+ Sum + Product + AddAssign + SubAssign + MulAssign
++ Sum + Product + AddAssign + SubAssign + MulAssign + From<bool>
 + Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self>
 {
     type AsFloatType: NumericDataType + From<f32>;
