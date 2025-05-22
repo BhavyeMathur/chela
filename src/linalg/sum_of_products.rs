@@ -45,7 +45,7 @@ pub(super) fn get_sum_of_products_function_generic_nops<T: SumOfProductsType>(st
                                                                               -> unsafe fn(ptrs: &[*mut T], stride: &[usize], count: usize) {
     let nops = strides.len() - 1;
 
-    if strides[nops - 1] == 0 {
+    if strides[nops] == 0 {
         return match nops {
             3 => { <T as SumOfProductsType>::sum_of_products_in_strides_n_n_n_out_stride_0 },
             _ => { <T as SumOfProductsType>::sum_of_products_out_stride_0_ }

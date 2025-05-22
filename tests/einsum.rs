@@ -763,6 +763,48 @@ test_for_all_numeric_dtypes!(
     }
 );
 
+test_for_common_numeric_dtypes!(
+    test_einsum_batched_matmul, {
+        for b in (1..37).step_by(9) {
+            for m in 1..4 {
+                for k in (1..25).step_by(8) {
+                    for n in (1..25).step_by(6) {
+                        let lhs = Tensor::arange(0, b * m * k)
+                            .reshape([b, m, k])
+                            .astype::<T>();
+
+                        let rhs = Tensor::arange(0, b * k * n)
+                            .reshape([b, k, n])
+                            .astype::<T>();
+
+                        let result = einsum([&lhs, &rhs], (["bik", "bkj"], "bij"));
+
+                        let mut expected_data = vec![];
+                        for b in 0..b {
+                            for i in 0..m {
+                                for j in 0..n {
+                                    let mut sum = T::default();
+                                    for kk in 0..k {
+                                        let a_val = lhs[[b, i, kk]];
+                                        let b_val = rhs[[b, kk, j]];
+                                        sum += a_val * b_val;
+                                    }
+                                    expected_data.push(sum);
+                                }
+                            }
+                        }
+
+                        let expected = Tensor::from(expected_data)
+                            .reshape([b, m, n])
+                            .astype::<T>();
+
+                        assert_eq!(result, expected);
+                    }
+                }
+            }
+        }
+    }
+);
 
 // #[test]
 // fn test_einsum_repeated_output_indices() {
