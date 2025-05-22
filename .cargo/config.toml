@@ -1,5 +1,5 @@
 [target.'cfg(all(target_os = "macos", target_arch = "aarch64"))']
-rustflags = ["--cfg", "use_apple_accelerate"]
+rustflags = ["--cfg", "use_apple_accelerate", "--cfg", "use_apple_vdsp", "--cfg", "use_apple_blas", "--cfg", "use_neon_simd"]
 
 [build]
 rustflags = ["-Ctarget-cpu=native"]

@@ -1,4 +1,4 @@
-#[cfg(use_apple_accelerate)]
+#[cfg(use_apple_vdsp)]
 use crate::accelerate::vdsp::*;
 use crate::dtype::{IntegerDataType, NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
@@ -155,14 +155,14 @@ pub trait TensorNumericReduce<T: NumericDataType>: TensorReduce<T> {
 
 impl<T: IntegerDataType> TensorNumericReduce<T> for Tensor<'_, T> {}
 
-#[cfg(not(use_apple_accelerate))]
+#[cfg(not(use_apple_vdsp))]
 impl TensorNumericReduce<f32> for Tensor<'_, f32> {}
 
-#[cfg(not(use_apple_accelerate))]
+#[cfg(not(use_apple_vdsp))]
 impl TensorNumericReduce<f64> for Tensor<'_, f64> {}
 
 
-#[cfg(use_apple_accelerate)]
+#[cfg(use_apple_vdsp)]
 impl TensorNumericReduce<f32> for Tensor<'_, f32> {
     fn sum<'a, 'b>(&'a self) -> Tensor<'b, f32> {
         match self.has_uniform_stride() {
@@ -220,7 +220,7 @@ impl TensorNumericReduce<f32> for Tensor<'_, f32> {
     }
 }
 
-#[cfg(use_apple_accelerate)]
+#[cfg(use_apple_vdsp)]
 impl TensorNumericReduce<f64> for Tensor<'_, f64> {
     fn sum<'a, 'b>(&'a self) -> Tensor<'b, f64> {
         match self.has_uniform_stride() {

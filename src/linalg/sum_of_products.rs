@@ -6,14 +6,14 @@ use std::hint::assert_unchecked;
 
 use paste::paste;
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(use_neon_simd)]
 use std::arch::aarch64::*;
 
 pub(super) fn get_sum_of_products_function<const N: usize, T: SumOfProductsType>(strides: &[usize; N])
                                                                                  -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
     if N == 2 { // 1 operand + 1 output
         if strides[0] == 1 && strides[1] == 0 {
-            // return <T as EinsumDataType>::operand_strides_1_out_stride_0;  // can be implemented later if needed
+            // return <T as EinsumDataType>::operand_strides_1_out_stride_0; // can be implemented later if needed
         }
     }
 
@@ -54,6 +54,7 @@ pub(super) fn get_sum_of_products_function_generic_nops<T: SumOfProductsType>(st
 
     <T as SumOfProductsType>::generic_unknown_nops
 }
+
 
 pub(super) trait SumOfProductsType: NumericDataType {
     #[inline(always)]
@@ -114,8 +115,8 @@ pub(super) trait SumOfProductsType: NumericDataType {
             k -= 1;
 
             sum += ptrs.iter().zip(strides.iter())
-                        .map(|(ptr, stride)| *ptr.add(k * stride))
-                        .product();
+                       .map(|(ptr, stride)| *ptr.add(k * stride))
+                       .product();
         }
 
         *dst += sum;
@@ -245,11 +246,7 @@ macro_rules! simd_kernel_for_dtype {
     $simd_dup:ident, $vdup:expr,
 
     $($func_name:ident, { $($body:tt)* };)+) => { paste! {
-            #[cfg(not(target_arch = "aarch64"))]
-            impl SumOfProductsType for $dtype {}
 
-            #[cfg(target_arch = "aarch64")]
-            impl SumOfProductsType for $dtype {
                 $(
                 #[inline(always)]
                 unsafe fn $func_name<const N: usize>($ptrs: &[*mut Self; N], $strides: &[usize; N], mut $count: usize) {
@@ -269,7 +266,7 @@ macro_rules! simd_kernel_for_dtype {
                     $($body)*
                 }
                 )+
-            }
+
         }
     }
 }
@@ -279,15 +276,49 @@ macro_rules! simd_kernel {
     $lanes:ident, $simd_load:ident, $simd_store:ident, $simd_add:ident, $simd_mul:ident, $simd_muladd:ident, $simd_sum:ident, $simd_dup:ident,
     $($func_name:ident, { $($body:tt)* },)+) => {
 
-        simd_kernel_for_dtype!(f32, 4, $ptrs, $strides, $count, $dst, $lanes,
-                                $simd_load, vld1q_f32, $simd_store, vst1q_f32, $simd_add, vaddq_f32, $simd_mul, vmulq_f32,
-                                $simd_muladd, vfmaq_f32, $simd_sum, vaddvq_f32, $simd_dup, vdupq_n_f32,
-                                $($func_name, { $($body)* };)+);
+        impl SumOfProductsType for f32 {
+            #[cfg(use_neon_simd)]
+            simd_kernel_for_dtype!(f32, 4, $ptrs, $strides, $count, $dst, $lanes,
+                                    $simd_load, vld1q_f32, $simd_store, vst1q_f32, $simd_add, vaddq_f32, $simd_mul, vmulq_f32,
+                                    $simd_muladd, vfmaq_f32, $simd_sum, vaddvq_f32, $simd_dup, vdupq_n_f32,
+                                    $($func_name, { $($body)* };)+);
 
-        simd_kernel_for_dtype!(f64, 2, $ptrs, $strides, $count, $dst, $lanes,
-                                $simd_load, vld1q_f64, $simd_store, vst1q_f64, $simd_add, vaddq_f64, $simd_mul, vmulq_f64,
-                                $simd_muladd, vfmaq_f64, $simd_sum, vaddvq_f64, $simd_dup, vdupq_n_f64,
-                                $($func_name, { $($body)* };)+);
+            #[cfg(use_apple_vdsp)]
+            #[inline(always)]
+            unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+                use crate::accelerate::vdsp::vDSP_dotpr;
+                vDSP_dotpr(ptrs[0], strides[0] as isize, ptrs[1], strides[1] as isize, ptrs[2], count as isize);
+            }
+
+            #[cfg(all(not(use_apple_vdsp), not(use_neon_simd), use_apple_blas))]
+            #[inline(always)]
+            unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+                use crate::accelerate::cblas::cblas_sdot;
+                *ptrs[2] = cblas_sdot(count as i32, ptrs[0], strides[0] as i32, ptrs[1], strides[1] as i32);
+            }
+        }
+
+        impl SumOfProductsType for f64 {
+            #[cfg(use_neon_simd)]
+            simd_kernel_for_dtype!(f64, 2, $ptrs, $strides, $count, $dst, $lanes,
+                                    $simd_load, vld1q_f64, $simd_store, vst1q_f64, $simd_add, vaddq_f64, $simd_mul, vmulq_f64,
+                                    $simd_muladd, vfmaq_f64, $simd_sum, vaddvq_f64, $simd_dup, vdupq_n_f64,
+                                    $($func_name, { $($body)* };)+);
+
+            #[cfg(use_apple_vdsp)]
+            #[inline(always)]
+            unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+                use crate::accelerate::vdsp::vDSP_dotprD;
+                vDSP_dotprD(ptrs[0], strides[0] as isize, ptrs[1], strides[1] as isize, ptrs[2], count as isize);
+            }
+            
+            #[cfg(all(not(use_apple_vdsp), not(use_neon_simd), use_apple_blas))]
+            #[inline(always)]
+            unsafe fn operand_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
+                use crate::accelerate::cblas::cblas_ddot;
+                *ptrs[2] = cblas_ddot(count as i32, ptrs[0], strides[0] as i32, ptrs[1], strides[1] as i32);
+            }
+        }
     };
 }
 

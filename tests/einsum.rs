@@ -436,8 +436,8 @@ test_for_float_dtypes!(
 
         let a = Tensor::arange(0, n * n).astype::<T>();
         let b = Tensor::arange(0, 2 * n * n).astype::<T>();
-        let a = a.reshape([n, n]) / ( n as T);
-        let b = b.reshape([n, n, 2]) / ( n as T);
+        let a = a.reshape([n, n]) / ( (n * n) as T);
+        let b = b.reshape([n, n, 2]) / ( (n * n) as T);
 
         let b = b.slice_along(Axis(2), 0);
 

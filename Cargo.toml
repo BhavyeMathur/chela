@@ -15,7 +15,7 @@ paste = "1.0.15"
 [lints.rust]
 private_bounds = "allow"
 dead_code = "allow"
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(use_apple_accelerate)'] }
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(use_apple_accelerate)", "cfg(use_neon_simd)", "cfg(use_apple_blas)", "cfg(use_apple_vdsp)"] }
 
 [profile.release]
 overflow-checks = false

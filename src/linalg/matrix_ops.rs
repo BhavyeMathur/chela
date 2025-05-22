@@ -7,6 +7,20 @@ impl<T: SumOfProductsType> Tensor<'_, T>
 where
     T: 'static // always satisfied because T is a primitive data type
 {
+    /// Calculates the dot product of two 1D tensors.
+    ///
+    /// # Panics
+    /// - Panics if either tensor is not 1D
+    /// - Panics if the lengths of the two tensors are not equal
+    /// 
+    /// # Examples
+    /// ```
+    /// # use chela::*;
+    /// let tensor1 = Tensor::from([1, 2, 3]);
+    /// let tensor2 = Tensor::from([4, 5, 6]);
+    /// let result = tensor1.dot(tensor2);
+    /// assert_eq!(result.value(), 32.0); // 1*4 + 2*5 + 3*6 = 32
+    /// ```
     pub fn dot<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
         assert_eq!(self.ndims(), 1, "dot product requires a tensor with 1 dimension");
