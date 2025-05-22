@@ -36,13 +36,16 @@ fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {
     //
     // the following code is equivalent to the above loop
     shape.iter().zip(stride.iter())
-        .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
-        .sum::<usize>() + 1
+         .map(|(&axis_length, &axis_stride)| axis_stride * (axis_length - 1))
+         .sum::<usize>() + 1
 }
 
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn slice_along<S: Indexer>(&'a self, axis: Axis, index: S) -> Tensor<'a, T> {
+    pub fn slice_along<'out, S: Indexer>(&'a self, axis: Axis, index: S) -> Tensor<'out, T>
+    where
+        'a: 'out,
+    {
         assert!(axis.0 >= 0, "negative axes not supported currently");
         let axis = axis.0 as usize;
 

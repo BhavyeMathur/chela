@@ -1,7 +1,7 @@
 use crate::axes_traits::AxisType;
 use crate::einsum::einsum_into_ptr;
 use crate::linalg::sum_of_products::SumOfProductsType;
-use crate::{IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
+use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
 use std::cmp::min;
 
 trait MatrixOps: SumOfProductsType {
@@ -205,9 +205,18 @@ where
         assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
 
         let result = Tensor::zeros([self.len(), self.shape()[1], other.shape()[2]]);
+        unsafe {
+            let mut lhs = self.slice_along(Axis(0), 0);
+            let mut rhs = other.slice_along(Axis(0), 0);
+            let mut out = result.mut_ptr();
 
-        for ((lhs, rhs), result) in self.iter_along(0).zip(other.iter_along(0)).zip(result.iter_along(0)) {
-            unsafe { <T as MatrixOps>::matrix_matrix_product(&lhs, &rhs, result.stride(), result.mut_ptr()) };
+            for _ in 0..self.len() {
+                <T as MatrixOps>::matrix_matrix_product(&lhs, &rhs, &result.stride()[1..], out);
+                
+                out = out.add(result.stride()[0]);
+                lhs.offset_ptr(self.stride()[0] as isize);
+                rhs.offset_ptr(other.stride()[0] as isize);
+            }
         }
 
         result

@@ -17,7 +17,7 @@ pub struct NdIterator<'a, T: RawDataType> {
 }
 
 impl<T: RawDataType> Tensor<'_, T> {
-    pub(in crate::tensor) unsafe fn offset_ptr(&mut self, offset: isize) {
+    pub(crate) unsafe fn offset_ptr(&mut self, offset: isize) {
         self.ptr = self.ptr.offset(offset);
     }
 }
