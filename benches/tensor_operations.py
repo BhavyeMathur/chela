@@ -99,7 +99,7 @@ class TensorOp4(TensorOpTimingSuite):
 
 
 class TensorOp5(TensorOpTimingSuite):
-    ID = 5
+    ID = 1005
     name = "Batch Matrices"
 
     def __init__(self):

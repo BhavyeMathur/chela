@@ -1,3 +1,4 @@
+use num::NumCast;
 use chela::*;
 use paste::paste;
 
@@ -93,10 +94,10 @@ fn test_matvec_inner_dim_mismatch() {
 fn test_matmat_matrix1_not_2d() {
     let a = Tensor::arange(0, 12);
     let a = a.reshape([3, 2, 2]);
-    
+
     let b = Tensor::arange(0, 6);
     let b = b.reshape([2, 3]);
-    
+
     a.matmul(&b);
 }
 
@@ -105,10 +106,10 @@ fn test_matmat_matrix1_not_2d() {
 fn test_matmat_matrix2_not_2d() {
     let a = Tensor::arange(0, 6);
     let a = a.reshape([2, 3]);
-    
+
     let b = Tensor::arange(0, 12);
     let b = b.reshape([2, 2, 3]);
-    
+
     a.matmul(&b);
 }
 
@@ -117,7 +118,7 @@ fn test_matmat_matrix2_not_2d() {
 fn test_matmat_inner_dim_mismatch() {
     let a = Tensor::arange(0, 6);
     let a = a.reshape([2, 3]);
-    
+
     let b = Tensor::arange(0, 8);
     let b = b.reshape([4, 2]);
     a.matmul(&b);
@@ -152,7 +153,7 @@ test_for_common_numeric_dtypes!(
 
 test_for_common_numeric_dtypes!(
     test_matvec, {
-        for m in 1..6 {
+        for m in (1..28).step_by(9) {
             for n in (1..30).step_by(3) {
                 let a = (Tensor::arange(0, m * n) * 6)
                     .reshape([m, n])
@@ -172,7 +173,7 @@ test_for_common_numeric_dtypes!(
 
 test_for_common_numeric_dtypes!(
     test_matvec_strided_views, {
-        for m in 1..6 {
+        for m in (1..28).step_by(9) {
             for n in (1..30).step_by(3) {
                 let a = (Tensor::arange(0, m * (n + 2) * 2) * 6)
                     .reshape([m, n + 2, 2])
@@ -196,9 +197,9 @@ test_for_common_numeric_dtypes!(
 
 test_for_common_numeric_dtypes!(
     test_matmat, {
-        for m in 1..6 {
-            for k in (1..10).step_by(2) {
-                for n in (1..10).step_by(3) {
+        for m in (1..25).step_by(6) {
+            for k in (1..28).step_by(9) {
+                for n in (1..28).step_by(9) {
                     let a = (Tensor::arange(0, m * k) * 3)
                         .reshape([m, k])
                         .astype::<T>();
@@ -206,7 +207,7 @@ test_for_common_numeric_dtypes!(
                     let b = (Tensor::arange(0, k * n) * 7)
                         .reshape([k, n])
                         .astype::<T>();
-                    
+
                     let expected = einsum([&a, &b], (["ik", "kj"], "ij"));
                     assert_eq!(a.matmul(&b), expected);
                     assert_eq!(a.matmul(b), expected);
@@ -217,10 +218,30 @@ test_for_common_numeric_dtypes!(
 );
 
 test_for_common_numeric_dtypes!(
+    test_batched_matmat, {
+        let high = <T as NumCast>::from(10).unwrap();
+
+        for b in (1..37).step_by(9) {
+            for m in (1..28).step_by(9) {
+                for k in (1..21).step_by(5) {
+                    for n in (1..25).step_by(6) {
+                        let lhs = Tensor::<T>::randint([b, m, k], T::default(), high);
+                        let rhs = Tensor::<T>::randint([b, k, n], T::default(), high);
+
+                        let expected = einsum([&lhs, &rhs], (["bik", "bkj"], "bij"));
+                        assert_almost_eq!(lhs.bmm(&rhs), expected);
+                    }
+                }
+            }
+        }
+    }
+);
+
+test_for_common_numeric_dtypes!(
     test_matmat_strided_views, {
-        for m in 1..6 {
-            for k in (1..10).step_by(2) {
-                for n in (1..10).step_by(3) {
+        for m in (1..37).step_by(9) {
+            for k in (1..21).step_by(4) {
+                for n in (1..25).step_by(6) {
                     let a = (Tensor::arange(0, m * (k + 3) * 2) * 6)
                         .reshape([m, k + 3, 2])
                         .astype::<T>();
@@ -246,7 +267,7 @@ test_for_common_numeric_dtypes!(
 
 test_for_common_numeric_dtypes!(
     test_dot_mem_overlap, {
-        for n in (1..30).step_by(3) {
+        for n in (1..31).step_by(5) {
             let a = Tensor::arange(0, n).astype::<T>();
             let b = a.view();
 

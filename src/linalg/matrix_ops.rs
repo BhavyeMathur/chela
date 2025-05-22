@@ -204,7 +204,13 @@ where
         assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D tensors");
         assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
 
-        Tensor::scalar(T::default())
+        let result = Tensor::zeros([self.len(), self.shape()[1], other.shape()[2]]);
+
+        for ((lhs, rhs), result) in self.iter_along(0).zip(other.iter_along(0)).zip(result.iter_along(0)) {
+            unsafe { <T as MatrixOps>::matrix_matrix_product(&lhs, &rhs, result.stride(), result.mut_ptr()) };
+        }
+
+        result
     }
 }
 
