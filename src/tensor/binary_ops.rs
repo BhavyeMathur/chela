@@ -53,7 +53,7 @@ macro_rules! define_binary_op {
                 let requires_grad = self.requires_grad() || rhs.requires_grad();
 
                 let data = lhs.flatiter().zip(rhs.flatiter()).map(|(lhs, rhs)| lhs $operator rhs).collect();
-                unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad) }
+                unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad, false) }
             }
         }
 
@@ -76,7 +76,7 @@ macro_rules! define_binary_op {
 
             fn $method(self, rhs: T) -> Self::Output {
                 let data = self.flatiter().map(|lhs| lhs $operator rhs).collect();
-                unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), data, self.requires_grad()) }
+                unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), data, self.requires_grad(), false) }
             }
         }
     };

@@ -157,13 +157,20 @@ pub trait TensorMethods {
 
     #[inline]
     fn is_leaf(&self) -> bool {
-        self.flags().contains(TensorFlags::IsLeaf)
+        if self.requires_grad() {
+            self.flags().contains(TensorFlags::UserCreated)
+        }
+        else {
+            true
+        }
     }
 
     #[inline]
     fn requires_grad(&self) -> bool {
         self.flags().contains(TensorFlags::RequiresGrad)
     }
+    
+    fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self;
 }
 
 impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
@@ -180,6 +187,18 @@ impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
     #[inline]
     fn flags(&self) -> TensorFlags {
         self.flags
+    }
+
+    #[inline]
+    fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self {
+        if requires_grad {
+            self.flags |= TensorFlags::RequiresGrad;
+        }
+        else {
+            self.flags -= TensorFlags::RequiresGrad;
+        }
+        
+        self
     }
 }
 

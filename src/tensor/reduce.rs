@@ -85,7 +85,7 @@ impl<T: RawDataType> TensorReduce<T> for Tensor<'_, T> {
             }
         }
 
-        unsafe { Tensor::from_contiguous_owned_buffer(out_shape, output, self.requires_grad()) }
+        unsafe { Tensor::from_contiguous_owned_buffer(out_shape, output, self.requires_grad(), false) }
     }
 
     fn reduce<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> Tensor<'b, T> {

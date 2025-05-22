@@ -426,7 +426,7 @@ trait MatrixOps: SumOfProductsType {
             dst = dst.add(1);
         }
 
-        Tensor::from_contiguous_owned_buffer(vec![rows], result, requires_grad)
+        Tensor::from_contiguous_owned_buffer(vec![rows], result, requires_grad, false)
     }
 }
 

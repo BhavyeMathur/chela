@@ -5,7 +5,7 @@ use crate::{Axis, AxisType, Tensor, TensorMethods};
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn flatten<'b>(&self) -> Tensor<'b, T> {
-        unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data(), self.requires_grad()) }
+        unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data(), self.requires_grad(), false) }
     }
 
     pub(super) unsafe fn reshaped_view_with_flags_and_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>, mut flags: TensorFlags) -> Tensor<T> {

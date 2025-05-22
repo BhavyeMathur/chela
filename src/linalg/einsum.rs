@@ -431,7 +431,7 @@ where
             unspecialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, output.as_mut_ptr());
         }
 
-        Tensor::from_contiguous_owned_buffer(output_shape, output, requires_grad)
+        Tensor::from_contiguous_owned_buffer(output_shape, output, requires_grad, false)
     }
 }
 

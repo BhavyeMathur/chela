@@ -10,8 +10,9 @@ impl<T: NumericDataType> Tensor<'_, T> {
         for (dst, src) in data.iter_mut().zip(self.flatiter()) {
             *dst = NumCast::from(src).expect("astype conversion failed");
         }
-
-        unsafe { Tensor::from_contiguous_owned_buffer(self.shape().to_vec(), data, self.requires_grad()) }
+        
+        // TODO need to figure out behaviour of requires_grad and user_created for this method
+        unsafe { Tensor::from_contiguous_owned_buffer(self.shape().to_vec(), data, self.requires_grad(), true) }
     }
 }
 

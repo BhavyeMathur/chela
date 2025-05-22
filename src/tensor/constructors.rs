@@ -65,10 +65,16 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// - `shape.iter().product()` must equal `data.len()`
     pub(crate) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>,
                                                       data: Vec<T>,
-                                                      requires_grad: bool) -> Self {
+                                                      requires_grad: bool,
+                                                      user_created: bool) -> Self {
         let mut flags = TensorFlags::Owned | TensorFlags::Contiguous | TensorFlags::UniformStride | TensorFlags::Writeable;
+
         if requires_grad {
             flags |= TensorFlags::RequiresGrad;
+        } 
+        
+        if user_created {
+            flags |= TensorFlags::UserCreated;
         }
 
         // take control of the data so that Rust doesn't drop it once the vector goes out of scope
@@ -115,7 +121,7 @@ impl<T: RawDataType> Tensor<'_, T> {
 
         assert!(!data.is_empty(), "Tensor::from() failed, cannot create data buffer from empty data");
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false) }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false, true) }
     }
 
     /// Creates a tensor filled with a specified value and given shape.
@@ -142,7 +148,7 @@ impl<T: RawDataType> Tensor<'_, T> {
         let data = vec![n; shape.iter().product()];
         assert!(!data.is_empty(), "Cannot create an empty tensor!");
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false) }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false, true) }
     }
 
     /// Creates a tensor filled with a specified value and given shape.
@@ -158,19 +164,19 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let tensor = Tensor::full_requires_grad(5i32, [2, 3], true); // 2x3 tensor filled with 5.
     /// let tensor = Tensor::full_requires_grad(true, [2, 3, 5], true); // 2x3x5 tensor filled with 'true'
     /// ```
-    pub fn full_requires_grad(n: T, shape: impl ToVec<usize>, requires_grad: bool) -> Self {
+    pub(crate) fn full_requires_grad(n: T, shape: impl ToVec<usize>, requires_grad: bool) -> Self {
         let shape = shape.to_vec();
 
         let data = vec![n; shape.iter().product()];
         assert!(!data.is_empty(), "Cannot create an empty tensor!");
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad) }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad, false) }
     }
 
     /// Creates a new tensor filled with zeros with the given shape.
@@ -205,13 +211,13 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// This function panics if the provided shape is empty.
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let tensor = Tensor::<i32>::zeros_requires_grad([2, 3], true);
     /// let tensor = Tensor::<bool>::zeros_requires_grad([2, 3], true);  // filled with 'false'
     /// ```
-    pub fn zeros_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
+    pub(crate) fn zeros_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
     where
         T: From<bool>,
     {
@@ -250,13 +256,13 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// This function panics if the provided shape is empty.
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let tensor = Tensor::<i32>::ones_requires_grad([2, 3], true);
     /// let tensor = Tensor::<bool>::ones_requires_grad([2, 3], true);  // filled with 'true'
     /// ```
-    pub fn ones_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
+    pub(crate) fn ones_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
     where
         T: From<bool>,
     {
@@ -287,14 +293,14 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// - `requires_grad` - If gradients need to be computed for this tensor.
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let scalar_tensor = Tensor::scalar_requires_grad(42, true);
     /// assert_eq!(scalar_tensor.shape(), []);
     /// assert_eq!(scalar_tensor.value(), 42);
     /// ```
-    pub fn scalar_requires_grad(n: T, requires_grad: bool) -> Self {
+    pub(crate) fn scalar_requires_grad(n: T, requires_grad: bool) -> Self {
         Tensor::full_requires_grad(n, [], requires_grad)
     }
 
@@ -348,7 +354,7 @@ impl<T: NumericDataType> Tensor<'_, T> {
     /// let tensor = Tensor::arange(0i32, 5); // [0, 1, 2, 3, 4].
     /// ```
     pub fn arange(start: T, stop: T) -> Tensor<'static, T> {
-       Self::arange_with_step(start, stop, T::one())
+        Self::arange_with_step(start, stop, T::one())
     }
 
     /// Generates a 1D tensor with evenly spaced values within a specified range.
@@ -374,7 +380,7 @@ impl<T: NumericDataType> Tensor<'_, T> {
             data[i] = <T as NumCast>::from(i).unwrap() * step + start;
         }
 
-        unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data, false) }
+        unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data, false, true) }
     }
 }
 
@@ -403,7 +409,7 @@ impl<T: FloatDataType> Tensor<'_, T> {
         assert!(num > 0);
 
         if num == 1 {
-            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start], false) };
+            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
         }
 
         let step = (stop - start) / (<T as NumCast>::from(num).unwrap() - T::one());
@@ -436,7 +442,7 @@ impl<T: FloatDataType> Tensor<'_, T> {
         assert!(num > 0);
 
         if num == 1 {
-            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start], false) };
+            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
         }
 
         let step = (stop - start) / <T as NumCast>::from(num).unwrap();

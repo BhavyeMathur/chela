@@ -21,17 +21,20 @@ fn test_constructor_requires_grad() {
     let a = Tensor::arange_with_step(0, -12, -3);
     assert!(!a.requires_grad());
 
-    let a = Tensor::full_requires_grad(5i32, [1, 2, 3], false);
+    let mut a = Tensor::full(5i32, [1, 2, 3]);
+    a.set_requires_grad(false);
     assert!(!a.requires_grad());
 
-    let a = Tensor::full_requires_grad(5i32, [1, 2, 3], true);
+    let mut a = Tensor::full(5i32, [1, 2, 3]);
+    a.set_requires_grad(true);
     assert!(a.requires_grad());
 }
 
 #[test]
 fn test_iter_requires_grad() {
     for requires_grad in [false, true] {
-        let a = Tensor::<i64>::ones_requires_grad([1, 2, 3], requires_grad);
+        let mut a = Tensor::<i64>::ones([1, 2, 3]);
+        a.set_requires_grad(requires_grad);
         
         for b in a.iter_along(Axis(-1)) {
             assert_eq!(b.requires_grad(), requires_grad);
@@ -48,7 +51,8 @@ fn test_iter_requires_grad() {
 #[test]
 fn test_reshape_requires_grad() {
     for requires_grad in [false, true] {
-        let a = Tensor::<u32>::ones_requires_grad([1, 2, 3], requires_grad);
+        let mut a = Tensor::<u32>::ones([1, 2, 3]);
+        a.set_requires_grad(requires_grad);
         
         let b = a.reshape([6, 1]);
         assert_eq!(b.requires_grad(), requires_grad);
@@ -76,7 +80,8 @@ fn test_reshape_requires_grad() {
 test_for_common_numeric_dtypes!(
  test_reduce_requires_grad, {
         for requires_grad in [false, true] {
-            let a = Tensor::<f32>::zeros_requires_grad([4, 4, 2], requires_grad);
+            let mut a = Tensor::<f32>::zeros([4, 4, 2]);
+            a.set_requires_grad(requires_grad);
 
             let b = a.sum();
             assert_eq!(b.requires_grad(), requires_grad);
