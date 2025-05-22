@@ -194,8 +194,12 @@ test_for_common_numeric_dtypes!(
 
         let expected = Tensor::from(expected_data);
         let expected = expected.reshape([n, n]);
-        let result = chela::einsum(&[&a, &b], (&["ij", "jk"], "ik"));
 
+        let result = chela::einsum(&[&a, &b], (&["ij", "jk"], "ik"));
+        assert_almost_eq!(result, expected);
+
+        let mut result = Tensor::ones(expected.shape());
+        einsum_into([&a, &b], (["ij", "jk"], "ik"), &mut result);
         assert_almost_eq!(result, expected);
     }
 );
@@ -244,6 +248,10 @@ test_for_all_numeric_dtypes!(
         let expected = expected.reshape([2, 10]);
 
         let result = chela::einsum(&[&a, &b], (["ij", "ij"], "ij"));
+        assert_almost_eq!(result, expected);
+
+        let mut result = Tensor::zeros(expected.shape());
+        einsum_into([&a, &b], (["ij", "ij"], "ij"), &mut result);
         assert_almost_eq!(result, expected);
     }
 );
@@ -328,7 +336,7 @@ test_for_common_numeric_dtypes!(
         let a = a.reshape([n, n]);
         let b = b.reshape([n, n]);
 
-        let expected_i = {
+        let expected = {
             let mut out = vec![T::default(); n];
 
             for i in 0..n {
@@ -343,7 +351,11 @@ test_for_common_numeric_dtypes!(
         };
 
         let result = chela::einsum([&a, &b], (["ij", "jk"], "i"));
-        assert_almost_eq!(result, expected_i);
+        assert_almost_eq!(result, expected);
+
+        let mut result = Tensor::zeros(expected.shape());
+        einsum_into([&a, &b], (["ij", "jk"], "i"), &mut result);
+        assert_almost_eq!(result, expected);
     }
 );
 
@@ -355,15 +367,15 @@ test_for_all_numeric_dtypes!(
         let expected = Tensor::scalar(63).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "ik"], ""));
         assert_almost_eq!(result, expected);
-    
+
         let expected = Tensor::scalar(101).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
         assert_almost_eq!(result, expected);
-    
+
         let expected = Tensor::scalar(71).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "ki"], ""));
         assert_almost_eq!(result, expected);
-    
+
         let expected = Tensor::scalar(93).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "kj"], ""));
         assert_almost_eq!(result, expected);
@@ -455,7 +467,11 @@ test_for_float_dtypes!(
             Tensor::scalar(out)
         };
 
-        let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
+        let result = einsum([&a, &b], (["ij", "jk"], ""));
+        assert_almost_eq!(result, expected);
+
+        let mut result = Tensor::scalar(T::default());
+        einsum_into([&a, &b], (["ij", "jk"], ""), &mut result);
         assert_almost_eq!(result, expected);
     }
 );
@@ -486,6 +502,10 @@ test_for_common_integer_dtypes!(
         };
 
         let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
+        assert_almost_eq!(result, expected);
+
+        let mut result = Tensor::scalar(T::default());
+        einsum_into([&a, &b], (["ij", "jk"], ""), &mut result);
         assert_almost_eq!(result, expected);
     }
 );
@@ -585,12 +605,17 @@ test_for_all_numeric_dtypes!(
     test_einsum_matrix_outer_product, {
         let a = Tensor::from([[1, 2], [3, 4]]).astype::<T>();
         let b = Tensor::from([[5, 6], [7, 8]]).astype::<T>();
+
         let expected = Tensor::from([
             [[[5, 6], [7, 8]], [[10, 12], [14, 16]]],
             [[[15, 18], [21, 24]], [[20, 24], [28, 32]]]
         ]).astype::<T>();
 
         let result = chela::einsum([&a, &b], (["ij", "kl"], "ijkl"));
+        assert_almost_eq!(result, expected);
+
+        let mut result = Tensor::ones(expected.shape());
+        einsum_into([&a, &b], (["ij", "kl"], "ijkl"), &mut result);
         assert_almost_eq!(result, expected);
     }
 );

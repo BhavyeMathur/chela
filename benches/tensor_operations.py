@@ -108,7 +108,7 @@ class TensorOp5(TensorOpTimingSuite):
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        _ = self.tensors[0] @ self.tensors[1]
+        _ = torch.bmm(self.tensors[0], self.tensors[1])
 
     @measure_performance("NumPy")
     def run(self):
