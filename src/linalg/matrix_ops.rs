@@ -1,9 +1,14 @@
 use crate::axes_traits::AxisType;
 use crate::linalg::sum_of_products::SumOfProductsType;
-use crate::{IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
+use crate::{einsum, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
 use std::cmp::min;
 
 trait MatrixOps: SumOfProductsType {
+    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
+                                                rhs: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        einsum([lhs, rhs], (["ij", "jk"], "ik"))
+    }
+
     unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
                                                 vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
         let rows = matrix.shape()[0];
@@ -28,9 +33,38 @@ trait MatrixOps: SumOfProductsType {
 impl<T: IntegerDataType> MatrixOps for T {}
 
 impl MatrixOps for f32 {
+    #[cfg(use_apple_blas)]
+    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
+                                                rhs: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        use crate::accelerate::cblas::{cblas_sgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+
+        // BLAS does not support matrices that don't have contiguous rows
+        if lhs.stride()[1] != 1 || rhs.stride()[1] != 1 {
+            return einsum([lhs, rhs], (["ij", "jk"], "ik"));
+        }
+
+        let m = lhs.shape()[0];
+        let n = rhs.shape()[1];
+
+        let mut result = vec![Self::default(); m * n];
+
+        unsafe {
+            cblas_sgemm(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS, CBLAS_NO_TRANS,
+                        m as i32, n as i32, lhs.shape()[1] as i32,
+                        1.0,
+                        lhs.mut_ptr(), lhs.stride()[0] as i32,
+                        rhs.mut_ptr(), rhs.stride()[0] as i32,
+                        0.0, result.as_mut_ptr(), n as i32);
+
+            Tensor::from_contiguous_owned_buffer(vec![m, n], result)
+        }
+    }
+
     #[cfg(all(use_apple_blas, not(use_neon_simd)))]
     unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
                                                 vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        use crate::accelerate::cblas::{cblas_sgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+
         // BLAS does not support matrices that don't have contiguous rows
         if matrix.stride()[1] != 1 {
             return einsum([matrix, vector], (["ij", "j"], "i"));
@@ -47,33 +81,62 @@ impl MatrixOps for f32 {
                         0.0, result.as_mut_ptr(), 1
             );
 
-            Tensor::from_contiguous_owned_buffer(vec![rows], result);
-        };
+            Tensor::from_contiguous_owned_buffer(vec![rows], result)
+        }
     }
 }
 
 impl MatrixOps for f64 {
+    #[cfg(use_apple_blas)]
+    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
+                                                rhs: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        use crate::accelerate::cblas::{cblas_dgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+
+        // BLAS does not support matrices that don't have contiguous rows
+        if lhs.stride()[1] != 1 || rhs.stride()[1] != 1 {
+            return einsum([lhs, rhs], (["ij", "jk"], "ik"));
+        }
+
+        let m = lhs.shape()[0];
+        let n = rhs.shape()[1];
+
+        let mut result = vec![Self::default(); m * n];
+
+        unsafe {
+            cblas_dgemm(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS, CBLAS_NO_TRANS,
+                        m as i32, n as i32, lhs.shape()[1] as i32,
+                        1.0,
+                        lhs.mut_ptr(), lhs.stride()[0] as i32,
+                        rhs.mut_ptr(), rhs.stride()[0] as i32,
+                        0.0, result.as_mut_ptr(), n as i32);
+
+            Tensor::from_contiguous_owned_buffer(vec![m, n], result)
+        }
+    }
+
     #[cfg(all(use_apple_blas, not(use_neon_simd)))]
     unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
                                                 vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        use crate::accelerate::cblas::{cblas_dgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+
         // BLAS does not support matrices that don't have contiguous rows
         if matrix.stride()[1] != 1 {
             return einsum([matrix, vector], (["ij", "j"], "i"));
         }
 
-        let rows = matrix.shape()[0] as i32;
+        let rows = matrix.shape()[0];
         let cols = matrix.shape()[1] as i32;
-        let result = Tensor::zeros([rows as usize]);
+        let mut result = vec![Self::default(); rows];
 
         unsafe {
             cblas_dgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
-                        rows, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
+                        rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
                         vector.ptr(), vector.stride()[0] as i32,
-                        0.0, result.mut_ptr(), 1
-            )
-        };
+                        0.0, result.as_mut_ptr(), 1
+            );
 
-        result
+            Tensor::from_contiguous_owned_buffer(vec![rows], result)
+        }
     }
 }
 
@@ -81,18 +144,52 @@ impl<T: MatrixOps> Tensor<'_, T>
 where
     T: 'static // always satisfied because T is a primitive data type
 {
+    /// Calculates the matrix product of two tensors.
+    ///
+    /// - If both tensors are 1D, then their dot product is returned.
+    /// - If both tensors are 2D, then their matrix product is returned.
+    /// - If the first tensor is 2D and the second tensor is 1D, then the matrix-vector product is returned.
+    ///
+    /// # Panics
+    /// - If the dimensions/shape of the tensors is incompatible
+    ///
+    /// # Example
+    /// ```
+    /// # use chela::Tensor;
+    ///
+    /// let a = Tensor::from(vec![
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    /// ]);
+    ///
+    /// let b = Tensor::from(vec![
+    ///     [7, 8],
+    ///     [9, 10],
+    ///     [11, 12],
+    /// ]);
+    ///
+    /// let result = a.matmul(&b);
+    /// assert_eq!(result, Tensor::from(vec![
+    ///     [58, 64],
+    ///     [139, 154],
+    /// ]));
+    /// ```
     pub fn matmul<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
-        assert_eq!(self.ndims(), 2, "matmul requires a tensor with 2 dimensions");
-        assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matmul");
 
-        if other.ndims() == 1 {
+        if self.ndims() == 1 && other.ndims() == 1 {
+            return self.dot(other);
+        }
+
+        if self.ndims() == 2 && other.ndims() == 1 {
+            assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-vector product: {:?} and {:?})", self.shape(), other.shape());
             return unsafe { <T as MatrixOps>::matrix_vector_product(self, other) };
         }
 
-        // if other.ndims() == 2 {
-        //     return unsafe { <T as MatrixOps>::matrix_matrix_product(self, other) };
-        // }
+        if self.ndims() == 2 && other.ndims() == 2 {
+            assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-matrix product: {:?} and {:?})", self.shape(), other.shape());
+            return unsafe { <T as MatrixOps>::matrix_matrix_product(self, other) };
+        }
 
         panic!("matmul requires a tensor with 1 or 2 dimensions");
     }

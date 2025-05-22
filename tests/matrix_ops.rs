@@ -54,6 +54,75 @@ fn test_dot_invalid_shapes() {
     a.dot(b);
 }
 
+#[test]
+#[should_panic]
+fn test_matvec_matrix_not_2d() {
+    let a = Tensor::arange(0, 12);
+    let a = a.reshape([3, 2, 2]);
+
+    let b = Tensor::arange(0, 2);
+
+    a.matmul(&b);
+}
+
+#[test]
+#[should_panic]
+fn test_matvec_vector_not_1d() {
+    let a = Tensor::arange(0, 6);
+    let a = a.reshape([2, 3]);
+
+    let b = Tensor::arange(0, 6);
+    let b = b.reshape([2, 3]);
+
+    a.matmul(&b);
+}
+
+#[test]
+#[should_panic]
+fn test_matvec_inner_dim_mismatch() {
+    let a = Tensor::arange(0, 6);
+    let a = a.reshape([2, 3]);
+
+    let b = Tensor::arange(0, 4);
+
+    a.matmul(&b);
+}
+
+#[test]
+#[should_panic]
+fn test_matmat_matrix1_not_2d() {
+    let a = Tensor::arange(0, 12);
+    let a = a.reshape([3, 2, 2]);
+    
+    let b = Tensor::arange(0, 6);
+    let b = b.reshape([2, 3]);
+    
+    a.matmul(&b);
+}
+
+#[test]
+#[should_panic]
+fn test_matmat_matrix2_not_2d() {
+    let a = Tensor::arange(0, 6);
+    let a = a.reshape([2, 3]);
+    
+    let b = Tensor::arange(0, 12);
+    let b = b.reshape([2, 2, 3]);
+    
+    a.matmul(&b);
+}
+
+#[test]
+#[should_panic]
+fn test_matmat_inner_dim_mismatch() {
+    let a = Tensor::arange(0, 6);
+    let a = a.reshape([2, 3]);
+    
+    let b = Tensor::arange(0, 8);
+    let b = b.reshape([4, 2]);
+    a.matmul(&b);
+}
+
 test_for_all_numeric_dtypes!(
     test_dot_basic, {
         let a = Tensor::from([5, 8, 1, 2]).astype::<T>();
@@ -75,6 +144,7 @@ test_for_common_numeric_dtypes!(
             let expected = Tensor::scalar((n - 1) * n * (2 * n + 14)).astype::<T>();
             assert_eq!(a.dot(&b), expected);
             assert_eq!(b.dot(&a), expected);
+            assert_eq!(a.matmul(&b), expected);
             assert_eq!(a.dot(b), expected);
         }
     }
@@ -84,28 +154,15 @@ test_for_common_numeric_dtypes!(
     test_matvec, {
         for m in 1..6 {
             for n in (1..30).step_by(3) {
-                // Matrix: shape [m, n], values = 1 * 6, 2 * 6, ..., (m*n - 1) * 6
-                let a = (Tensor::arange(0, m * n) * 6).reshape([m, n]).astype::<T>();
+                let a = (Tensor::arange(0, m * n) * 6)
+                    .reshape([m, n])
+                    .astype::<T>();
 
-                // Vector: shape [n], values = [5, 6, ..., 5 + n - 1]
-                let b = Tensor::arange(5, 5 + n).astype::<T>();
+                let b = Tensor::arange(5, 5 + n)
+                    .astype::<T>();
 
-                // Compute matrix-vector product: [m] = [m, n] @ [n]
                 let result = a.matmul(&b);
-
-                // Manually compute expected result:
-                let mut expected_data = vec![];
-                for i in 0..m {
-                    let mut sum = 0;
-                    for j in 0..n {
-                        let a_ij = (i * n + j) * 6;
-                        let b_j = 5 + j;
-                        sum += a_ij * b_j;
-                    }
-                    expected_data.push(sum);
-                }
-
-                let expected = Tensor::from(expected_data).astype::<T>();
+                let expected = einsum([&a, &b], (["ij", "j"], "i"));
                 assert_eq!(result, expected);
             }
         }
@@ -129,15 +186,63 @@ test_for_common_numeric_dtypes!(
                 let b = b.slice_along(Axis(1), 0);
                 assert!(!b.is_contiguous());
 
-                let result = a.matmul(&b);
                 let expected = einsum([&a, &b], (["ij", "j"], "i"));
-                assert_eq!(result, expected);
+                assert_eq!(a.matmul(&b), expected);
+                assert_eq!(a.matmul(b), expected);
             }
         }
     }
 );
 
+test_for_common_numeric_dtypes!(
+    test_matmat, {
+        for m in 1..6 {
+            for k in (1..10).step_by(2) {
+                for n in (1..10).step_by(3) {
+                    let a = (Tensor::arange(0, m * k) * 3)
+                        .reshape([m, k])
+                        .astype::<T>();
 
+                    let b = (Tensor::arange(0, k * n) * 7)
+                        .reshape([k, n])
+                        .astype::<T>();
+                    
+                    let expected = einsum([&a, &b], (["ik", "kj"], "ij"));
+                    assert_eq!(a.matmul(&b), expected);
+                    assert_eq!(a.matmul(b), expected);
+                }
+            }
+        }
+    }
+);
+
+test_for_common_numeric_dtypes!(
+    test_matmat_strided_views, {
+        for m in 1..6 {
+            for k in (1..10).step_by(2) {
+                for n in (1..10).step_by(3) {
+                    let a = (Tensor::arange(0, m * (k + 3) * 2) * 6)
+                        .reshape([m, k + 3, 2])
+                        .astype::<T>();
+                    let a = a.slice(s![.., 2..k + 2, 0]);
+                    assert_eq!(a.shape(), &[m, k]);
+                    assert_eq!(a.has_uniform_stride(), None);
+
+                    let b = (Tensor::arange(0, k * (n + 2) * 2) * 7)
+                        .reshape([k, n + 2, 2])
+                        .astype::<T>();
+                    let b = b.slice(s![.., ..n, 0]);
+                    assert_eq!(b.shape(), &[k, n]);
+                    assert!(!b.is_contiguous());
+
+                    let result = a.matmul(&b);
+                    let expected = einsum([&a, &b], (["ik", "kj"], "ij"));
+                    assert_eq!(result, expected);
+                }
+            }
+        }
+    }
+);
 
 test_for_common_numeric_dtypes!(
     test_dot_mem_overlap, {

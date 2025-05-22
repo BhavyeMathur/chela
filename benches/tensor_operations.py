@@ -65,7 +65,7 @@ class TensorOp2(TensorOpTimingSuite):
 
 
 class TensorOp3(TensorOpTimingSuite):
-    ID = 3
+    ID = 1003
     name = "Matrix Mult"
 
     def __init__(self):

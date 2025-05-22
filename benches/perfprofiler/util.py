@@ -34,7 +34,7 @@ def get_class_from_method(method) -> str:
     return method.__qualname__.split(".")[0]
 
 
-def rand_ndarrays_with_shape(shapes: list[tuple[int, ...]], dtype: str = "float32", slices=None) -> list[np.ndarray]:
+def rand_ndarrays_with_shape(shapes: list[tuple[int, ...]], dtype="float32", slices=None) -> list[np.ndarray]:
     if slices is None:
         return [np.random.rand(*shape).astype(dtype) for shape in shapes]
     return [np.random.rand(*shape).astype(dtype)[slice_] for shape, slice_ in zip(shapes, slices)]
