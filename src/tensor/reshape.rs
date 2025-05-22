@@ -1,11 +1,11 @@
 use crate::dtype::RawDataType;
 use crate::slice::update_flags_with_contiguity;
 use crate::tensor::flags::TensorFlags;
-use crate::{Axis, Tensor, TensorMethods};
+use crate::{Axis, AxisType, Tensor, TensorMethods};
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn flatten<'b>(&self) -> Tensor<'b, T> {
-        unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data()) }
+        unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data(), self.requires_grad()) }
     }
 
     pub(super) unsafe fn reshaped_view_with_flags_and_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>, mut flags: TensorFlags) -> Tensor<T> {
@@ -48,11 +48,8 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     }
 
     pub fn unsqueeze(&'a self, axis: Axis) -> Tensor<'a, T> {
-        assert!(axis.0 >= 0, "negative axes not supported currently");
-        let axis = axis.0 as usize;
-
-        assert!(axis <= self.ndims(), "Tensor::unsqueeze(), axis out of bounds");
-
+        let axis = axis.get_absolute(self.ndims());
+        
         let mut shape = self.shape.clone();
         let mut stride = self.stride.clone();
 

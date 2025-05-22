@@ -8,5 +8,7 @@ bitflags! {
         const Contiguous = 0b00000010;
         const UniformStride = 0b00000100;
         const Writeable = 0b00001000;
+        const IsLeaf = 0b00010000;
+        const RequiresGrad = 0b00100000;
     }
 }

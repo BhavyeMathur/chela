@@ -18,7 +18,7 @@ impl<T: FloatDataType + SampleUniform> Tensor<'_, T> {
             .map(|_| <T as NumCast>::from(normal.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers) }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers, false) }
     }
 
     pub fn rand(shape: impl ToVec<usize>) -> Self {
@@ -31,7 +31,7 @@ impl<T: FloatDataType + SampleUniform> Tensor<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers) }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers, false) }
     }
 }
 
@@ -48,6 +48,6 @@ impl<T: NumericDataType> Tensor<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers) }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers, false) }
     }
 }

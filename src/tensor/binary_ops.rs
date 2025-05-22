@@ -1,12 +1,15 @@
 use crate::broadcast::broadcast_shapes;
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
-use crate::Tensor;
+use crate::{Tensor, TensorMethods};
 use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign};
 
 macro_rules! define_binary_op {
     ( $trait_: ident, $operator: tt, $method: ident ) => {
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_ for Tensor<'_, T> {
+        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_ for Tensor<'_, T>
+        where
+            for<'a> Tensor<'a, T>: TensorMethods
+        {
             type Output = Tensor<'static, T>;
 
             fn $method(self, rhs: Tensor<T>) -> Self::Output {
@@ -14,7 +17,10 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<&Tensor<'_, T>> for Tensor<'_, T> {
+        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<&Tensor<'_, T>> for Tensor<'_, T>
+        where
+            for<'a> Tensor<'a, T>: TensorMethods
+        {
             type Output = Tensor<'static, T>;
 
             fn $method(self, rhs: &Tensor<T>) -> Self::Output {
@@ -22,7 +28,10 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<Tensor<'_, T>> for &Tensor<'_, T> {
+        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<Tensor<'_, T>> for &Tensor<'_, T>
+        where
+            for<'a> Tensor<'a, T>: TensorMethods
+        {
             type Output = Tensor<'static, T>;
 
             fn $method(self, rhs: Tensor<T>) -> Self::Output {
@@ -30,7 +39,10 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<&Tensor<'_, T>> for &Tensor<'_, T> {
+        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<&Tensor<'_, T>> for &Tensor<'_, T>
+        where
+            for<'a> Tensor<'a, T>: TensorMethods
+        {
             type Output = Tensor<'static, T>;
 
             fn $method(self, rhs: &Tensor<T>) -> Self::Output {
@@ -38,12 +50,17 @@ macro_rules! define_binary_op {
                 let lhs = self.broadcast_to(&shape);
                 let rhs = rhs.broadcast_to(&shape);
 
+                let requires_grad = self.requires_grad() || rhs.requires_grad();
+
                 let data = lhs.flatiter().zip(rhs.flatiter()).map(|(lhs, rhs)| lhs $operator rhs).collect();
-                unsafe { Tensor::from_contiguous_owned_buffer(shape, data) }
+                unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad) }
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<T> for Tensor<'_, T> {
+        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<T> for Tensor<'_, T>
+        where
+            for<'a> Tensor<'a, T>: TensorMethods
+        {
             type Output = Tensor<'static, T>;
 
             fn $method(self, rhs: T) -> Self::Output {
@@ -51,12 +68,15 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<T> for &Tensor<'_, T> {
+        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<T> for &Tensor<'_, T>
+        where
+            for<'a> Tensor<'a, T>: TensorMethods
+        {
             type Output = Tensor<'static, T>;
 
             fn $method(self, rhs: T) -> Self::Output {
                 let data = self.flatiter().map(|lhs| lhs $operator rhs).collect();
-                unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), data) }
+                unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), data, self.requires_grad()) }
             }
         }
     };

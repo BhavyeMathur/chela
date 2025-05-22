@@ -1,13 +1,13 @@
 use crate::constructors::stride_from_shape;
 use crate::dtype::{NumericDataType, RawDataType};
+use crate::fill::fill_shape_and_stride;
+use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
 use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::linalg::util::{permute_array, transpose_2d_array};
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::{Tensor, TensorMethods};
-use crate::fill::fill_shape_and_stride;
-use crate::iterator::collapse_contiguous::has_uniform_stride;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -39,7 +39,7 @@ fn parse_operand_subscripts<A: TensorMethods>(subscripts: &str,
     }
 
     let subscripts = subscripts.as_bytes();
-    
+
     *broadcast_dims = operand.ndims() - alphanum_chars;
 
     let mut first_occurrence = [(MAX_DIMS + 3) as i8; 128];
@@ -301,7 +301,9 @@ pub fn prepare_einsum<'a, 'b, T, String, ArrString>(operands: &[&'a Tensor<'a, T
                                                     strides: &mut [[usize; MAX_ARGS]; MAX_DIMS],
                                                     iter_ndims: &mut usize,
                                                     iter_shape: &mut Vec<usize>,
-                                                    output_shape: &mut Vec<usize>)
+                                                    output_shape: &mut Vec<usize>,
+
+                                                    requires_grad: &mut bool)
 where
     T: SumOfProductsType + 'a,
 
@@ -328,6 +330,7 @@ where
         parse_operand_subscripts(subscript.as_ref(), operand,
                                  &mut operand_labels[i], &mut label_counts, &mut label_dims, &mut broadcast_dims);
         max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
+        *requires_grad |= operand.requires_grad();
     }
 
     let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
@@ -416,8 +419,10 @@ where
     let mut iter_shape = Vec::new();
     let mut output_shape = Vec::new();
 
+    let mut requires_grad = false;
+
     prepare_einsum(operands, subscripts,
-                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
+                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape, &mut requires_grad);
 
     let mut output = vec![T::zero(); output_shape.iter().product()];
 
@@ -426,40 +431,7 @@ where
             unspecialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, output.as_mut_ptr());
         }
 
-        Tensor::from_contiguous_owned_buffer(output_shape, output)
-    }
-}
-
-
-pub fn einsum_into<'a, 'b, T, String, ArrTensor, ArrString>(operands: ArrTensor,
-                                                            subscripts: (ArrString, &str),
-                                                            result: &mut Tensor<'b, T>)
-where
-    T: SumOfProductsType + 'a,
-    ArrTensor: AsRef<[&'a Tensor<'a, T>]>,
-
-    String: AsRef<str>,
-    ArrString: AsRef<[String]>,
-{
-    let operands = operands.as_ref();
-
-    let mut strides = [[0; MAX_ARGS]; MAX_DIMS];
-    let mut iter_ndims = 0;
-    let mut iter_shape = Vec::new();
-    let mut output_shape = Vec::new();
-
-    prepare_einsum(operands, subscripts,
-                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
-
-    assert_eq!(result.shape(), &output_shape, "the result shape {:?} does not match the shape of the einsum output {:?}", result.shape(), &output_shape);
-    assert!(result.is_contiguous(), "only contiguous result tensors are currently supported");
-
-    result.fill(T::zero());
-
-    unsafe {
-        if !try_specialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, result.mut_ptr()) {
-            unspecialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, result.mut_ptr());
-        }
+        Tensor::from_contiguous_owned_buffer(output_shape, output, requires_grad)
     }
 }
 
@@ -481,8 +453,10 @@ where
     let mut iter_shape = Vec::new();
     let mut output_shape = Vec::new();
 
+    let mut requires_grad = false;
+
     prepare_einsum(operands, subscripts,
-                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
+                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape, &mut requires_grad);
 
     if let Some(stride) = has_uniform_stride(&output_shape, result_stride) {
         assert_eq!(stride, 1, "only contiguous result tensors are currently supported");

@@ -154,6 +154,16 @@ pub trait TensorMethods {
         let (_, new_stride) = collapse_to_uniform_stride(self.shape(), self.stride());
         Some(new_stride[0])
     }
+
+    #[inline]
+    fn is_leaf(&self) -> bool {
+        self.flags().contains(TensorFlags::IsLeaf)
+    }
+
+    #[inline]
+    fn requires_grad(&self) -> bool {
+        self.flags().contains(TensorFlags::RequiresGrad)
+    }
 }
 
 impl<T: RawDataType> TensorMethods for Tensor<'_, T> {

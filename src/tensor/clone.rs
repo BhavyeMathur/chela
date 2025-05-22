@@ -6,7 +6,7 @@ use std::ptr::copy_nonoverlapping;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn clone<'b>(&'a self) -> Tensor<'b, T> {
-        unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data()) }
+        unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data(), self.requires_grad()) }
     }
 
     pub(super) fn clone_data(&self) -> Vec<T> {

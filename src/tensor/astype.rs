@@ -11,7 +11,7 @@ impl<T: NumericDataType> Tensor<'_, T> {
             *dst = NumCast::from(src).expect("astype conversion failed");
         }
 
-        unsafe { Tensor::from_contiguous_owned_buffer(self.shape().to_vec(), data) }
+        unsafe { Tensor::from_contiguous_owned_buffer(self.shape().to_vec(), data, self.requires_grad()) }
     }
 }
 

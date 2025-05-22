@@ -53,7 +53,10 @@ where
         if self.ndims() == 2 && other.ndims() == 2 {
             assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-matrix product: {:?} and {:?})", self.shape(), other.shape());
 
-            let result = Tensor::zeros([self.shape()[0], other.shape()[1]]);
+            let requires_grad = self.requires_grad() || other.requires_grad();
+            let output_shape = [self.shape()[0], other.shape()[1]];
+
+            let result = Tensor::zeros_requires_grad(output_shape, requires_grad);
             unsafe { <T as MatrixOps>::matrix_matrix_product(self, other, result.stride(), result.mut_ptr()) };
             return result;
         }
@@ -84,7 +87,10 @@ where
         assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D tensors");
         assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
 
-        let result = Tensor::zeros([self.len(), self.shape()[1], other.shape()[2]]);
+        let requires_grad = self.requires_grad() || other.requires_grad();
+        let output_shape = [self.len(), self.shape()[1], other.shape()[2]];
+
+        let result = Tensor::zeros_requires_grad(output_shape, requires_grad);
         unsafe { <T as MatrixOps>::batch_matrix_matrix_product(self, other, result.stride(), result.mut_ptr()); }
         result
     }
@@ -114,7 +120,8 @@ where
         assert_eq!(other.ndims(), 1, "dot product requires a tensor with 1 dimension");
         assert_eq!(self.len(), other.len(), "dot product requires tensors with the same length");
 
-        let result = Tensor::scalar(T::default());
+        let requires_grad = self.requires_grad() || other.requires_grad();
+        let result = Tensor::scalar_requires_grad(T::default(), requires_grad);
 
         unsafe {
             <T as SumOfProductsType>::sum_of_products_in_strides_n_n_out_stride_0(&[self.mut_ptr(), other.mut_ptr(), result.mut_ptr()],
@@ -411,13 +418,15 @@ trait MatrixOps: SumOfProductsType {
         let mut matrix_row = matrix.mut_ptr();
         let mut dst = result.as_mut_ptr();
 
+        let requires_grad = matrix.requires_grad() || vector.requires_grad();
+
         for _ in 0..rows {
             Self::sum_of_products_in_strides_n_n_out_stride_0(&[matrix_row, vector.mut_ptr(), dst], strides, cols);
             matrix_row = matrix_row.add(matrix.stride()[0]);
             dst = dst.add(1);
         }
 
-        Tensor::from_contiguous_owned_buffer(vec![rows], result)
+        Tensor::from_contiguous_owned_buffer(vec![rows], result, requires_grad)
     }
 }
 
@@ -464,6 +473,8 @@ impl MatrixOps for f32 {
         let cols = matrix.shape()[1] as i32;
         let mut result = vec![Self::default(); rows];
 
+        let requires_grad = matrix.requires_grad() || vector.requires_grad();
+
         unsafe {
             cblas_sgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
                         rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
@@ -471,7 +482,7 @@ impl MatrixOps for f32 {
                         0.0, result.as_mut_ptr(), 1
             );
 
-            Tensor::from_contiguous_owned_buffer(vec![rows], result)
+            Tensor::from_contiguous_owned_buffer(vec![rows], result, requires_grad)
         }
     }
 }
@@ -517,6 +528,8 @@ impl MatrixOps for f64 {
         let cols = matrix.shape()[1] as i32;
         let mut result = vec![Self::default(); rows];
 
+        let requires_grad = matrix.requires_grad() || vector.requires_grad();
+
         unsafe {
             cblas_dgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
                         rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
@@ -524,7 +537,7 @@ impl MatrixOps for f64 {
                         0.0, result.as_mut_ptr(), 1
             );
 
-            Tensor::from_contiguous_owned_buffer(vec![rows], result)
+            Tensor::from_contiguous_owned_buffer(vec![rows], result, requires_grad)
         }
     }
 }
