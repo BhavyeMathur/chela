@@ -4,159 +4,6 @@ use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
 use std::cmp::min;
 
-trait MatrixOps: SumOfProductsType {
-    unsafe fn batch_matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                      rhs: &Tensor<'b, Self>,
-                                                      result_stride: &[usize],
-                                                      mut result: *mut Self) {
-        let mut lhs_slice = lhs.slice_along(Axis(0), 0);
-        let mut rhs_slice = rhs.slice_along(Axis(0), 0);
-
-        for _ in 0..lhs.len() {
-            Self::matrix_matrix_product(&lhs_slice, &rhs_slice, &result_stride[1..], result);
-
-            result = result.add(result_stride[0]);
-            lhs_slice.offset_ptr(lhs.stride()[0] as isize);
-            rhs_slice.offset_ptr(rhs.stride()[0] as isize);
-        }
-    }
-
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
-        einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result)
-    }
-
-    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
-                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
-        let rows = matrix.shape()[0];
-        let cols = matrix.shape()[1];
-        let mut result = vec![Self::default(); rows];
-
-        let strides = &[matrix.stride()[1], vector.stride()[0], 0];
-
-        let mut matrix_row = matrix.mut_ptr();
-        let mut dst = result.as_mut_ptr();
-
-        for _ in 0..rows {
-            Self::sum_of_products_in_strides_n_n_out_stride_0(&[matrix_row, vector.mut_ptr(), dst], strides, cols);
-            matrix_row = matrix_row.add(matrix.stride()[0]);
-            dst = dst.add(1);
-        }
-
-        Tensor::from_contiguous_owned_buffer(vec![rows], result)
-    }
-}
-
-impl<T: IntegerDataType> MatrixOps for T {}
-
-impl MatrixOps for f32 {
-    #[cfg(use_apple_blas)]
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
-        use crate::accelerate::cblas::{cblas_sgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
-
-        // BLAS does not support matrices that don't have contiguous rows
-        if lhs.stride()[1] != 1 || rhs.stride()[1] != 1 {
-            return einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result);
-        }
-
-        let m = lhs.shape()[0];
-        let n = rhs.shape()[1];
-
-        unsafe {
-            cblas_sgemm(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS, CBLAS_NO_TRANS,
-                        m as i32, n as i32, lhs.shape()[1] as i32,
-                        1.0,
-                        lhs.mut_ptr(), lhs.stride()[0] as i32,
-                        rhs.mut_ptr(), rhs.stride()[0] as i32,
-                        0.0, result, n as i32);
-        }
-    }
-
-    #[cfg(all(use_apple_blas, not(use_neon_simd)))]
-    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
-                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
-        use crate::accelerate::cblas::{cblas_sgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
-        use crate::einsum;
-
-        // BLAS does not support matrices that don't have contiguous rows
-        if matrix.stride()[1] != 1 {
-            return einsum([matrix, vector], (["ij", "j"], "i"));
-        }
-
-        let rows = matrix.shape()[0];
-        let cols = matrix.shape()[1] as i32;
-        let mut result = vec![Self::default(); rows];
-
-        unsafe {
-            cblas_sgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
-                        rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
-                        vector.ptr(), vector.stride()[0] as i32,
-                        0.0, result.as_mut_ptr(), 1
-            );
-
-            Tensor::from_contiguous_owned_buffer(vec![rows], result)
-        }
-    }
-}
-
-impl MatrixOps for f64 {
-    #[cfg(use_apple_blas)]
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
-        use crate::accelerate::cblas::{cblas_dgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
-
-        // BLAS does not support matrices that don't have contiguous rows
-        if lhs.stride()[1] != 1 || rhs.stride()[1] != 1 {
-            return einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result);
-        }
-
-        let m = lhs.shape()[0];
-        let n = rhs.shape()[1];
-
-        unsafe {
-            cblas_dgemm(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS, CBLAS_NO_TRANS,
-                        m as i32, n as i32, lhs.shape()[1] as i32,
-                        1.0,
-                        lhs.mut_ptr(), lhs.stride()[0] as i32,
-                        rhs.mut_ptr(), rhs.stride()[0] as i32,
-                        0.0, result, n as i32);
-        }
-    }
-
-    #[cfg(all(use_apple_blas, not(use_neon_simd)))]
-    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
-                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
-        use crate::accelerate::cblas::{cblas_dgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
-        use crate::einsum;
-
-        // BLAS does not support matrices that don't have contiguous rows
-        if matrix.stride()[1] != 1 {
-            return einsum([matrix, vector], (["ij", "j"], "i"));
-        }
-
-        let rows = matrix.shape()[0];
-        let cols = matrix.shape()[1] as i32;
-        let mut result = vec![Self::default(); rows];
-
-        unsafe {
-            cblas_dgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
-                        rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
-                        vector.ptr(), vector.stride()[0] as i32,
-                        0.0, result.as_mut_ptr(), 1
-            );
-
-            Tensor::from_contiguous_owned_buffer(vec![rows], result)
-        }
-    }
-}
-
 impl<T: MatrixOps> Tensor<'_, T>
 where
     T: 'static // always satisfied because T is a primitive data type
@@ -214,6 +61,23 @@ where
         panic!("matmul requires a tensor with 1 or 2 dimensions");
     }
 
+    /// Performs batch matrix multiplication on 3D tensors.
+    ///
+    /// The shape of the resulting tensor will be `[batch_size, self.shape()[1], other.shape()[2]]`,
+    /// where `batch_size` is the shared first dimension of both input tensors.
+    ///
+    /// # Panics
+    /// - If either tensor is not 3D
+    /// - If the tensors do not have dimensions compatible for batch matrix multiplication.
+    ///
+    /// # Example
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor_a = Tensor::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
+    /// let tensor_b = Tensor::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices
+    /// let result = tensor_a.bmm(&tensor_b);
+    /// assert_eq!(result.shape(), [3, 2, 5]); // result is 3 batches of 2x5 matrices
+    /// ```
     pub fn bmm<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
         assert_eq!(self.ndims(), 3, "batch matrix multiplication requires 3D tensors");
@@ -444,6 +308,9 @@ impl<T: RawDataType> Tensor<'_, T> {
 
         let ptr_offset;
 
+
+        // modify the dimensions and data pointer based on offset
+
         if offset >= 0 {
             let offset = offset as usize;
             if offset >= dim2 {
@@ -482,5 +349,182 @@ impl<T: RawDataType> Tensor<'_, T> {
 
         // create and return the diagonal view
         unsafe { self.reshaped_view_with_offset(ptr_offset, result_shape, result_stride) }
+    }
+}
+
+
+trait MatrixOps: SumOfProductsType {
+    /// Performs an unchecked batched matrix-matrix product operation
+    /// and writes the result to the given pointer
+    ///
+    /// # Safety
+    ///
+    /// - The dimensions of `lhs` and `rhs` must be `(b, i, j)` and `(b, j, k)`.
+    /// - `result` must point to a valid data buffer with dimension `(b, i, k)`
+    /// - `result_stride` must represent a valid layout for the results buffer with
+    ///      the last 2 dimensions being contiguous.
+    /// - `result` must not overlap with `lhs` or `rhs`.
+    unsafe fn batch_matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
+                                                      rhs: &Tensor<'b, Self>,
+                                                      result_stride: &[usize],
+                                                      mut result: *mut Self) {
+        let mut lhs_slice = lhs.slice_along(Axis(0), 0);
+        let mut rhs_slice = rhs.slice_along(Axis(0), 0);
+
+        for _ in 0..lhs.len() {
+            Self::matrix_matrix_product(&lhs_slice, &rhs_slice, &result_stride[1..], result);
+
+            result = result.add(result_stride[0]);
+            lhs_slice.offset_ptr(lhs.stride()[0] as isize);
+            rhs_slice.offset_ptr(rhs.stride()[0] as isize);
+        }
+    }
+
+    /// Performs an unchecked matrix-matrix product and writes the result to the given pointer
+    ///
+    /// # Safety
+    ///
+    /// - The dimensions of `lhs` and `rhs` must be `(i, j)` and `(j, k)`.
+    /// - `result` must point to a valid data buffer with dimension `(i, k)`.
+    /// - `result_stride` must represent a contiguous layout for the results buffer.
+    /// - `result` must not overlap with `lhs` or `rhs`.
+    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
+                                                rhs: &Tensor<'b, Self>,
+                                                result_stride: &[usize],
+                                                result: *mut Self) {
+        einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result)
+    }
+
+    /// Performs an unchecked matrix-vector product and returns the result.
+    ///
+    /// # Safety
+    ///
+    /// - The dimensions of `lhs` and `rhs` must be `(i, j)` and `(j)`.
+    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
+                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        let rows = matrix.shape()[0];
+        let cols = matrix.shape()[1];
+        let mut result = vec![Self::default(); rows];
+
+        let strides = &[matrix.stride()[1], vector.stride()[0], 0];
+
+        let mut matrix_row = matrix.mut_ptr();
+        let mut dst = result.as_mut_ptr();
+
+        for _ in 0..rows {
+            Self::sum_of_products_in_strides_n_n_out_stride_0(&[matrix_row, vector.mut_ptr(), dst], strides, cols);
+            matrix_row = matrix_row.add(matrix.stride()[0]);
+            dst = dst.add(1);
+        }
+
+        Tensor::from_contiguous_owned_buffer(vec![rows], result)
+    }
+}
+
+impl<T: IntegerDataType> MatrixOps for T {}
+
+impl MatrixOps for f32 {
+    #[cfg(use_apple_blas)]
+    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
+                                                rhs: &Tensor<'b, Self>,
+                                                result_stride: &[usize],
+                                                result: *mut Self) {
+        use crate::accelerate::cblas::{cblas_sgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+
+        // BLAS does not support matrices that don't have contiguous rows
+        if lhs.stride()[1] != 1 || rhs.stride()[1] != 1 {
+            return einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result);
+        }
+
+        let m = lhs.shape()[0];
+        let n = rhs.shape()[1];
+
+        unsafe {
+            cblas_sgemm(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS, CBLAS_NO_TRANS,
+                        m as i32, n as i32, lhs.shape()[1] as i32,
+                        1.0,
+                        lhs.mut_ptr(), lhs.stride()[0] as i32,
+                        rhs.mut_ptr(), rhs.stride()[0] as i32,
+                        0.0, result, n as i32);
+        }
+    }
+
+    #[cfg(all(use_apple_blas, not(use_neon_simd)))]
+    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
+                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        use crate::accelerate::cblas::{cblas_sgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+        use crate::einsum;
+
+        // BLAS does not support matrices that don't have contiguous rows
+        if matrix.stride()[1] != 1 {
+            return einsum([matrix, vector], (["ij", "j"], "i"));
+        }
+
+        let rows = matrix.shape()[0];
+        let cols = matrix.shape()[1] as i32;
+        let mut result = vec![Self::default(); rows];
+
+        unsafe {
+            cblas_sgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
+                        rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
+                        vector.ptr(), vector.stride()[0] as i32,
+                        0.0, result.as_mut_ptr(), 1
+            );
+
+            Tensor::from_contiguous_owned_buffer(vec![rows], result)
+        }
+    }
+}
+
+impl MatrixOps for f64 {
+    #[cfg(use_apple_blas)]
+    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
+                                                rhs: &Tensor<'b, Self>,
+                                                result_stride: &[usize],
+                                                result: *mut Self) {
+        use crate::accelerate::cblas::{cblas_dgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+
+        // BLAS does not support matrices that don't have contiguous rows
+        if lhs.stride()[1] != 1 || rhs.stride()[1] != 1 {
+            return einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result);
+        }
+
+        let m = lhs.shape()[0];
+        let n = rhs.shape()[1];
+
+        unsafe {
+            cblas_dgemm(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS, CBLAS_NO_TRANS,
+                        m as i32, n as i32, lhs.shape()[1] as i32,
+                        1.0,
+                        lhs.mut_ptr(), lhs.stride()[0] as i32,
+                        rhs.mut_ptr(), rhs.stride()[0] as i32,
+                        0.0, result, n as i32);
+        }
+    }
+
+    #[cfg(all(use_apple_blas, not(use_neon_simd)))]
+    unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
+                                                vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
+        use crate::accelerate::cblas::{cblas_dgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+        use crate::einsum;
+
+        // BLAS does not support matrices that don't have contiguous rows
+        if matrix.stride()[1] != 1 {
+            return einsum([matrix, vector], (["ij", "j"], "i"));
+        }
+
+        let rows = matrix.shape()[0];
+        let cols = matrix.shape()[1] as i32;
+        let mut result = vec![Self::default(); rows];
+
+        unsafe {
+            cblas_dgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
+                        rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
+                        vector.ptr(), vector.stride()[0] as i32,
+                        0.0, result.as_mut_ptr(), 1
+            );
+
+            Tensor::from_contiguous_owned_buffer(vec![rows], result)
+        }
     }
 }
