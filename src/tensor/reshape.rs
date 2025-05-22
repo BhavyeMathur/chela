@@ -48,7 +48,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     }
 
     pub fn unsqueeze(&'a self, axis: Axis) -> Tensor<'a, T> {
-        let axis = axis.get_absolute(self.ndims());
+        let axis = axis.get_absolute(self.ndims() + 1);
         
         let mut shape = self.shape.clone();
         let mut stride = self.stride.clone();
