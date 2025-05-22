@@ -287,22 +287,23 @@ pub fn einsum_view<'b, T: NumericDataType>(operand: &'b Tensor<T>,
     try_reshape_for_einsum(operand, &labels, output_dims, output_labels)
 }
 
+pub fn prepare_einsum<'a, 'b, T, String, ArrString>(operands: &[&'a Tensor<'a, T>],
+                                                    subscripts: (ArrString, &str),
 
-pub fn einsum<'a, 'b, T, String, ArrTensor, ArrString>(operands: ArrTensor,
-                                                       subscripts: (ArrString, &str))
-                                                       -> Tensor<'b, T>
+                                                    strides: &mut [[usize; MAX_ARGS]; MAX_DIMS],
+                                                    iter_ndims: &mut usize,
+                                                    iter_shape: &mut Vec<usize>,
+                                                    output_shape: &mut Vec<usize>)
 where
     T: SumOfProductsType + 'a,
-    ArrTensor: AsRef<[&'a Tensor<'a, T>]>,
 
     String: AsRef<str>,
     ArrString: AsRef<[String]>,
 {
-    let operands = operands.as_ref();
-    let subscripts = (subscripts.0.as_ref(), subscripts.1);
-
     let n_operands = operands.len();
     assert!(n_operands < MAX_ARGS);
+
+    let subscripts = (subscripts.0.as_ref(), subscripts.1);
 
     let mut operand_labels = [[0; MAX_DIMS]; MAX_ARGS];
     let mut output_labels = [0; MAX_DIMS];
@@ -323,7 +324,7 @@ where
 
     let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
 
-    let mut iter_ndims = output_dims;
+    *iter_ndims = output_dims;
     let mut iter_labels = output_labels;
     let output_labels = &output_labels[0..output_dims];
 
@@ -345,51 +346,73 @@ where
 
     // set up the output buffer after calculating its shape
 
-    let mut output_shape = Vec::with_capacity(output_dims);
+    *output_shape = Vec::with_capacity(output_dims);
     for &label in output_labels.iter() {
         output_shape.push(label_dims[label as usize]);
     }
-    let output_len = output_shape.iter().product();
-    let mut output = vec![T::zero(); output_len];
 
 
     // create iterators to iterate over the operands in the correct order
 
-    let mut iter_shape = output_shape.clone();
+    *iter_shape = output_shape.clone();
     for label in 0i8..=127 {
         if label_counts[label as usize] == 0 || output_labels.contains(&label) {
             continue;
         }
-        if iter_ndims >= MAX_DIMS {
+        if *iter_ndims >= MAX_DIMS {
             panic!("too many subscripts in einsum");
         }
 
         let dimension = label_dims[label as usize];
 
-        iter_labels[iter_ndims] = label;
+        iter_labels[*iter_ndims] = label;
         iter_shape.push(dimension);
-        iter_ndims += 1;
+        *iter_ndims += 1;
     }
-    let iter_labels = &iter_labels[0..iter_ndims];
+    let iter_labels = &iter_labels[0..*iter_ndims];
 
 
     // create iterator to traverse operand values in the correct order
 
-    let mut strides = [[0; MAX_DIMS]; MAX_ARGS];
+    let mut tmp_strides = [[0; MAX_DIMS]; MAX_ARGS];
     for ((operand, labels), new_stride) in reshaped_operands.iter()
                                                             .zip(operand_labels.iter_mut())
-                                                            .zip(strides.iter_mut()) {
+                                                            .zip(tmp_strides.iter_mut()) {
         operand_stride_for_einsum(operand.ndims(), operand.stride(), labels, iter_labels, new_stride)
     }
 
-    strides[n_operands][0..output_dims].copy_from_slice(&stride_from_shape(&output_shape));
-    let mut strides: [[usize; MAX_ARGS]; MAX_DIMS] = transpose_2d_array(strides);
+    tmp_strides[n_operands][0..output_dims].copy_from_slice(&stride_from_shape(&output_shape));
+    *strides = transpose_2d_array(tmp_strides);
 
-    if let Some(best_axis_ordering) = MultiFlatIndexGenerator::find_best_axis_ordering(n_operands + 1, iter_ndims, &strides) {
-        permute_array(&mut strides[0..iter_ndims], &best_axis_ordering);
-        permute_array(&mut iter_shape, &best_axis_ordering);
+    if let Some(best_axis_ordering) = MultiFlatIndexGenerator::find_best_axis_ordering(n_operands + 1, *iter_ndims, strides) {
+        permute_array(&mut strides[0..*iter_ndims], &best_axis_ordering);
+        permute_array(iter_shape, &best_axis_ordering);
     }
+}
 
+
+pub fn einsum<'a, 'b, T, String, ArrTensor, ArrString>(operands: ArrTensor,
+                                                       subscripts: (ArrString, &str))
+                                                       -> Tensor<'b, T>
+where
+    T: SumOfProductsType + 'a,
+    ArrTensor: AsRef<[&'a Tensor<'a, T>]>,
+
+    String: AsRef<str>,
+    ArrString: AsRef<[String]>,
+{
+    let operands = operands.as_ref();
+    let n_operands = operands.len();
+
+    let mut strides = [[0; MAX_ARGS]; MAX_DIMS];
+    let mut iter_ndims = 0;
+    let mut iter_shape = Vec::new();
+    let mut output_shape = Vec::new();
+
+    prepare_einsum(operands, subscripts,
+                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
+
+    let mut output = vec![T::zero(); output_shape.iter().product()];
 
     // accelerated loops for specific structures
 
@@ -422,6 +445,10 @@ where
                                             first_n_elements!(strides[2], 3),
                                             first_n_elements!(iter_shape, 3),
                                             output, output_shape);
+        }
+
+        if (n_operands == 2 || n_operands == 3) && (iter_ndims == 2 || iter_ndims == 3) {
+            return unsafe { Tensor::from_contiguous_owned_buffer(output_shape, output) };
         }
     }
 
