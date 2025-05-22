@@ -6,6 +6,8 @@ use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::linalg::util::{permute_array, transpose_2d_array};
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::{Tensor, TensorMethods};
+use crate::fill::fill_shape_and_stride;
+use crate::iterator::collapse_contiguous::has_uniform_stride;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -445,12 +447,46 @@ where
 
     assert_eq!(result.shape(), &output_shape, "the result shape {:?} does not match the shape of the einsum output {:?}", result.shape(), &output_shape);
     assert!(result.is_contiguous(), "only contiguous result tensors are currently supported");
-    
+
     result.fill(T::zero());
-    
+
     unsafe {
         if !try_specialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, result.mut_ptr()) {
             unspecialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, result.mut_ptr());
+        }
+    }
+}
+
+pub(super) unsafe fn einsum_into_ptr<'a, 'b, T, String, ArrTensor, ArrString>(operands: ArrTensor,
+                                                                              subscripts: (ArrString, &str),
+                                                                              result_stride: &[usize],
+                                                                              result: *mut T)
+where
+    T: SumOfProductsType + 'a,
+    ArrTensor: AsRef<[&'a Tensor<'a, T>]>,
+
+    String: AsRef<str>,
+    ArrString: AsRef<[String]>,
+{
+    let operands = operands.as_ref();
+
+    let mut strides = [[0; MAX_ARGS]; MAX_DIMS];
+    let mut iter_ndims = 0;
+    let mut iter_shape = Vec::new();
+    let mut output_shape = Vec::new();
+
+    prepare_einsum(operands, subscripts,
+                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
+    
+    if let Some(stride) = has_uniform_stride(&output_shape, result_stride) {
+        assert_eq!(stride, 1, "only contiguous result tensors are currently supported");
+    }
+    
+    fill_shape_and_stride(result, T::zero(), &output_shape, result_stride);
+
+    unsafe {
+        if !try_specialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, result) {
+            unspecialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, result);
         }
     }
 }

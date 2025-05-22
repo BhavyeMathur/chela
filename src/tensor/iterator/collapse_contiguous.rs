@@ -71,7 +71,7 @@ pub(in crate::tensor) fn collapse_to_uniform_stride(shape: &[usize], stride: &[u
     (new_shape, new_stride)
 }
 
-pub(in crate::tensor) fn has_uniform_stride(shape: &[usize], stride: &[usize]) -> Option<usize> {
+pub(crate) fn has_uniform_stride(shape: &[usize], stride: &[usize]) -> Option<usize> {
     let ndims = shape.len();
     if ndims == 0 {
         return Some(0);

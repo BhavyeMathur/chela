@@ -9,7 +9,7 @@ unsafe fn fill_strided<T: Copy>(mut start: *mut T, value: T, stride: usize, n: u
     }
 }
 
-unsafe fn fill_shape_and_stride<T: Copy>(mut start: *mut T, value: T, shape: &[usize], stride: &[usize]) {
+pub(crate) unsafe fn fill_shape_and_stride<T: Copy>(mut start: *mut T, value: T, shape: &[usize], stride: &[usize]) {
     if shape.len() == 1 {
         return fill_strided(start, value, stride[0], shape[0]);
     }
