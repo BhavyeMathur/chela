@@ -1,4 +1,4 @@
-use crate::axes_traits::AxisType;
+use crate::axis::AxisType;
 use crate::einsum::einsum_into_ptr;
 use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};

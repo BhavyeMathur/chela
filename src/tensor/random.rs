@@ -1,4 +1,4 @@
-use crate::traits::to_vec::ToVec;
+use crate::util::to_vec::ToVec;
 use crate::{FloatDataType, NumericDataType, Tensor};
 use num::NumCast;
 use rand::distributions::uniform::SampleUniform;

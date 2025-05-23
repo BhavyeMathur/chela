@@ -1,5 +1,6 @@
-use crate::traits::haslength::HasLength;
-use crate::Axis;
+use crate::util::haslength::HasLength;
+
+pub struct Axis(pub isize);
 
 pub trait AxisType {
     fn isize(&self) -> isize;

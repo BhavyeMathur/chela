@@ -1,5 +1,5 @@
 use std::ops::Range;
-use crate::axes_traits::AxisType;
+use crate::axis::AxisType;
 use crate::{Axis, RawDataType};
 
 pub(crate) trait ToVec<T> {

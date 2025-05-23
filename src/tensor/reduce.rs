@@ -3,7 +3,7 @@ use crate::accelerate::vdsp::*;
 use crate::dtype::{IntegerDataType, NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
-use crate::traits::to_vec::ToVec;
+use crate::util::to_vec::ToVec;
 use crate::{AxisType, Tensor, TensorMethods};
 use num::Bounded;
 use std::collections::VecDeque;

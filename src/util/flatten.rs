@@ -5,7 +5,7 @@
 
 use crate::recursive_trait_base_cases;
 use crate::tensor::dtype::RawDataType;
-use crate::traits::shape::Shape;
+use crate::util::shape::Shape;
 use std::fmt::Debug;
 
 use std::ptr::copy_nonoverlapping;

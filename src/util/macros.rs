@@ -1,3 +1,29 @@
+// TODO make sure this doesn't export the macro to the public API
+
+#[macro_export(local_inner_macros)]
+macro_rules! recursive_trait_base_cases {
+    ( $macro_name: ident ) => {
+        $macro_name!(i8);
+        $macro_name!(i16);
+        $macro_name!(i32);
+        $macro_name!(i64);
+        $macro_name!(i128);
+        $macro_name!(isize);
+
+        $macro_name!(u8);
+        $macro_name!(u16);
+        $macro_name!(u32);
+        $macro_name!(u64);
+        $macro_name!(u128);
+        $macro_name!(usize);
+
+        $macro_name!(f32);
+        $macro_name!(f64);
+
+        $macro_name!(bool);
+    };
+}
+
 #[macro_export]
 macro_rules! implement_test_for_dtypes {
     ($name:ident, $body:block, $($t:ty),*) => {
@@ -126,3 +152,4 @@ macro_rules! first_n_elements {
         &$arr[0..$n].try_into().unwrap()
     }};
 }
+

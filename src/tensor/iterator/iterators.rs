@@ -2,7 +2,7 @@ use crate::dtype::RawDataType;
 use crate::iterator::flat_iterator::FlatIterator;
 use crate::tensor_iterator::NdIterator;
 use crate::Tensor;
-use crate::axes_traits::{AxesType, AxisType};
+use crate::axis::{AxesType, AxisType};
 use crate::buffer_iterator::BufferIterator;
 
 impl<T: RawDataType> Tensor<'_, T> {

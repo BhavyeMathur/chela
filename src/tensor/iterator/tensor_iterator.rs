@@ -1,7 +1,7 @@
 use crate::dtype::RawDataType;
 use crate::iterator::util::split_by_indices;
 use crate::tensor::flags::TensorFlags;
-use crate::traits::haslength::HasLength;
+use crate::util::haslength::HasLength;
 use crate::Tensor;
 
 #[non_exhaustive]

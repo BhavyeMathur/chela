@@ -1,10 +1,9 @@
-use crate::axis::indexer::Indexer;
-
 use crate::axis::Axis;
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::tensor::flags::TensorFlags;
 use crate::{AxisType, Tensor, TensorMethods};
+use crate::index::Indexer;
 
 pub(super) fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
     flags -= TensorFlags::Owned;
