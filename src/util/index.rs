@@ -19,10 +19,15 @@ pub enum Index {
 }
 
 pub(crate) trait Indexer: Clone {
+    /// The resulting dimension of the axis indexed by this indexer.
     fn indexed_length(&self, axis_length: usize) -> usize;
-
+    
+    /// The first element along the dimension indexed by this kind of indexer
+    /// For example, 0 for `tensor[..]` or `tensor[..2]` but 5 for `tensor[5..]` or `tensor[5]`
     fn index_of_first_element(&self) -> usize;
 
+    /// When indexed with this kind of object, does the dimension of the tensor collapse?
+    /// Only true for usize since all range-based indexers retain the dimension.
     fn collapse_dimension(&self) -> bool {
         false
     }
@@ -52,7 +57,7 @@ impl Indexer for Index {
             Index::RangeToInclusive(index) => index.index_of_first_element(),
         }
     }
-
+    
     fn collapse_dimension(&self) -> bool {
         matches!(self, Index::Usize(_))
     }

@@ -1,4 +1,4 @@
-pub(super) fn transpose_2d_array<T: Default + Copy, const N: usize, const M: usize>(array: [[T; N]; M]) -> [[T; M]; N] {
+pub(crate) fn transpose_2d_array<T: Default + Copy, const N: usize, const M: usize>(array: [[T; N]; M]) -> [[T; M]; N] {
     let mut result = [[T::default(); M]; N];
 
     for i in 0..M {
@@ -11,7 +11,7 @@ pub(super) fn transpose_2d_array<T: Default + Copy, const N: usize, const M: usi
 }
 
 
-pub(super) fn permute_array<T: Clone>(arr: &mut [T], permutation: &[usize]) {
+pub(crate) fn permute_array<T: Clone>(arr: &mut [T], permutation: &[usize]) {
     assert_eq!(arr.len(), permutation.len(), "Length mismatch between array and permutation");
 
     let original = arr.to_vec();

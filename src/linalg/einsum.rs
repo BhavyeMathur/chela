@@ -5,9 +5,9 @@ use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
 use crate::linalg::sum_of_products::SumOfProductsType;
-use crate::linalg::util::{permute_array, transpose_2d_array};
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::{Tensor, TensorMethods};
+use crate::util::methods::{permute_array, transpose_2d_array};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
