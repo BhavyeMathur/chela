@@ -6,8 +6,8 @@ use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
 use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
-use crate::{Tensor, TensorMethods};
 use crate::util::functions::{permute_array, transpose_2d_array};
+use crate::{Tensor, TensorMethods};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -161,10 +161,10 @@ fn parse_output_subscripts(subscripts: &str,
 }
 
 
-fn reshape_shape_and_stride_for_einsum<'a, A: TensorMethods>(operand: &'a A,
-                                                             labels: &[i8; MAX_DIMS],
-                                                             output_dims: usize,
-                                                             output_labels: &[i8]) -> Option<(Vec<usize>, Vec<usize>)> {
+fn reshape_shape_and_stride_for_einsum<A: TensorMethods>(operand: &A,
+                                                         labels: &[i8; MAX_DIMS],
+                                                         output_dims: usize,
+                                                         output_labels: &[i8]) -> Option<(Vec<usize>, Vec<usize>)> {
     let mut new_stride = vec![0; output_dims];
     let mut new_shape = vec![0; output_dims];
 
@@ -190,7 +190,7 @@ fn reshape_shape_and_stride_for_einsum<'a, A: TensorMethods>(operand: &'a A,
     Some((new_stride, new_shape))
 }
 
-fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<T>,
+fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &Tensor<'a, T>,
                                               labels: &[i8; MAX_DIMS],
                                               output_dims: usize,
                                               output_labels: &[i8]) -> Option<Tensor<'a, T>> {
@@ -206,7 +206,7 @@ fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<T>,
 /*
 Collapses dimensions with repeated subscripts. For example in ii-> (trace) or ii->i (diagonal)
  */
-fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
+fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &Tensor<'a, T>,
                                                   labels: &mut [i8; MAX_DIMS]) -> Tensor<'a, T> {
     // fast path if operand dimensions cannot be combined
     if labels.iter().all(|&val| val >= 0) {
@@ -276,8 +276,8 @@ fn operand_stride_for_einsum(ndims: usize,
     }
 }
 
-pub fn einsum_view<'b, T: NumericDataType>(operand: &'b Tensor<T>,
-                                           subscripts: (&str, &str)) -> Option<Tensor<'b, T>> {
+pub fn einsum_view<'a, T: NumericDataType>(operand: &Tensor<'a, T>,
+                                           subscripts: (&str, &str)) -> Option<Tensor<'a, T>> {
     let mut labels = [0; MAX_DIMS];
     let mut output_labels = [0; MAX_DIMS];
     let mut label_counts = [0; 128];
@@ -295,15 +295,15 @@ pub fn einsum_view<'b, T: NumericDataType>(operand: &'b Tensor<T>,
     try_reshape_for_einsum(operand, &labels, output_dims, output_labels)
 }
 
-pub fn prepare_einsum<'a, 'b, T, String, ArrString>(operands: &[&'a Tensor<'a, T>],
-                                                    subscripts: (ArrString, &str),
+pub fn prepare_einsum<'a, T, String, ArrString>(operands: &[&Tensor<'a, T>],
+                                                subscripts: (ArrString, &str),
 
-                                                    strides: &mut [[usize; MAX_ARGS]; MAX_DIMS],
-                                                    iter_ndims: &mut usize,
-                                                    iter_shape: &mut Vec<usize>,
-                                                    output_shape: &mut Vec<usize>,
+                                                strides: &mut [[usize; MAX_ARGS]; MAX_DIMS],
+                                                iter_ndims: &mut usize,
+                                                iter_shape: &mut Vec<usize>,
+                                                output_shape: &mut Vec<usize>,
 
-                                                    requires_grad: &mut bool)
+                                                requires_grad: &mut bool)
 where
     T: SumOfProductsType + 'a,
 
@@ -402,12 +402,13 @@ where
 }
 
 
-pub fn einsum<'a, 'b, T, String, ArrTensor, ArrString>(operands: ArrTensor,
-                                                       subscripts: (ArrString, &str))
-                                                       -> Tensor<'b, T>
+pub fn einsum<'a, 'r, 'c, T, String, ArrTensor, ArrString>(operands: ArrTensor,
+                                                           subscripts: (ArrString, &str))
+                                                           -> Tensor<'r, T>
 where
+    'a: 'c,
     T: SumOfProductsType + 'a,
-    ArrTensor: AsRef<[&'a Tensor<'a, T>]>,
+    ArrTensor: AsRef<[&'c Tensor<'a, T>]>,
 
     String: AsRef<str>,
     ArrString: AsRef<[String]>,
@@ -435,13 +436,13 @@ where
     }
 }
 
-pub(super) unsafe fn einsum_into_ptr<'a, 'b, T, String, ArrTensor, ArrString>(operands: ArrTensor,
-                                                                              subscripts: (ArrString, &str),
-                                                                              result_stride: &[usize],
-                                                                              result: *mut T)
+pub(super) unsafe fn einsum_into_ptr<'a, 'r, T, String, ArrString>(operands: impl AsRef<[&'r Tensor<'a, T>]>,
+                                                                   subscripts: (ArrString, &str),
+                                                                   result_stride: &[usize],
+                                                                   result: *mut T)
 where
-    T: SumOfProductsType + 'a,
-    ArrTensor: AsRef<[&'a Tensor<'a, T>]>,
+    'a: 'r,
+    T: SumOfProductsType,
 
     String: AsRef<str>,
     ArrString: AsRef<[String]>,

@@ -1,5 +1,6 @@
 use crate::axis::Axis;
 use crate::dtype::RawDataType;
+use crate::index::Indexer;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::tensor::flags::TensorFlags;
 use crate::{AxisType, Tensor, TensorMethods};
@@ -41,9 +42,7 @@ fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {
 
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn slice_along<'out, S: Indexer>(&'a self, axis: Axis, index: S) -> Tensor<'out, T>
-    where
-        'a: 'out,
+    pub fn slice_along<S: Indexer>(&self, axis: Axis, index: S) -> Tensor<'a, T>
     {
         let axis = axis.get_absolute(self.ndims());
 
@@ -75,7 +74,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
     }
 
-    pub fn slice<S, I>(&'a self, index: I) -> Tensor<'a, T>
+    pub fn slice<S, I>(&self, index: I) -> Tensor<'a, T>
     where
         S: Indexer,
         I: IntoIterator<Item=S>,

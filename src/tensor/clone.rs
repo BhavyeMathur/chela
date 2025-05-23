@@ -1,11 +1,11 @@
 use crate::dtype::RawDataType;
-use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride};
+use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::iterator::flat_index_generator::FlatIndexGenerator;
 use crate::{Tensor, TensorMethods};
 use std::ptr::copy_nonoverlapping;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn clone<'b>(&'a self) -> Tensor<'b, T> {
+    pub fn clone<'r>(&self) -> Tensor<'r, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data(), self.requires_grad(), false) }
     }
 

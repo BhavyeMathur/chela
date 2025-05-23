@@ -4,10 +4,7 @@ use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
 use std::cmp::min;
 
-impl<T: MatrixOps> Tensor<'_, T>
-where
-    T: 'static // always satisfied because T is a primitive data type
-{
+impl<'a, T: MatrixOps> Tensor<'a, T> {
     /// Calculates the matrix product of two tensors.
     ///
     /// - If both tensors are 1D, then their dot product is returned.
@@ -38,7 +35,7 @@ where
     ///     [139, 154],
     /// ]));
     /// ```
-    pub fn matmul<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
+    pub fn matmul<'r>(&self, other: impl AsRef<Tensor<'a, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
 
         if self.ndims() == 1 && other.ndims() == 1 {
@@ -81,7 +78,7 @@ where
     /// let result = tensor_a.bmm(&tensor_b);
     /// assert_eq!(result.shape(), [3, 2, 5]); // result is 3 batches of 2x5 matrices
     /// ```
-    pub fn bmm<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
+    pub fn bmm<'r>(&self, other: impl AsRef<Tensor<'a, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
         assert_eq!(self.ndims(), 3, "batch matrix multiplication requires 3D tensors");
         assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D tensors");
@@ -96,10 +93,7 @@ where
     }
 }
 
-impl<T: SumOfProductsType> Tensor<'_, T>
-where
-    T: 'static // always satisfied because T is a primitive data type
-{
+impl<'a, T: SumOfProductsType> Tensor<'a, T> {
     /// Calculates the dot product of two 1D tensors.
     ///
     /// # Panics
@@ -114,7 +108,7 @@ where
     /// let result = tensor1.dot(tensor2);
     /// assert_eq!(result.value(), 32); // 1*4 + 2*5 + 3*6 = 32
     /// ```
-    pub fn dot<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
+    pub fn dot<'b, 'r>(&self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
         assert_eq!(self.ndims(), 1, "dot product requires a tensor with 1 dimension");
         assert_eq!(other.ndims(), 1, "dot product requires a tensor with 1 dimension");
@@ -152,7 +146,7 @@ where
     /// ]);
     ///
     /// assert_eq!(tensor.trace(), Tensor::scalar(1 + 5 + 9));
-    pub fn trace<'b>(&'a self) -> Tensor<'b, T> {
+    pub fn trace<'r>(&self) -> Tensor<'r, T> {
         self.offset_trace(0)
     }
 
@@ -171,7 +165,7 @@ where
     /// ]);
     ///
     /// assert_eq!(tensor.offset_trace(-1), Tensor::scalar(4 + 8));
-    pub fn offset_trace<'b>(&'a self, offset: isize) -> Tensor<'b, T> {
+    pub fn offset_trace<'r>(&self, offset: isize) -> Tensor<'r, T> {
         self.offset_trace_along(offset, 0, 1)
     }
 
@@ -191,7 +185,7 @@ where
     /// ]);
     ///
     /// assert_eq!(tensor.trace_along(0, 1), Tensor::scalar(1 + 5 + 9));
-    pub fn trace_along<'b>(&'a self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'b, T> {
+    pub fn trace_along<'r>(&self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'r, T> {
         self.offset_trace_along(0, axis1, axis2)
     }
 
@@ -211,13 +205,13 @@ where
     /// ]);
     ///
     /// assert_eq!(tensor.offset_trace_along(1, 0, 1), Tensor::scalar(2 + 6));
-    pub fn offset_trace_along<'b>(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'b, T> {
+    pub fn offset_trace_along<'r>(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'r, T> {
         let diagonal = self.offset_diagonal_along(offset, axis1, axis2);
         diagonal.sum_along(-1)
     }
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
+impl<'a, T: RawDataType> Tensor<'a, T> {
     /// Returns a diagonal view of the tensor along its first 2 axes.
     ///
     /// # Panics
@@ -234,7 +228,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// let diagonal = tensor.diagonal();
     /// assert_eq!(diagonal, Tensor::from([1, 5, 9]));
-    pub fn diagonal(&self) -> Tensor<T> {
+    pub fn diagonal(&self) -> Tensor<'a, T> {
         self.diagonal_along(0, 1)
     }
 
@@ -254,7 +248,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// let diagonal = tensor.offset_diagonal(1);
     /// assert_eq!(diagonal, Tensor::from([2, 6]));
-    pub fn offset_diagonal(&self, offset: isize) -> Tensor<T> {
+    pub fn offset_diagonal(&self, offset: isize) -> Tensor<'a, T> {
         self.offset_diagonal_along(offset, 0, 1)
     }
 
@@ -275,7 +269,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// let diagonal = tensor.diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
     /// assert_eq!(diagonal, Tensor::from([1, 5, 9]));
-    pub fn diagonal_along(&self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<T> {
+    pub fn diagonal_along(&self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'a, T> {
         self.offset_diagonal_along(0, axis1, axis2)
     }
 
@@ -296,7 +290,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///
     /// let diagonal = tensor.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
     /// assert_eq!(diagonal, Tensor::from([4, 8]));
-    pub fn offset_diagonal_along(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<T> {
+    pub fn offset_diagonal_along(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'a, T> {
         assert!(self.ndims() >= 2, "diagonals require a tensor with at least 2 dimensions");
 
         let axis1 = axis1.get_absolute(self.ndims());
@@ -371,10 +365,10 @@ trait MatrixOps: SumOfProductsType {
     /// - `result_stride` must represent a valid layout for the results buffer with
     ///      the last 2 dimensions being contiguous.
     /// - `result` must not overlap with `lhs` or `rhs`.
-    unsafe fn batch_matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                      rhs: &Tensor<'b, Self>,
-                                                      result_stride: &[usize],
-                                                      mut result: *mut Self) {
+    unsafe fn batch_matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
+                                              rhs: &Tensor<'a, Self>,
+                                              result_stride: &[usize],
+                                              mut result: *mut Self) {
         let mut lhs_slice = lhs.slice_along(Axis(0), 0);
         let mut rhs_slice = rhs.slice_along(Axis(0), 0);
 
@@ -395,10 +389,11 @@ trait MatrixOps: SumOfProductsType {
     /// - `result` must point to a valid data buffer with dimension `(i, k)`.
     /// - `result_stride` must represent a contiguous layout for the results buffer.
     /// - `result` must not overlap with `lhs` or `rhs`.
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
+    unsafe fn matrix_matrix_product<'a, 'data>(lhs: &Tensor<'a, Self>,
+                                               rhs: &Tensor<'a, Self>,
+                                               result_stride: &[usize],
+                                               result: *mut Self)
+    {
         einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result)
     }
 
@@ -434,10 +429,10 @@ impl<T: IntegerDataType> MatrixOps for T {}
 
 impl MatrixOps for f32 {
     #[cfg(use_apple_blas)]
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
+    unsafe fn matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
+                                        rhs: &Tensor<'a, Self>,
+                                        result_stride: &[usize],
+                                        result: *mut Self) {
         use crate::accelerate::cblas::{cblas_sgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
 
         // BLAS does not support matrices that don't have contiguous rows
@@ -489,10 +484,10 @@ impl MatrixOps for f32 {
 
 impl MatrixOps for f64 {
     #[cfg(use_apple_blas)]
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
+    unsafe fn matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
+                                        rhs: &Tensor<'a, Self>,
+                                        result_stride: &[usize],
+                                        result: *mut Self) {
         use crate::accelerate::cblas::{cblas_dgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
 
         // BLAS does not support matrices that don't have contiguous rows

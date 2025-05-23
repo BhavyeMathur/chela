@@ -5,7 +5,7 @@ use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
 
-pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync {}
+pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync + 'static {}
 
 impl RawDataType for u8 {}
 impl RawDataType for u16 {}

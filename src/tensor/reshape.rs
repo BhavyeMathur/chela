@@ -8,7 +8,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         unsafe { Tensor::from_contiguous_owned_buffer(vec![self.size()], self.clone_data(), self.requires_grad(), false) }
     }
 
-    pub(super) unsafe fn reshaped_view_with_flags_and_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>, mut flags: TensorFlags) -> Tensor<T> {
+    pub(super) unsafe fn reshaped_view_with_flags_and_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>, mut flags: TensorFlags) -> Tensor<'a, T> {
         flags = update_flags_with_contiguity(flags, &shape, &stride) - TensorFlags::UserCreated;
 
         Tensor {
@@ -24,19 +24,19 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
     }
 
-    pub(crate) unsafe fn reshaped_view_with_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
+    pub(crate) unsafe fn reshaped_view_with_offset(&self, offset: usize, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<'a, T> {
         self.reshaped_view_with_flags_and_offset(offset, shape, stride, self.flags - TensorFlags::Owned)
     }
 
-    pub(crate) unsafe fn reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<T> {
+    pub(crate) unsafe fn reshaped_view(&self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<'a, T> {
         self.reshaped_view_with_flags_and_offset(0, shape, stride, self.flags - TensorFlags::Owned)
     }
 
-    pub fn view(&'a self) -> Tensor<'a, T> {
+    pub fn view(&self) -> Tensor<'a, T> {
         unsafe { self.reshaped_view(self.shape.clone(), self.stride.clone()) }
     }
 
-    pub fn squeeze(&'a self) -> Tensor<'a, T> {
+    pub fn squeeze(&self) -> Tensor<'a, T> {
         let mut shape = self.shape.clone();
         let mut stride = self.stride.clone();
 
@@ -47,7 +47,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         unsafe { self.reshaped_view(shape, stride) }
     }
 
-    pub fn unsqueeze(&'a self, axis: Axis) -> Tensor<'a, T> {
+    pub fn unsqueeze(&self, axis: Axis) -> Tensor<'a, T> {
         let axis = axis.get_absolute(self.ndims() + 1);
         
         let mut shape = self.shape.clone();
@@ -64,7 +64,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         unsafe { self.reshaped_view(shape, stride) }
     }
 
-    pub fn reshape<const N: usize>(&'a self, new_shape: [usize; N]) -> Tensor<'a, T> {
+    pub fn reshape<const N: usize>(&self, new_shape: [usize; N]) -> Tensor<'a, T> {
         if self.size() != new_shape.iter().product() {
             panic!("total number of elements must not change during reshape");
         }
