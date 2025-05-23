@@ -1,9 +1,9 @@
 use num::traits::MulAdd;
 use num::{Bounded, Float, NumCast, One, ToPrimitive, Zero};
+use rand::distributions::uniform::SampleUniform;
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
-use rand::distributions::uniform::SampleUniform;
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync {}
 

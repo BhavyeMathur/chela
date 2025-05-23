@@ -9,3 +9,6 @@ pub use util::*;
 
 #[cfg(use_apple_accelerate)]
 mod accelerate;
+
+pub mod autograd;
+pub use autograd::*;

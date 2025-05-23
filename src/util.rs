@@ -7,7 +7,7 @@ pub(crate) mod nested;
 pub(crate) mod shape;
 pub(crate) mod haslength;
 pub(crate) mod to_vec;
-pub(crate) mod methods;
+pub(crate) mod functions;
 
 pub mod index;
 pub use index::*;

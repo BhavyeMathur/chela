@@ -7,7 +7,7 @@ use crate::linalg::specialized_einsum::*;
 use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::{Tensor, TensorMethods};
-use crate::util::methods::{permute_array, transpose_2d_array};
+use crate::util::functions::{permute_array, transpose_2d_array};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 

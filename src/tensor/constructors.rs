@@ -71,8 +71,8 @@ impl<T: RawDataType> Tensor<'_, T> {
 
         if requires_grad {
             flags |= TensorFlags::RequiresGrad;
-        } 
-        
+        }
+
         if user_created {
             flags |= TensorFlags::UserCreated;
         }
