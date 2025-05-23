@@ -1,4 +1,5 @@
 use crate::dtype::NumericDataType;
+use crate::gradient_function::{AccumulateGrad, NoneBackwards};
 use crate::tensor::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 use crate::tensor::Tensor;
@@ -52,7 +53,7 @@ pub(crate) fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
     stride
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
+impl<'a, T: RawDataType> Tensor<'a, T> {
     /// Constructs a new tensor from the given data buffer and shape assuming a contiguous layout
     ///
     /// # Parameters
@@ -81,7 +82,7 @@ impl<T: RawDataType> Tensor<'_, T> {
         let mut data = ManuallyDrop::new(data);
         let stride = stride_from_shape(&shape);
 
-        Self {
+        let mut result = Self {
             ptr: NonNull::new_unchecked(data.as_mut_ptr()),
             len: data.len(),
             capacity: data.capacity(),
@@ -91,10 +92,16 @@ impl<T: RawDataType> Tensor<'_, T> {
             flags,
 
             grad: None,
-            grad_fn: None,
+            grad_fn: NoneBackwards::new(),
 
             _marker: Default::default(),
+        };
+
+        if requires_grad && user_created {
+            result.grad_fn = AccumulateGrad::new(0 as *mut T);
         }
+
+        result
     }
 
     /// Constructs an n-dimensional `Tensor` from input data such as a vector or array.

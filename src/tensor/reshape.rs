@@ -2,6 +2,7 @@ use crate::dtype::RawDataType;
 use crate::slice::update_flags_with_contiguity;
 use crate::tensor::flags::TensorFlags;
 use crate::{Axis, AxisType, Tensor, TensorMethods};
+use crate::gradient_function::NoneBackwards;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     pub fn flatten<'b>(&self) -> Tensor<'b, T> {
@@ -21,7 +22,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             flags,
 
             grad: None,  // TODO
-            grad_fn: None,
+            grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,
         }

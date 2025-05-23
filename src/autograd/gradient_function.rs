@@ -1,27 +1,41 @@
-use crate::{NumericDataType, RawDataType, Tensor};
+use crate::{RawDataType, Tensor};
+use std::cell::RefCell;
+use std::rc::Rc;
 
-pub(crate) trait GradientFunction<T: RawDataType> {
+pub(crate) type GradientFunction<T> = Rc<RefCell<dyn GradientFuncTrait<T>>>;
+
+pub(crate) trait GradientFuncTrait<T: RawDataType> {
     fn backward(&mut self, grad: &Tensor<T>);
 }
 
-struct AccumulateGrad<'a, T: NumericDataType> {
-    tensor: &'a mut Tensor<'a, T>
-}
+pub(crate) struct NoneBackwards {}
 
-struct AddBackwards<T: NumericDataType> {
-    next_functions: Vec<Box<dyn GradientFunction<T>>>
-}
-
-impl<T: NumericDataType> GradientFunction<T> for AddBackwards<T> {
-    fn backward(&mut self, grad: &Tensor<T>) {
-        for func in self.next_functions.iter_mut() {
-            func.backward(grad);
-        }
+impl NoneBackwards {
+    pub(crate) fn new<T: RawDataType>() -> GradientFunction<T> {
+        Rc::new(RefCell::new(Self {}))
     }
 }
 
-impl<'a, T: NumericDataType> GradientFunction<T> for AccumulateGrad<'a, T> {
+impl<T: RawDataType> GradientFuncTrait<T> for NoneBackwards {
+    fn backward(&mut self, _: &Tensor<T>) {}
+}
+
+
+pub(crate) struct AccumulateGrad<T: RawDataType> {
+    tensor: *mut T
+}
+
+
+impl<T: RawDataType> AccumulateGrad<T> {
+    pub(crate) fn new(tensor: *mut T) -> GradientFunction<T> {
+        Rc::new(RefCell::new(Self {
+            tensor
+        }))
+    }
+}
+
+impl<T: RawDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
     fn backward(&mut self, grad: &Tensor<T>) {
-        self.tensor.set_grad(grad);
+        
     }
 }

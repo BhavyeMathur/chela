@@ -4,6 +4,7 @@ use crate::index::Indexer;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::tensor::flags::TensorFlags;
 use crate::{AxisType, Tensor, TensorMethods};
+use crate::gradient_function::NoneBackwards;
 
 pub(super) fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
     flags -= TensorFlags::Owned;
@@ -70,7 +71,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             flags,
 
             grad: None,  // TODO
-            grad_fn: None,
+            grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,
         }
@@ -117,7 +118,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             flags,
 
             grad: None,  // TODO
-            grad_fn: None,
+            grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,
         }

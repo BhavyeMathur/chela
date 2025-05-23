@@ -36,7 +36,7 @@ mod backward;
 pub(crate) const MAX_DIMS: usize = 32;
 pub(crate) const MAX_ARGS: usize = 16;
 
-use crate::gradient_function::GradientFunction;
+use crate::gradient_function::{GradientFunction};
 
 pub struct Tensor<'a, T: RawDataType> {
     pub(crate) ptr: NonNull<T>,
@@ -47,8 +47,8 @@ pub struct Tensor<'a, T: RawDataType> {
     stride: Vec<usize>,
     flags: TensorFlags,
 
-    grad: Option<Rc<RefCell<Tensor<'a, T>>>>,
-    grad_fn: Option<Box<dyn GradientFunction<T>>>,
+    grad: Option<Rc<RefCell<Tensor<'static, T>>>>,
+    grad_fn: GradientFunction<T>,
 
     _marker: PhantomData<&'a T>,
 }
