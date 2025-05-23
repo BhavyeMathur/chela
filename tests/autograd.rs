@@ -7,6 +7,8 @@ fn test_autograd_sum() {
 
     a.set_requires_grad(true);
     
-    let c = a + b;
+    let mut c = a * b;
     c.backward(1.0);
+    
+    println!("{:?}", c.gradient())
 }

@@ -1,5 +1,7 @@
+use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::ptr::NonNull;
+use std::rc::Rc;
 
 pub mod dtype;
 pub use dtype::*;
@@ -29,9 +31,12 @@ mod flags;
 use flags::TensorFlags;
 
 mod print;
+mod backward;
 
 pub(crate) const MAX_DIMS: usize = 32;
 pub(crate) const MAX_ARGS: usize = 16;
+
+use crate::gradient_function::GradientFunction;
 
 pub struct Tensor<'a, T: RawDataType> {
     pub(crate) ptr: NonNull<T>,
@@ -41,6 +46,9 @@ pub struct Tensor<'a, T: RawDataType> {
     shape: Vec<usize>,
     stride: Vec<usize>,
     flags: TensorFlags,
+
+    grad: Option<Rc<RefCell<Tensor<'a, T>>>>,
+    grad_fn: Option<Box<dyn GradientFunction<T>>>,
 
     _marker: PhantomData<&'a T>,
 }

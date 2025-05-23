@@ -20,6 +20,9 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             stride,
             flags,
 
+            grad: None,  // TODO
+            grad_fn: None,
+
             _marker: self._marker,
         }
     }
@@ -49,7 +52,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
 
     pub fn unsqueeze(&self, axis: Axis) -> Tensor<'a, T> {
         let axis = axis.get_absolute(self.ndims() + 1);
-        
+
         let mut shape = self.shape.clone();
         let mut stride = self.stride.clone();
 

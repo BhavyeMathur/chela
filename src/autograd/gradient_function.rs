@@ -1,30 +1,27 @@
-use crate::{RawDataType, Tensor};
+use crate::{NumericDataType, RawDataType, Tensor};
 
-pub(crate) trait GradientFunction<T: RawDataType>: Clone {
-    fn backward(&self);
+pub(crate) trait GradientFunction<T: RawDataType> {
+    fn backward(&mut self, grad: &Tensor<T>);
 }
 
-trait IntoGradient<'a, T: RawDataType> {
-    #[allow(clippy::wrong_self_convention)]
-    fn as_tensor(self) -> Tensor<'a, T>;
+struct AccumulateGrad<'a, T: NumericDataType> {
+    tensor: &'a mut Tensor<'a, T>
 }
 
-impl<'a, T: RawDataType> IntoGradient<'a, T> for Tensor<'a, T> {
-    fn as_tensor(self) -> Tensor<'a, T> {
-        self
-    }   
+struct AddBackwards<T: NumericDataType> {
+    next_functions: Vec<Box<dyn GradientFunction<T>>>
 }
 
-impl<'a, T: RawDataType> IntoGradient<'a, T> for T {
-    fn as_tensor(self) -> Tensor<'a, T> {
-        Tensor::scalar(self)
+impl<T: NumericDataType> GradientFunction<T> for AddBackwards<T> {
+    fn backward(&mut self, grad: &Tensor<T>) {
+        for func in self.next_functions.iter_mut() {
+            func.backward(grad);
+        }
     }
 }
 
-
-impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn backward(&self, gradient: impl IntoGradient<'a, T>) {
-        let gradient = gradient.as_tensor();
-        
+impl<'a, T: NumericDataType> GradientFunction<T> for AccumulateGrad<'a, T> {
+    fn backward(&mut self, grad: &Tensor<T>) {
+        self.tensor.set_grad(grad);
     }
 }

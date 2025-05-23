@@ -202,7 +202,7 @@ impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
     }
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
+impl<'a, T: RawDataType> Tensor<'a, T> {
     pub(crate) unsafe fn mut_ptr(&self) -> *mut T {
         self.ptr.as_ptr()
     }

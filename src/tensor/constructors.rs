@@ -90,6 +90,9 @@ impl<T: RawDataType> Tensor<'_, T> {
             stride,
             flags,
 
+            grad: None,
+            grad_fn: None,
+
             _marker: Default::default(),
         }
     }
