@@ -5,6 +5,7 @@ use crate::{NumericDataType, Tensor, TensorMethods};
 use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign};
 use crate::arithmetic_backwards::MultiplyBackwards;
 
+
 macro_rules! define_binary_op {
     ( $trait_: ident, $operator: tt, $method: ident ) => {
         impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_ for Tensor<'_, T>

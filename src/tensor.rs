@@ -1,7 +1,5 @@
-use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::ptr::NonNull;
-use std::rc::Rc;
 
 pub mod dtype;
 pub use dtype::*;
@@ -46,8 +44,7 @@ pub struct Tensor<'a, T: RawDataType> {
     shape: Vec<usize>,
     stride: Vec<usize>,
     flags: TensorFlags,
-
-    grad: Option<Rc<RefCell<Tensor<'static, T>>>>,
+    
     grad_fn: GradientFunction<T>,
 
     _marker: PhantomData<&'a T>,

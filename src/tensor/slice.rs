@@ -69,8 +69,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             shape: new_shape,
             stride: new_stride,
             flags,
-
-            grad: None,  // TODO
+            
             grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,
@@ -116,8 +115,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             shape: new_shape,
             stride: new_stride,
             flags,
-
-            grad: None,  // TODO
+            
             grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,

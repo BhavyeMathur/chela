@@ -1,7 +1,8 @@
 use crate::dtype::RawDataType;
+use crate::gradient_function::AccumulateGrad;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::tensor::flags::TensorFlags;
-use crate::Tensor;
+use crate::{NumericDataType, Tensor};
 
 pub trait TensorMethods {
     /// Returns the dimensions of the tensor along each axis.
@@ -169,8 +170,6 @@ pub trait TensorMethods {
     fn requires_grad(&self) -> bool {
         self.flags().contains(TensorFlags::RequiresGrad)
     }
-
-    fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self;
 }
 
 impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
@@ -188,18 +187,6 @@ impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
     fn flags(&self) -> TensorFlags {
         self.flags
     }
-
-    #[inline]
-    fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self {
-        if requires_grad {
-            self.flags |= TensorFlags::RequiresGrad;
-        }
-        else {
-            self.flags -= TensorFlags::RequiresGrad;
-        }
-
-        self
-    }
 }
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
@@ -209,5 +196,25 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
 
     pub(crate) unsafe fn ptr(&self) -> *const T {
         self.ptr.as_ptr()
+    }
+}
+
+impl<T: NumericDataType> Tensor<'_, T> {
+    #[inline]
+    pub fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self {
+        let required_grad = self.requires_grad();
+
+        if requires_grad {
+            self.flags |= TensorFlags::RequiresGrad;
+        }
+        else {
+            self.flags -= TensorFlags::RequiresGrad;
+        }
+
+        if !required_grad && requires_grad {
+            self.grad_fn = AccumulateGrad::new(self.shape.clone());
+        }
+
+        self
     }
 }
