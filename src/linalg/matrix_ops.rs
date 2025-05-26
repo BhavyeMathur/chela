@@ -307,19 +307,17 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         let stride1 = self.stride()[axis1];
         let stride2 = self.stride()[axis2];
 
-        let ptr_offset;
-
 
         // modify the dimensions and data pointer based on offset
 
-        if offset >= 0 {
+        let ptr_offset = if offset >= 0 {
             let offset = offset as usize;
             if offset >= dim2 {
                 panic!("invalid offset {} for axis with dimension {}", offset, dim2);
             }
 
             dim2 -= offset;
-            ptr_offset = offset * stride2;
+            offset * stride2
         } else {
             let offset = -offset as usize;
             if offset >= dim1 {
@@ -327,9 +325,9 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             }
 
             dim1 -= offset;
-            ptr_offset = offset * stride1;
-        }
-
+            offset * stride1
+        };
+        
 
         // compute the resultant shape and stride
 
@@ -362,8 +360,8 @@ trait MatrixOps: SumOfProductsType {
     ///
     /// - The dimensions of `lhs` and `rhs` must be `(b, i, j)` and `(b, j, k)`.
     /// - `result` must point to a valid data buffer with dimension `(b, i, k)`
-    /// - `result_stride` must represent a valid layout for the results buffer with
-    ///      the last 2 dimensions being contiguous.
+    /// - `result_stride` must represent a valid layout for the results buffer with 
+    ///   the last 2 dimensions being contiguous.
     /// - `result` must not overlap with `lhs` or `rhs`.
     unsafe fn batch_matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
                                               rhs: &Tensor<'a, Self>,
@@ -389,10 +387,10 @@ trait MatrixOps: SumOfProductsType {
     /// - `result` must point to a valid data buffer with dimension `(i, k)`.
     /// - `result_stride` must represent a contiguous layout for the results buffer.
     /// - `result` must not overlap with `lhs` or `rhs`.
-    unsafe fn matrix_matrix_product<'a, 'data>(lhs: &Tensor<'a, Self>,
-                                               rhs: &Tensor<'a, Self>,
-                                               result_stride: &[usize],
-                                               result: *mut Self)
+    unsafe fn matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
+                                        rhs: &Tensor<'a, Self>,
+                                        result_stride: &[usize],
+                                        result: *mut Self)
     {
         einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result)
     }

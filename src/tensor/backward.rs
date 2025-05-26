@@ -3,7 +3,7 @@ use crate::gradient_function::GradientFunction;
 use crate::intro_gradient::IntoTensor;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub(crate) fn get_grad_fn<'b>(&self) -> GradientFunction<T> {
+    pub(crate) fn get_grad_fn(&self) -> GradientFunction<T> {
         self.grad_fn.clone()
     }
 

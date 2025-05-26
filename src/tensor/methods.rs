@@ -4,6 +4,7 @@ use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::tensor::flags::TensorFlags;
 use crate::{NumericDataType, Tensor};
 
+#[allow(clippy::len_without_is_empty)]
 pub trait TensorMethods {
     /// Returns the dimensions of the tensor along each axis.
     ///

@@ -18,9 +18,9 @@ pub(super) fn get_sum_of_products_function<const N: usize, T: SumOfProductsType>
     }
 
     if N == 3 { // 2 operands + 1 output
-        let mut code = if strides[0] == 0 { 0 } else { if strides[0] == 1 { 4 } else { 8 } };
-        code += if strides[1] == 0 { 0 } else { if strides[1] == 1 { 2 } else { 8 } };
-        code += if strides[2] == 0 { 0 } else { if strides[2] == 1 { 1 } else { 8 } };
+        let mut code = if strides[0] == 0 { 0 } else if strides[0] == 1 { 4 } else { 8 };
+        code += if strides[1] == 0 { 0 } else if strides[1] == 1 { 2 } else { 8 };
+        code += if strides[2] == 0 { 0 } else if strides[2] == 1 { 1 } else { 8 };
 
         match code {
             2 => { return <T as SumOfProductsType>::sum_of_products_in_strides_0_1_out_stride_0; }
@@ -163,7 +163,7 @@ pub(super) trait SumOfProductsType: NumericDataType {
         assert_unchecked(strides[0] == 0);
         assert_unchecked(strides[1] == 1);
         assert_unchecked(strides[2] == 0);
-        Self::sum_of_scaled_array(&ptrs, strides, count);
+        Self::sum_of_scaled_array(ptrs, strides, count);
     }
 
     #[inline(always)]
@@ -183,9 +183,7 @@ pub(super) trait SumOfProductsType: NumericDataType {
         assert_unchecked(N == 3);
 
         let mut ptrs = *ptrs;
-        let tmp = ptrs[0];
-        ptrs[0] = ptrs[1];
-        ptrs[1] = tmp;
+        ptrs.swap(0, 1);
 
         Self::sum_of_scaled_array(&ptrs, strides, count);
     }
@@ -198,9 +196,7 @@ pub(super) trait SumOfProductsType: NumericDataType {
         assert_unchecked(N == 3);
 
         let mut ptrs = *ptrs;
-        let tmp = ptrs[0];
-        ptrs[0] = ptrs[1];
-        ptrs[1] = tmp;
+        ptrs.swap(0, 1);
 
         Self::sum_of_products_muladd(&ptrs, strides, count);
     }
@@ -270,6 +266,8 @@ macro_rules! simd_kernel_for_dtype {
 
                 $(
                 #[inline(always)]
+                #[allow(clippy::erasing_op)]
+                #[allow(clippy::identity_op)]
                 unsafe fn $func_name<const N: usize>($ptrs: &[*mut Self; N], $strides: &[usize; N], mut $count: usize) {
                     assert_unchecked($count > 0);
 

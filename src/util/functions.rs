@@ -1,9 +1,9 @@
 pub(crate) fn transpose_2d_array<T: Default + Copy, const N: usize, const M: usize>(array: [[T; N]; M]) -> [[T; M]; N] {
     let mut result = [[T::default(); M]; N];
 
-    for i in 0..M {
-        for j in 0..N {
-            result[j][i] = array[i][j];
+    for (i, row) in array.iter().enumerate() {
+        for (j, &item) in row.iter().enumerate() {
+            result[j][i] = item;
         }
     }
 

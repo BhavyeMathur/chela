@@ -379,8 +379,8 @@ impl<T: NumericDataType> Tensor<'_, T> {
         let n = NumCast::from(n).unwrap();
 
         let mut data: Vec<T> = vec![T::default(); n];
-        for i in 0..n {
-            data[i] = <T as NumCast>::from(i).unwrap() * step + start;
+        for (i, item) in data.iter_mut().enumerate() {
+            *item = <T as NumCast>::from(i).unwrap() * step + start;
         }
 
         unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data, false, true) }

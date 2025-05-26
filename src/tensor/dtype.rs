@@ -39,11 +39,11 @@ pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Ze
     fn abs(&self) -> Self;
 
     fn ceil(&self) -> Self {
-        self.clone()
+        *self
     }
 
     fn floor(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -51,7 +51,7 @@ impl NumericDataType for u8 {
     type AsFloatType = f32;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -59,7 +59,7 @@ impl NumericDataType for u16 {
     type AsFloatType = f32;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -67,7 +67,7 @@ impl NumericDataType for u32 {
     type AsFloatType = f32;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -75,7 +75,7 @@ impl NumericDataType for u64 {
     type AsFloatType = f64;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -83,7 +83,7 @@ impl NumericDataType for u128 {
     type AsFloatType = f64;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -91,7 +91,7 @@ impl NumericDataType for usize {
     type AsFloatType = f64;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 

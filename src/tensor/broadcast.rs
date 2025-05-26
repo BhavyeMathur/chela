@@ -59,9 +59,7 @@ fn broadcast_stride(stride: &[usize], broadcast_shape: &[usize], original_shape:
     let mut broadcast_stride = Vec::with_capacity(ndims);
     let original_first_axis = ndims - original_shape.len();
 
-    for _ in 0..original_first_axis {
-        broadcast_stride.push(0);  // new dimensions get a zero stride
-    }
+    broadcast_stride.resize(original_first_axis, 0);  // new dimensions get a zero stride
 
     for axis in original_first_axis..ndims {
         let original_axis_length = original_shape[axis - original_first_axis];

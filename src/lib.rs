@@ -1,3 +1,8 @@
+#![allow(clippy::needless_lifetimes)]
+#![allow(clippy::needless_range_loop)]
+#![allow(clippy::manual_map)]
+#![allow(clippy::new_ret_no_self)]
+
 pub mod tensor;
 pub use tensor::*;
 

@@ -29,14 +29,14 @@ pub(crate) struct NegBackwards<T: FloatDataType> {
     next_function: GradientFunction<T>
 }
 
-impl<'a, T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
+impl<T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
     fn backward(&mut self, grad: &Tensor<T>) {
         self.next_functions[0].borrow_mut().backward(grad);
         self.next_functions[1].borrow_mut().backward(grad);
     }
 }
 
-impl<'a, T: FloatDataType> GradientFuncTrait<T> for SubBackwards<T> {
+impl<T: FloatDataType> GradientFuncTrait<T> for SubBackwards<T> {
     fn backward(&mut self, grad: &Tensor<T>) {
         self.next_functions[0].borrow_mut().backward(grad);
         self.next_functions[1].borrow_mut().backward(&-grad);

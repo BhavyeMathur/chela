@@ -85,6 +85,7 @@ fn parse_operand_subscripts<A: TensorMethods>(subscripts: &str,
             for j in i..i + *broadcast_dims {
                 result[j] = 0;
             }
+            
         } else if label != b' ' {
             panic!("invalid label '{}' in einsum string, subscripts must be letters", label);
         }
@@ -247,7 +248,7 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &Tensor<'a, T>,
         }
     }
 
-    unsafe { Tensor::reshaped_view(&operand, new_shape, new_stride) }
+    unsafe { Tensor::reshaped_view(operand, new_shape, new_stride) }
 }
 
 
@@ -392,7 +393,7 @@ where
         operand_stride_for_einsum(operand.ndims(), operand.stride(), labels, iter_labels, new_stride)
     }
 
-    tmp_strides[n_operands][0..output_dims].copy_from_slice(&stride_from_shape(&output_shape));
+    tmp_strides[n_operands][0..output_dims].copy_from_slice(&stride_from_shape(output_shape));
     *strides = transpose_2d_array(tmp_strides);
 
     if let Some(best_axis_ordering) = MultiFlatIndexGenerator::find_best_axis_ordering(n_operands + 1, *iter_ndims, strides) {
