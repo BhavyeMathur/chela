@@ -229,7 +229,7 @@ test_for_common_numeric_dtypes!(
                         let rhs = Tensor::<T>::randint([b, k, n], T::default(), high);
 
                         let expected = einsum([&lhs, &rhs], (["bik", "bkj"], "bij"));
-                        assert_almost_eq!(lhs.bmm(&rhs), expected);
+                        assert_almost_eq!(lhs.bmm(&rhs), expected, 0.1);
                     }
                 }
             }

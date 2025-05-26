@@ -139,10 +139,14 @@ macro_rules! test_for_all_dtypes {
 
 #[macro_export]
 macro_rules! assert_almost_eq {
-    ($left:expr, $right:expr) => {
-        if ((&($left) - &($right)).max().flatiter().next().unwrap() as f64).abs() > 0.2 {
+    ($left:expr, $right:expr, $tol:expr) => {
+        if ((&($left) - &($right)).max().flatiter().next().unwrap() as f64).abs() > $tol {
             assert_eq!($left, $right);
         }
+    };
+
+    ($left:expr, $right:expr) => {
+        assert_almost_eq!($left, $right, 1e-5);
     };
 }
 
@@ -152,4 +156,3 @@ macro_rules! first_n_elements {
         &$arr[0..$n].try_into().unwrap()
     }};
 }
-

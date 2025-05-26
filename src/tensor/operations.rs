@@ -3,7 +3,7 @@ use crate::{IntegerDataType, RawDataType, Tensor, TensorMethods};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Neg, Rem, Shl, Shr, Sub};
 
 use paste::paste;
-use crate::arithmetic_backwards::{AddBackwards, MulBackwards, NegBackwards, SubBackwards};
+use crate::arithmetic_backwards::{AddBackwards, DivBackwards, MulBackwards, NegBackwards, SubBackwards};
 
 macro_rules! define_binary_ops {
     ($($trait_: ident, $operator: tt, $method: ident;)* ) => {
@@ -76,6 +76,21 @@ macro_rules! define_float_binary_ops {
                 }
             }
         )*
+
+        fn neg<'a, 'b>(rhs: impl AsRef<Tensor<'a, $dtype>>) -> Tensor<'static, $dtype> {
+            let rhs = rhs.as_ref();
+
+            let requires_grad = rhs.requires_grad();
+
+            let data = rhs.flatiter().map(|rhs| -rhs).collect();
+            let mut result = unsafe { Tensor::from_contiguous_owned_buffer(rhs.shape.clone(), data, requires_grad, false) };
+
+            if requires_grad {
+                result.grad_fn = NegBackwards::new(rhs);
+            }
+
+            result
+        }
     }
 }
 
@@ -186,22 +201,8 @@ impl TensorBinaryOps<f32> for f32 {
         Add, +, add, AddBackwards;
         Sub, -, sub, SubBackwards;
         Mul, *, mul, MulBackwards;
+        Div, /, div, DivBackwards;
     );
-
-    fn neg<'a, 'b>(rhs: impl AsRef<Tensor<'a, f32>>) -> Tensor<'static, f32> {
-        let rhs = rhs.as_ref();
-        
-        let requires_grad = rhs.requires_grad();
-
-        let data = rhs.flatiter().map(|rhs| -rhs).collect();
-        let mut result = unsafe { Tensor::from_contiguous_owned_buffer(rhs.shape.clone(), data, requires_grad, false) };
-        
-        if requires_grad {
-            result.grad_fn = NegBackwards::new(rhs);
-        }
-        
-        result
-    }
 }
 
 impl TensorBinaryOps<f64> for f64 {
@@ -210,20 +211,6 @@ impl TensorBinaryOps<f64> for f64 {
         Add, +, add, AddBackwards;
         Sub, -, sub, SubBackwards;
         Mul, *, mul, MulBackwards;
+        Div, /, div, DivBackwards;
     );
-
-    fn neg<'a, 'b>(rhs: impl AsRef<Tensor<'a, f64>>) -> Tensor<'static, f64> {
-        let rhs = rhs.as_ref();
-
-        let requires_grad = rhs.requires_grad();
-
-        let data = rhs.flatiter().map(|rhs| -rhs).collect();
-        let mut result = unsafe { Tensor::from_contiguous_owned_buffer(rhs.shape.clone(), data, requires_grad, false) };
-
-        if requires_grad {
-            result.grad_fn = NegBackwards::new(rhs);
-        }
-
-        result
-    }
 }

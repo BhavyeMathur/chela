@@ -427,7 +427,7 @@ test_for_float_dtypes!(
             Tensor::scalar(out)
         };
         let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
-        assert_almost_eq!(result, expected);
+        assert_almost_eq!(result, expected, 0.01);
     }
 );
 
@@ -457,7 +457,7 @@ test_for_float_dtypes!(
         };
 
         let result = einsum([&a, &b], (["ij", "jk"], ""));
-        assert_almost_eq!(result, expected);
+        assert_almost_eq!(result, expected, 0.01);
     }
 );
 
@@ -541,7 +541,7 @@ test_for_float_dtypes!(
         };
 
         let result = chela::einsum([&a, &b], (["ij", "kj"], ""));
-        assert_almost_eq!(result, expected);
+        assert_almost_eq!(result, expected, 0.2);
     }
 );
 

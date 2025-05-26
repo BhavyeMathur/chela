@@ -124,32 +124,32 @@ test_for_float_dtypes!(
         let d = &a + &b;
         let e = &a - &b;
         let f = &c * &b;
-        // let g = &c / &b;
+        let g = &c / &b;
         
         assert!(d.requires_grad());
         assert!(e.requires_grad());
         assert!(f.requires_grad());
-        // assert!(g.requires_grad());
+        assert!(g.requires_grad());
         
         let d = &a + 5.0;
         let e = &a - 5.0;
         let f = &c * 5.0;
-        // let g = &c / 5.0;
+        let g = &c / 5.0;
         
         assert!(d.requires_grad());
         assert!(e.requires_grad());
         assert!(f.requires_grad());
-        // assert!(g.requires_grad());
+        assert!(g.requires_grad());
         
         let d = &b + 5.0;
         let e = &b - 5.0;
         let f = &b * 5.0;
-        // let g = &b / 5.0;
+        let g = &b / 5.0;
         
         assert!(!d.requires_grad());
         assert!(!e.requires_grad());
         assert!(!f.requires_grad());
-        // assert!(!g.requires_grad());
+        assert!(!g.requires_grad());
         
         let h = &b + &b;
         let i = &h * &c;
