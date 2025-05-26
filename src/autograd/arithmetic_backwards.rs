@@ -42,6 +42,16 @@ impl<T: FloatDataType> GradientFuncTrait<T> for MulBackwards<'_, T> {
     }
 }
 
+impl<T: FloatDataType> AddBackwards<T> {
+    pub(crate) fn new(lhs: Tensor<T>, rhs: Tensor<T>) -> GradientFunction<T> {
+        let grad_fn = Self {
+            next_functions: [lhs.get_grad_fn(), rhs.get_grad_fn()],
+        };
+
+        Rc::new(RefCell::new(grad_fn))
+    }
+}
+
 impl<T: FloatDataType> SubBackwards<T> {
     pub(crate) fn new(lhs: Tensor<T>, rhs: Tensor<T>) -> GradientFunction<T> {
         let grad_fn = Self {

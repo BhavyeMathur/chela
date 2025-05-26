@@ -1,8 +1,9 @@
 use crate::broadcast::broadcast_shapes;
-use crate::{RawDataType, Tensor};
+use crate::{IntegerDataType, RawDataType, Tensor, TensorMethods};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
 use paste::paste;
+use crate::arithmetic_backwards::{AddBackwards, MulBackwards, SubBackwards};
 
 macro_rules! define_binary_ops {
     ($($trait_: ident, $operator: tt, $method: ident;)* ) => {
@@ -38,7 +39,47 @@ macro_rules! define_binary_ops {
     }
 }
 
-macro_rules! implement_binary_op_traits {
+macro_rules! define_float_binary_ops {
+    ($dtype:ty, $($trait_: ident, $operator: tt, $method: ident, $backwards: ident;)* ) => {
+        $(
+            fn $method<'a, 'b>(lhs: impl AsRef<Tensor<'a, $dtype>>,
+                               rhs: impl AsRef<Tensor<'b, $dtype>>) -> Tensor<'static, $dtype>
+            {
+                let lhs = lhs.as_ref();
+                let rhs = rhs.as_ref();
+
+                let shape = broadcast_shapes(&lhs.shape, &rhs.shape);
+                let lhs = lhs.broadcast_to(&shape);
+                let rhs = rhs.broadcast_to(&shape);
+
+                let requires_grad = lhs.requires_grad() || rhs.requires_grad();
+
+                let data = lhs.flatiter().zip(rhs.flatiter()).map(|(lhs, rhs)| lhs $operator rhs).collect();
+                let mut result = unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad, false) };
+
+                if requires_grad {
+                    result.grad_fn = $backwards::new(lhs, rhs);
+                }
+
+                result
+            }
+
+            paste! { fn [<$method _scalar>] <'a, 'b>(lhs: impl AsRef<Tensor<'a, $dtype>>,
+                                                     rhs: $dtype) -> Tensor<'static, $dtype>
+                {
+                    let lhs = lhs.as_ref();
+
+                    let requires_grad = lhs.requires_grad();
+
+                    let data = lhs.flatiter().map(|lhs| lhs $operator rhs).collect();
+                    unsafe { Tensor::from_contiguous_owned_buffer(lhs.shape.clone(), data, requires_grad, false) }
+                }
+            }
+        )*
+    }
+}
+
+macro_rules! implement_binary_ops {
     ($($trait_: ident, $method: ident;)* ) => {
         $(
             impl<T: RawDataType + $trait_<Output=T>> $trait_ for Tensor<'_, T> {
@@ -74,6 +115,17 @@ macro_rules! implement_binary_op_traits {
                 fn $method(self, rhs: T) -> Self::Output { paste! { <T as TensorBinaryOps<T>>::[<$method _scalar>](self, rhs) } }
             }
         )*
+    };
+
+    ($dtype1:ty, $dtype2:ty, $($trait_: ident, $method: ident;)* ) => {
+        implement_binary_ops!($dtype1, $($trait_, $method;)* );
+        implement_binary_ops!($dtype2, $($trait_, $method;)* );
+    };
+
+    ($dtype1:ty, $dtype2:ty, $dtype3:ty, $dtype4:ty, $($trait_: ident, $method: ident;)* ) => {
+        implement_binary_ops!($dtype1, $dtype2, $($trait_, $method;)* );
+        implement_binary_ops!($dtype3, $dtype4, $($trait_, $method;)* );
+        implement_binary_ops!($dtype5, $dtype6, $($trait_, $method;)* );
     }
 }
 
@@ -91,19 +143,35 @@ pub trait TensorBinaryOps<T: RawDataType> {
     );
 }
 
-implement_binary_op_traits!(
+implement_binary_ops!(
     Add, add;
     Sub, sub;
     Mul, mul;
     Div, div;
     Rem, rem;
-);
-
-implement_binary_op_traits!(
     BitAnd, bitand;
     BitOr, bitor;
     Shl, shl;
     Shr, shr;
 );
 
-impl<T: RawDataType> TensorBinaryOps<T> for T {}
+impl<T: IntegerDataType> TensorBinaryOps<T> for T {}
+impl TensorBinaryOps<bool> for bool {}
+
+impl TensorBinaryOps<f32> for f32 {
+    define_float_binary_ops!(
+        f32,
+        Add, +, add, AddBackwards;
+        Sub, -, sub, SubBackwards;
+        Mul, *, mul, MulBackwards;
+    );
+}
+
+impl TensorBinaryOps<f64> for f64 {
+    define_float_binary_ops!(
+        f64,
+        Add, +, add, AddBackwards;
+        Sub, -, sub, SubBackwards;
+        Mul, *, mul, MulBackwards;
+    );
+}

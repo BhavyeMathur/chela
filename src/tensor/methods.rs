@@ -202,6 +202,8 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
 impl<T: NumericDataType> Tensor<'_, T> {
     #[inline]
     pub fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self {
+        // TODO disallow non-floating types for grad
+        
         let required_grad = self.requires_grad();
 
         if requires_grad {

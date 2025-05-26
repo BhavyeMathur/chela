@@ -14,28 +14,12 @@ pub(crate) trait GradientFuncTrait<T: RawDataType> {
 
 pub(crate) struct NoneBackwards {}
 
-impl NoneBackwards {
-    pub(crate) fn new<T: RawDataType>() -> GradientFunction<T> {
-        Rc::new(RefCell::new(Self {}))
-    }
-}
-
-impl<T: RawDataType> GradientFuncTrait<T> for NoneBackwards {
-    fn backward(&mut self, _: &Tensor<T>) {}
-}
-
-
 pub(crate) struct AccumulateGrad<T: NumericDataType> {
     tensor_grad: Tensor<'static, T>,
 }
 
-
-impl<T: NumericDataType> AccumulateGrad<T> {
-    pub(crate) fn new(shape: Vec<usize>) -> GradientFunction<T> {
-        Rc::new(RefCell::new(Self {
-            tensor_grad: Tensor::zeros(shape),
-        }))
-    }
+impl<T: RawDataType> GradientFuncTrait<T> for NoneBackwards {
+    fn backward(&mut self, _: &Tensor<T>) {}
 }
 
 impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
@@ -45,5 +29,19 @@ impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
 
     fn gradient(&self) -> Option<Tensor<'static, T>> {
         Some(self.tensor_grad.clone())
+    }
+}
+
+impl<T: NumericDataType> AccumulateGrad<T> {
+    pub(crate) fn new(shape: Vec<usize>) -> GradientFunction<T> {
+        Rc::new(RefCell::new(Self {
+            tensor_grad: Tensor::zeros(shape),
+        }))
+    }
+}
+
+impl NoneBackwards {
+    pub(crate) fn new<T: RawDataType>() -> GradientFunction<T> {
+        Rc::new(RefCell::new(Self {}))
     }
 }

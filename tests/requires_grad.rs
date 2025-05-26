@@ -41,7 +41,7 @@ fn test_constructor_requires_grad() {
 #[test]
 fn test_iter_requires_grad() {
     for requires_grad in [false, true] {
-        let mut a = Tensor::<i64>::ones([1, 2, 3]);
+        let mut a = Tensor::<f64>::ones([1, 2, 3]);
         a.set_requires_grad(requires_grad);
 
         for b in a.iter_along(Axis(-1)) {
@@ -98,7 +98,7 @@ fn test_reshape_requires_grad() {
 test_for_float_dtypes!(
  test_mean_requires_grad, {
         for requires_grad in [false, true] {
-            let mut a = Tensor::<f32>::zeros([4, 4, 2]).astype::<T>();
+            let mut a = Tensor::<T>::zeros([4, 4, 2]);
             a.set_requires_grad(requires_grad);
             
             let b = a.mean();
@@ -109,6 +109,53 @@ test_for_float_dtypes!(
             assert_eq!(b.requires_grad(), requires_grad);
             assert!(!requires_grad || !b.is_leaf());
         }
+    }
+);
+
+test_for_float_dtypes!(
+ test_arithemtic_requires_grad, {
+        let mut a = Tensor::<T>::zeros([4, 4, 2]);
+        let b = Tensor::<T>::ones([4, 4, 2]);
+        let mut c = Tensor::<T>::zeros([4, 4, 2]);
+        
+        a.set_requires_grad(true);
+        c.set_requires_grad(true);
+        
+        let d = &a + &b;
+        let e = &a - &b;
+        let f = &c * &b;
+        // let g = &c / &b;
+        
+        assert!(d.requires_grad());
+        assert!(e.requires_grad());
+        assert!(f.requires_grad());
+        // assert!(g.requires_grad());
+        
+        let d = &a + 5.0;
+        let e = &a - 5.0;
+        let f = &c * 5.0;
+        // let g = &c / 5.0;
+        
+        assert!(d.requires_grad());
+        assert!(e.requires_grad());
+        assert!(f.requires_grad());
+        // assert!(g.requires_grad());
+        
+        let d = &b + 5.0;
+        let e = &b - 5.0;
+        let f = &b * 5.0;
+        // let g = &b / 5.0;
+        
+        assert!(!d.requires_grad());
+        assert!(!e.requires_grad());
+        assert!(!f.requires_grad());
+        // assert!(!g.requires_grad());
+        
+        let h = &b + &b;
+        let i = &h * &c;
+        
+        assert!(!h.requires_grad());
+        assert!(i.requires_grad());
     }
 );
 

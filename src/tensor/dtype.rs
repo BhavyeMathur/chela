@@ -1,3 +1,4 @@
+use crate::arithmetic::TensorBinaryOps;
 use num::traits::MulAdd;
 use num::{Bounded, Float, NumCast, One, ToPrimitive, Zero};
 use rand::distributions::uniform::SampleUniform;
@@ -5,7 +6,7 @@ use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
 
-pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync + 'static {}
+pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync + TensorBinaryOps<Self> + 'static {}
 
 impl RawDataType for u8 {}
 impl RawDataType for u16 {}
@@ -28,8 +29,7 @@ impl RawDataType for bool {}
 
 pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Zero + One + NumCast
 + Sum + Product + AddAssign + SubAssign + MulAssign + From<bool>
-+ Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self>
-{
++ Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self> {
     type AsFloatType: FloatDataType;
 
     fn to_float(&self) -> Self::AsFloatType {
