@@ -22,6 +22,7 @@ pub mod clone;
 pub mod equals;
 pub mod broadcast;
 pub mod binary_ops;
+pub mod arithmetic;
 pub mod random;
 pub mod astype;
 
@@ -30,7 +31,6 @@ use flags::TensorFlags;
 
 mod print;
 mod backward;
-mod arithmetic;
 
 pub(crate) const MAX_DIMS: usize = 32;
 pub(crate) const MAX_ARGS: usize = 16;

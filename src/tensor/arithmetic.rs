@@ -1,6 +1,6 @@
 use crate::broadcast::broadcast_shapes;
 use crate::{RawDataType, Tensor};
-use std::ops::{Add, Div, Mul, Rem, Sub};
+use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
 use paste::paste;
 
@@ -24,7 +24,7 @@ macro_rules! define_binary_ops {
             }
 
             paste! { fn [<$method _scalar>] <'a, 'b>(lhs: impl AsRef<Tensor<'a, T>>,
-                                                     rhs: T) -> Tensor<'static, T> 
+                                                     rhs: T) -> Tensor<'static, T>
                 where
                     T: $trait_<Output=T>,
                 {
@@ -84,6 +84,10 @@ pub trait TensorBinaryOps<T: RawDataType> {
         Mul, *, mul;
         Div, /, div;
         Rem, %, rem;
+        BitAnd, &, bitand;
+        BitOr, |, bitor;
+        Shl, <<, shl;
+        Shr, >>, shr;
     );
 }
 
@@ -93,6 +97,13 @@ implement_binary_op_traits!(
     Mul, mul;
     Div, div;
     Rem, rem;
+);
+
+implement_binary_op_traits!(
+    BitAnd, bitand;
+    BitOr, bitor;
+    Shl, shl;
+    Shr, shr;
 );
 
 impl<T: RawDataType> TensorBinaryOps<T> for T {}
