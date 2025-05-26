@@ -1,6 +1,7 @@
+use crate::tensor::TensorFlags;
 use crate::broadcast::broadcast_shapes;
 use crate::{IntegerDataType, RawDataType, Tensor, TensorMethods};
-use std::ops::{Add, BitAnd, BitOr, Div, Mul, Neg, Rem, Shl, Shr, Sub};
+use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign};
 
 use paste::paste;
 use crate::arithmetic_backwards::{AddBackwards, DivBackwards, MulBackwards, NegBackwards, SubBackwards};
@@ -96,6 +97,18 @@ macro_rules! define_float_binary_ops {
 
 macro_rules! implement_binary_ops {
     ($($trait_: ident, $method: ident;)* ) => {
+        impl<T: RawDataType + Neg<Output=T>> Neg for Tensor<'_, T> {
+            type Output = Tensor<'static, T>;
+        
+            fn neg(self) -> Self::Output { <T as TensorBinaryOps<T>>::neg(self) }
+        }
+        
+        impl<T: RawDataType + Neg<Output=T>> Neg for &Tensor<'_, T> {
+            type Output = Tensor<'static, T>;
+        
+            fn neg(self) -> Self::Output { <T as TensorBinaryOps<T>>::neg(self) }
+        }
+                
         $(
             impl<T: RawDataType + $trait_<Output=T>> $trait_ for Tensor<'_, T> {
                 type Output = Tensor<'static, T>;
@@ -180,18 +193,6 @@ implement_binary_ops!(
     Shr, shr;
 );
 
-impl<T: RawDataType + Neg<Output=T>> Neg for Tensor<'_, T> {
-    type Output = Tensor<'static, T>;
-
-    fn neg(self) -> Self::Output { <T as TensorBinaryOps<T>>::neg(self) }
-}
-
-impl<T: RawDataType + Neg<Output=T>> Neg for &Tensor<'_, T> {
-    type Output = Tensor<'static, T>;
-
-    fn neg(self) -> Self::Output { <T as TensorBinaryOps<T>>::neg(self) }
-}
-
 impl<T: IntegerDataType> TensorBinaryOps<T> for T {}
 impl TensorBinaryOps<bool> for bool {}
 
@@ -214,3 +215,37 @@ impl TensorBinaryOps<f64> for f64 {
         Div, /, div, DivBackwards;
     );
 }
+
+macro_rules! define_binary_iop {
+    ( $trait_: ident, $operator: tt, $method: ident ) => {
+    impl<T: RawDataType + $trait_> $trait_<Tensor<'_, T>> for Tensor<'_, T> {
+        fn $method(&mut self, rhs: Tensor<'_, T>) {
+            *self $operator &rhs
+        }
+    }
+
+    impl<T: RawDataType + $trait_> $trait_<&Tensor<'_, T>> for Tensor<'_, T> {
+        fn $method(&mut self, rhs: &Tensor<'_, T>) {
+            if !self.flags.contains(TensorFlags::Writeable) {
+                panic!("Tensor is readonly");
+            }
+
+            let rhs = rhs.broadcast_to(&self.shape);
+
+            for (lhs, rhs) in self.flatiter_ptr().zip(rhs.flatiter()) {
+                unsafe { *lhs $operator rhs; }
+            }
+        }
+    }
+    };
+}
+
+define_binary_iop!(AddAssign, +=, add_assign);
+define_binary_iop!(SubAssign, -=, sub_assign);
+define_binary_iop!(MulAssign, *=, mul_assign);
+define_binary_iop!(DivAssign, /=, div_assign);
+define_binary_iop!(RemAssign, %=, rem_assign);
+define_binary_iop!(BitAndAssign, &=, bitand_assign);
+define_binary_iop!(BitOrAssign, |=, bitor_assign);
+define_binary_iop!(ShlAssign, <<=, shl_assign);
+define_binary_iop!(ShrAssign, >>=, shr_assign);

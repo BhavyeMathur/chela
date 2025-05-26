@@ -21,7 +21,6 @@ pub mod reshape;
 pub mod clone;
 pub mod equals;
 pub mod broadcast;
-pub mod binary_ops;
 pub mod operations;
 pub mod random;
 pub mod astype;
