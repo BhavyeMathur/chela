@@ -1,5 +1,5 @@
 use crate::dtype::NumericDataType;
-use crate::gradient_function::{NoneBackwards};
+use crate::gradient_function::NoneBackwards;
 use crate::tensor::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 use crate::tensor::Tensor;
@@ -10,7 +10,7 @@ use crate::util::to_vec::ToVec;
 use crate::{FloatDataType, TensorMethods};
 use num::NumCast;
 use std::mem::ManuallyDrop;
-use std::ptr::{NonNull};
+use std::ptr::NonNull;
 
 /// Computes the stride of a tensor from its given shape assuming a contiguous layout.
 ///
@@ -90,7 +90,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             shape,
             stride,
             flags,
-            
+
             grad_fn: NoneBackwards::new(),
 
             _marker: Default::default(),

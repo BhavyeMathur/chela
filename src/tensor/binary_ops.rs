@@ -1,14 +1,13 @@
 use crate::broadcast::broadcast_shapes;
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
-use crate::{NumericDataType, Tensor, TensorMethods};
-use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign};
-use crate::arithmetic_backwards::MultiplyBackwards;
+use crate::{Tensor, TensorMethods};
+use std::ops::{AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, DivAssign, MulAssign, RemAssign, Shl, ShlAssign, Shr, ShrAssign, SubAssign};
 
 
 macro_rules! define_binary_op {
     ( $trait_: ident, $operator: tt, $method: ident ) => {
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_ for Tensor<'_, T>
+        impl<T: RawDataType + $trait_<Output=T>> $trait_ for Tensor<'_, T>
         where
             for<'a> Tensor<'a, T>: TensorMethods
         {
@@ -19,7 +18,7 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<&Tensor<'_, T>> for Tensor<'_, T>
+        impl<T: RawDataType + $trait_<Output=T>> $trait_<&Tensor<'_, T>> for Tensor<'_, T>
         where
             for<'a> Tensor<'a, T>: TensorMethods
         {
@@ -30,7 +29,7 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<Tensor<'_, T>> for &Tensor<'_, T>
+        impl<T: RawDataType + $trait_<Output=T>> $trait_<Tensor<'_, T>> for &Tensor<'_, T>
         where
             for<'a> Tensor<'a, T>: TensorMethods
         {
@@ -41,7 +40,7 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<&Tensor<'_, T>> for &Tensor<'_, T>
+        impl<T: RawDataType + $trait_<Output=T>> $trait_<&Tensor<'_, T>> for &Tensor<'_, T>
         where
             for<'a> Tensor<'a, T>: TensorMethods
         {
@@ -59,7 +58,7 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<T> for Tensor<'_, T>
+        impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for Tensor<'_, T>
         where
             for<'a> Tensor<'a, T>: TensorMethods
         {
@@ -70,7 +69,7 @@ macro_rules! define_binary_op {
             }
         }
 
-        impl<T: RawDataType + $trait_<Output=T> + 'static> $trait_<T> for &Tensor<'_, T>
+        impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for &Tensor<'_, T>
         where
             for<'a> Tensor<'a, T>: TensorMethods
         {
@@ -86,13 +85,13 @@ macro_rules! define_binary_op {
 
 macro_rules! define_binary_iop {
     ( $trait_: ident, $operator: tt, $method: ident ) => {
-    impl<T: RawDataType + $trait_ + 'static> $trait_<Tensor<'_, T>> for Tensor<'_, T> {
+    impl<T: RawDataType + $trait_> $trait_<Tensor<'_, T>> for Tensor<'_, T> {
         fn $method(&mut self, rhs: Tensor<'_, T>) {
             *self $operator &rhs
         }
     }
 
-    impl<T: RawDataType + $trait_ + 'static> $trait_<&Tensor<'_, T>> for Tensor<'_, T> {
+    impl<T: RawDataType + $trait_> $trait_<&Tensor<'_, T>> for Tensor<'_, T> {
         fn $method(&mut self, rhs: &Tensor<'_, T>) {
             if !self.flags.contains(TensorFlags::Writeable) {
                 panic!("Tensor is readonly");
@@ -108,11 +107,6 @@ macro_rules! define_binary_iop {
     };
 }
 
-define_binary_op!(Add, +, add);
-define_binary_op!(Sub, -, sub);
-// define_binary_op!(Mul, *, mul);
-define_binary_op!(Div, /, div);
-define_binary_op!(Rem, %, rem);
 define_binary_op!(BitAnd, &, bitand);
 define_binary_op!(BitOr, |, bitor);
 define_binary_op!(Shl, <<, shl);
@@ -127,79 +121,3 @@ define_binary_iop!(BitAndAssign, &=, bitand_assign);
 define_binary_iop!(BitOrAssign, |=, bitor_assign);
 define_binary_iop!(ShlAssign, <<=, shl_assign);
 define_binary_iop!(ShrAssign, >>=, shr_assign);
-
-
-impl<T: NumericDataType> Mul for Tensor<'_, T>
-where
-        for<'a> Tensor<'a, T>: TensorMethods
-{
-    type Output = Tensor<'static, T>;
-
-    fn mul(self, rhs: Tensor<T>) -> Self::Output {
-        &self * rhs
-    }
-}
-impl<T: NumericDataType> Mul<&Tensor<'_, T>> for Tensor<'_, T>
-where
-        for<'a> Tensor<'a, T>: TensorMethods
-{
-    type Output = Tensor<'static, T>;
-
-    fn mul(self, rhs: &Tensor<T>) -> Self::Output {
-        &self * rhs
-    }
-}
-impl<T: NumericDataType> Mul<Tensor<'_, T>> for &Tensor<'_, T>
-where
-        for<'a> Tensor<'a, T>: TensorMethods
-{
-    type Output = Tensor<'static, T>;
-
-    fn mul(self, rhs: Tensor<T>) -> Self::Output {
-        self * &rhs
-    }
-}
-impl<T: NumericDataType> Mul<&Tensor<'_, T>> for &Tensor<'_, T>
-where
-        for<'a> Tensor<'a, T>: TensorMethods
-{
-    type Output = Tensor<'static, T>;
-
-    fn mul(self, rhs: &Tensor<T>) -> Self::Output {
-        let shape = broadcast_shapes(&self.shape, &rhs.shape);
-        let lhs = self.broadcast_to(&shape);
-        let rhs = rhs.broadcast_to(&shape);
-
-        let requires_grad = self.requires_grad() || rhs.requires_grad();
-
-        let data = lhs.flatiter().zip(rhs.flatiter()).map(|(lhs, rhs)| lhs * rhs).collect();
-        let mut result = unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad, false) };
-
-        if requires_grad {
-            result.grad_fn = MultiplyBackwards::new(lhs, rhs);
-        }
-
-        result
-    }
-}
-impl<T: NumericDataType> Mul<T> for Tensor<'_, T>
-where
-        for<'a> Tensor<'a, T>: TensorMethods
-{
-    type Output = Tensor<'static, T>;
-
-    fn mul(self, rhs: T) -> Self::Output {
-        &self * rhs
-    }
-}
-impl<T: NumericDataType> Mul<T> for &Tensor<'_, T>
-where
-        for<'a> Tensor<'a, T>: TensorMethods
-{
-    type Output = Tensor<'static, T>;
-
-    fn mul(self, rhs: T) -> Self::Output {
-        let data = self.flatiter().map(|lhs| lhs * rhs).collect();
-        unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), data, self.requires_grad(), false) }
-    }
-}

@@ -30,6 +30,7 @@ use flags::TensorFlags;
 
 mod print;
 mod backward;
+mod arithmetic;
 
 pub(crate) const MAX_DIMS: usize = 32;
 pub(crate) const MAX_ARGS: usize = 16;
