@@ -18,6 +18,10 @@ pub(crate) struct MulBackwards<'a, T: FloatDataType> {
     rhs: Tensor<'a, T>
 }
 
+pub(crate) struct NegBackwards<T: FloatDataType> {
+    next_function: GradientFunction<T>
+}
+
 impl<'a, T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
     fn backward(&mut self, grad: &Tensor<T>) {
         self.next_functions[0].borrow_mut().backward(grad);
@@ -28,7 +32,7 @@ impl<'a, T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
 impl<'a, T: FloatDataType> GradientFuncTrait<T> for SubBackwards<T> {
     fn backward(&mut self, grad: &Tensor<T>) {
         self.next_functions[0].borrow_mut().backward(grad);
-        self.next_functions[1].borrow_mut().backward(grad);
+        self.next_functions[1].borrow_mut().backward(&-grad);
     }
 }
 
@@ -39,6 +43,12 @@ impl<T: FloatDataType> GradientFuncTrait<T> for MulBackwards<'_, T> {
 
         self.next_functions[0].borrow_mut().backward(&lhs_grad);
         self.next_functions[1].borrow_mut().backward(&rhs_grad);
+    }
+}
+
+impl<T: FloatDataType> GradientFuncTrait<T> for NegBackwards<T> {
+    fn backward(&mut self, grad: &Tensor<T>) {
+        self.next_function.borrow_mut().backward(&-grad);
     }
 }
 
@@ -69,6 +79,16 @@ impl<T: FloatDataType> MulBackwards<'static, T> {
 
             lhs: lhs.clone(),
             rhs: rhs.clone(),
+        };
+
+        Rc::new(RefCell::new(grad_fn))
+    }
+}
+
+impl<T: FloatDataType> NegBackwards<T> {
+    pub(crate) fn new(rhs: &Tensor<T>) -> GradientFunction<T> {
+        let grad_fn = Self {
+            next_function: rhs.get_grad_fn(),
         };
 
         Rc::new(RefCell::new(grad_fn))

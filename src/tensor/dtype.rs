@@ -1,10 +1,10 @@
-use crate::arithmetic::TensorBinaryOps;
+use crate::operations::TensorBinaryOps;
 use num::traits::MulAdd;
 use num::{Bounded, Float, NumCast, One, ToPrimitive, Zero};
 use rand::distributions::uniform::SampleUniform;
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync + TensorBinaryOps<Self> + 'static {}
 
@@ -191,7 +191,7 @@ impl IntegerDataType for i64 {}
 impl IntegerDataType for i128 {}
 impl IntegerDataType for isize {}
 
-pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform {}
+pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform + Neg<Output=Self> {}
 
 impl FloatDataType for f32 {}
 impl FloatDataType for f64 {}

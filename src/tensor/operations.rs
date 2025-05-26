@@ -1,9 +1,9 @@
 use crate::broadcast::broadcast_shapes;
 use crate::{IntegerDataType, RawDataType, Tensor, TensorMethods};
-use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
+use std::ops::{Add, BitAnd, BitOr, Div, Mul, Neg, Rem, Shl, Shr, Sub};
 
 use paste::paste;
-use crate::arithmetic_backwards::{AddBackwards, MulBackwards, SubBackwards};
+use crate::arithmetic_backwards::{AddBackwards, MulBackwards, NegBackwards, SubBackwards};
 
 macro_rules! define_binary_ops {
     ($($trait_: ident, $operator: tt, $method: ident;)* ) => {
@@ -141,6 +141,16 @@ pub trait TensorBinaryOps<T: RawDataType> {
         Shl, <<, shl;
         Shr, >>, shr;
     );
+
+    fn neg<'a, 'b>(rhs: impl AsRef<Tensor<'a, T>>) -> Tensor<'static, T>
+    where
+        T: Neg<Output=T>,
+    {
+        let rhs = rhs.as_ref();
+
+        let data = rhs.flatiter().map(|rhs| -rhs).collect();
+        unsafe { Tensor::from_contiguous_owned_buffer(rhs.shape.clone(), data, false, false) }
+    }
 }
 
 implement_binary_ops!(
@@ -155,6 +165,18 @@ implement_binary_ops!(
     Shr, shr;
 );
 
+impl<T: RawDataType + Neg<Output=T>> Neg for Tensor<'_, T> {
+    type Output = Tensor<'static, T>;
+
+    fn neg(self) -> Self::Output { <T as TensorBinaryOps<T>>::neg(self) }
+}
+
+impl<T: RawDataType + Neg<Output=T>> Neg for &Tensor<'_, T> {
+    type Output = Tensor<'static, T>;
+
+    fn neg(self) -> Self::Output { <T as TensorBinaryOps<T>>::neg(self) }
+}
+
 impl<T: IntegerDataType> TensorBinaryOps<T> for T {}
 impl TensorBinaryOps<bool> for bool {}
 
@@ -165,6 +187,21 @@ impl TensorBinaryOps<f32> for f32 {
         Sub, -, sub, SubBackwards;
         Mul, *, mul, MulBackwards;
     );
+
+    fn neg<'a, 'b>(rhs: impl AsRef<Tensor<'a, f32>>) -> Tensor<'static, f32> {
+        let rhs = rhs.as_ref();
+        
+        let requires_grad = rhs.requires_grad();
+
+        let data = rhs.flatiter().map(|rhs| -rhs).collect();
+        let mut result = unsafe { Tensor::from_contiguous_owned_buffer(rhs.shape.clone(), data, requires_grad, false) };
+        
+        if requires_grad {
+            result.grad_fn = NegBackwards::new(rhs);
+        }
+        
+        result
+    }
 }
 
 impl TensorBinaryOps<f64> for f64 {
@@ -174,4 +211,19 @@ impl TensorBinaryOps<f64> for f64 {
         Sub, -, sub, SubBackwards;
         Mul, *, mul, MulBackwards;
     );
+
+    fn neg<'a, 'b>(rhs: impl AsRef<Tensor<'a, f64>>) -> Tensor<'static, f64> {
+        let rhs = rhs.as_ref();
+
+        let requires_grad = rhs.requires_grad();
+
+        let data = rhs.flatiter().map(|rhs| -rhs).collect();
+        let mut result = unsafe { Tensor::from_contiguous_owned_buffer(rhs.shape.clone(), data, requires_grad, false) };
+
+        if requires_grad {
+            result.grad_fn = NegBackwards::new(rhs);
+        }
+
+        result
+    }
 }
