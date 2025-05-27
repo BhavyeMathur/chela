@@ -30,3 +30,9 @@ impl<T: RawDataType> Tensor<'_, T> {
         unsafe { fill_shape_and_stride(self.mut_ptr(), value, &shape, &stride); }
     }
 }
+
+impl<T: RawDataType + From<bool>> Tensor<'_, T> {
+    pub fn zero(&mut self) {
+        self.fill(false.into());
+    }
+}
