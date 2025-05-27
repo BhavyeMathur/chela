@@ -1,6 +1,7 @@
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 use crate::Tensor;
+use crate::util::functions::pad;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     /// Broadcasts the tensor to the specified shape.
@@ -29,7 +30,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     ///
     /// assert_eq!(broadcasted_tensor.shape(), &[2, 3]);
     /// ```
-    pub fn broadcast_to(&self, shape: &[usize]) -> Tensor<'a, T> {
+    pub fn broadcast_to(&'a self, shape: &[usize]) -> Tensor<'a, T> {
         let broadcast_shape = broadcast_shape(&self.shape, shape);
         let broadcast_stride = broadcast_stride(&self.stride, &broadcast_shape, &self.shape);
 
@@ -37,30 +38,6 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         result.flags -= TensorFlags::Writeable;
         result
     }
-}
-
-/// Left pads a slice with a specified value until it reaches a specified length.
-///
-/// # Parameters
-/// - `arr`: The slice to pad.
-/// - `value`: The value to pad with.
-/// - `n`: The desired length.
-///
-/// # Examples
-///
-/// ```ignore
-/// let arr = vec![1, 2, 3];
-/// let padded = pad(&arr, 0, 5);
-/// assert_eq!(padded, vec![0, 0, 1, 2, 3]);
-/// ```
-fn pad<T: Copy>(arr: &[T], value: T, n: usize) -> Vec<T> {
-    let mut new_arr = Vec::with_capacity(n);
-
-    for _ in 0..(n - arr.len()) {
-        new_arr.push(value);
-    }
-    new_arr.extend(arr);
-    new_arr
 }
 
 /// Adjusts `shape` and `stride` to match an `ndims`-dimensional view of the tensor

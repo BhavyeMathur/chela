@@ -19,3 +19,28 @@ pub(crate) fn permute_array<T: Clone>(arr: &mut [T], permutation: &[usize]) {
         arr[i] = original[src_idx].clone();
     }
 }
+
+
+/// Left pads a slice with a specified value until it reaches a specified length.
+///
+/// # Parameters
+/// - `arr`: The slice to pad.
+/// - `value`: The value to pad with.
+/// - `n`: The desired length.
+///
+/// # Examples
+///
+/// ```ignore
+/// let arr = vec![1, 2, 3];
+/// let padded = pad(&arr, 0, 5);
+/// assert_eq!(padded, vec![0, 0, 1, 2, 3]);
+/// ```
+pub(crate) fn pad<T: Copy>(arr: &[T], value: T, n: usize) -> Vec<T> {
+    let mut new_arr = Vec::with_capacity(n);
+
+    for _ in 0..(n - arr.len()) {
+        new_arr.push(value);
+    }
+    new_arr.extend(arr);
+    new_arr
+}

@@ -22,7 +22,7 @@ impl<T: RawDataType> Tensor<'_, T> {
 }
 
 impl<'a, T: RawDataType> NdIterator<'a, T> {
-    pub(super) fn from<I>(tensor: &Tensor<'a, T>, axes: I) -> Self
+    pub(super) fn from<I>(tensor: &'a Tensor<'a, T>, axes: I) -> Self
     where
         I: IntoIterator<Item=usize> + HasLength + Clone,
     {
@@ -50,7 +50,7 @@ impl<'a, T: RawDataType> Iterator for NdIterator<'a, T> {
             return None;
         }
 
-        let return_value = self.result.view();
+        let return_value = self.result.clone();  // TODO this shouldn't be cloned!
         self.iterator_index += 1;
         
         for i in (0..self.shape.len()).rev() {

@@ -3,19 +3,16 @@ use crate::into_gradient::IntoTensor;
 use crate::{FloatDataType, Tensor, TensorMethods};
 
 impl<'a, T: FloatDataType> Tensor<'a, T> {
-    pub(crate) fn get_grad_fn(&self) -> GradientFunction<T> {
+    pub(crate) fn get_grad_fn(&'a self) -> GradientFunction<T> {
         self.grad_fn.clone()
     }
 
-    pub fn gradient(&self) -> Option<Tensor<T>> {
+    pub fn gradient(&'a self) -> Option<Tensor<'a, T>> {
         self.grad_fn.borrow().gradient()
     }
 
     pub fn zero_gradient(&self) {
-        match self.gradient() {
-            None => {},
-            Some(mut grad) => { grad.zero() }
-        }
+        self.grad_fn.borrow_mut().zero();
     }
 
     pub fn backward_with(&self, gradient: impl IntoTensor<'a, T>) {

@@ -85,7 +85,6 @@ fn parse_operand_subscripts<A: TensorMethods>(subscripts: &str,
             for j in i..i + *broadcast_dims {
                 result[j] = 0;
             }
-            
         } else if label != b' ' {
             panic!("invalid label '{}' in einsum string, subscripts must be letters", label);
         }
@@ -191,7 +190,7 @@ fn reshape_shape_and_stride_for_einsum<A: TensorMethods>(operand: &A,
     Some((new_stride, new_shape))
 }
 
-fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &Tensor<'a, T>,
+fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
                                               labels: &[i8; MAX_DIMS],
                                               output_dims: usize,
                                               output_labels: &[i8]) -> Option<Tensor<'a, T>> {
@@ -207,7 +206,7 @@ fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &Tensor<'a, T>,
 /*
 Collapses dimensions with repeated subscripts. For example in ii-> (trace) or ii->i (diagonal)
  */
-fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &Tensor<'a, T>,
+fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
                                                   labels: &mut [i8; MAX_DIMS]) -> Tensor<'a, T> {
     // fast path if operand dimensions cannot be combined
     if labels.iter().all(|&val| val >= 0) {
@@ -277,7 +276,7 @@ fn operand_stride_for_einsum(ndims: usize,
     }
 }
 
-pub fn einsum_view<'a, T: NumericDataType>(operand: &Tensor<'a, T>,
+pub fn einsum_view<'a, T: NumericDataType>(operand: &'a Tensor<'a, T>,
                                            subscripts: (&str, &str)) -> Option<Tensor<'a, T>> {
     let mut labels = [0; MAX_DIMS];
     let mut output_labels = [0; MAX_DIMS];

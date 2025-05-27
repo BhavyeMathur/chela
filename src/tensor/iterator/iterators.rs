@@ -16,15 +16,15 @@ impl<T: RawDataType> Tensor<'_, T> {
 }
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn iter(&self) -> NdIterator<'a, T> {
+    pub fn iter(&'a self) -> NdIterator<'a, T> {
         NdIterator::from(self, [0])
     }
 
-    pub fn iter_along(&self, axis: impl AxisType) -> NdIterator<'a, T> {
+    pub fn iter_along(&'a self, axis: impl AxisType) -> NdIterator<'a, T> {
         NdIterator::from(self, [axis.get_absolute(self.shape.len())])
     }
 
-    pub fn nditer(&self, axes: impl AxesType) -> NdIterator<'a, T> {
+    pub fn nditer(&'a self, axes: impl AxesType) -> NdIterator<'a, T> {
         NdIterator::from(self, axes)
     }
 }

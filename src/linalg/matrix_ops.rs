@@ -225,7 +225,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     ///
     /// let diagonal = tensor.diagonal();
     /// assert_eq!(diagonal, Tensor::from([1, 5, 9]));
-    pub fn diagonal(&self) -> Tensor<'a, T> {
+    pub fn diagonal(&'a self) -> Tensor<'a, T> {
         self.diagonal_along(0, 1)
     }
 
@@ -245,7 +245,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     ///
     /// let diagonal = tensor.offset_diagonal(1);
     /// assert_eq!(diagonal, Tensor::from([2, 6]));
-    pub fn offset_diagonal(&self, offset: isize) -> Tensor<'a, T> {
+    pub fn offset_diagonal(&'a self, offset: isize) -> Tensor<'a, T> {
         self.offset_diagonal_along(offset, 0, 1)
     }
 
@@ -266,7 +266,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     ///
     /// let diagonal = tensor.diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
     /// assert_eq!(diagonal, Tensor::from([1, 5, 9]));
-    pub fn diagonal_along(&self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'a, T> {
+    pub fn diagonal_along(&'a self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'a, T> {
         self.offset_diagonal_along(0, axis1, axis2)
     }
 
@@ -287,7 +287,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     ///
     /// let diagonal = tensor.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
     /// assert_eq!(diagonal, Tensor::from([4, 8]));
-    pub fn offset_diagonal_along(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'a, T> {
+    pub fn offset_diagonal_along(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'a, T> {
         assert!(self.ndims() >= 2, "diagonals require a tensor with at least 2 dimensions");
 
         let axis1 = axis1.get_absolute(self.ndims());
@@ -324,7 +324,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             dim1 -= offset;
             offset * stride1
         };
-        
+
 
         // compute the resultant shape and stride
 
