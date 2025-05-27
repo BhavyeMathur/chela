@@ -1,8 +1,34 @@
 use crate::dtype::RawDataType;
-use crate::Tensor;
 use crate::tensor::flags::TensorFlags;
+use crate::Tensor;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
+    /// Broadcasts the tensor to the specified shape.
+    ///
+    /// This method returns a *readonly* view of the tensor with the desired shape.
+    /// Broadcasting is done by left-padding the tensor's shape with ones until they reach the
+    /// desired dimension. Then, any axes with length 1 are repeated to match the target shape.
+    ///
+    /// For example, suppose the tensor's shape is `[2, 3]` and the broadcast shape is `[3, 2, 3]`.
+    /// Then the tensor's shape becomes `[1, 2, 3]` after padding and `[3, 2, 3]` after repeating
+    /// the first axis.
+    ///
+    /// # Panics
+    /// This method panics if the target shape is incompatible with the tensor.
+    ///
+    /// - If `shape.len()` is less than the dimensionality of the tensor.
+    /// - If a dimension in `shape` does not equal the corresponding dimension in the tensor's `shape`
+    ///   and cannot be broadcasted (i.e., it is not 1 or does not match).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([1, 2, 3]);  // shape is [3]
+    /// let broadcasted_tensor = tensor.broadcast_to(&[2, 3]);
+    ///
+    /// assert_eq!(broadcasted_tensor.shape(), &[2, 3]);
+    /// ```
     pub fn broadcast_to(&self, shape: &[usize]) -> Tensor<'a, T> {
         let broadcast_shape = broadcast_shape(&self.shape, shape);
         let broadcast_stride = broadcast_stride(&self.stride, &broadcast_shape, &self.shape);
@@ -13,6 +39,20 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     }
 }
 
+/// Left pads a slice with a specified value until it reaches a specified length.
+///
+/// # Parameters
+/// - `arr`: The slice to pad.
+/// - `value`: The value to pad with.
+/// - `n`: The desired length.
+///
+/// # Examples
+///
+/// ```ignore
+/// let arr = vec![1, 2, 3];
+/// let padded = pad(&arr, 0, 5);
+/// assert_eq!(padded, vec![0, 0, 1, 2, 3]);
+/// ```
 fn pad<T: Copy>(arr: &[T], value: T, n: usize) -> Vec<T> {
     let mut new_arr = Vec::with_capacity(n);
 
@@ -23,6 +63,25 @@ fn pad<T: Copy>(arr: &[T], value: T, n: usize) -> Vec<T> {
     new_arr
 }
 
+/// Adjusts `shape` and `stride` to match an `ndims`-dimensional view of the tensor
+///
+/// This is done by left-padding `shape` with ones and `stride` with zeros until they reach
+/// the desired dimension.
+///
+/// # Panics
+/// - If `shape.len() > ndims`
+///
+/// # Example
+/// ```ignore
+/// let shape = vec![2, 3];
+/// let stride = vec![3, 1];
+/// let ndims = 4;
+///
+/// let (padded_shape, padded_stride) = pad_dimensions(&shape, &stride, ndims);
+///
+/// assert_eq!(padded_shape, vec![1, 1, 2, 3]);
+/// assert_eq!(padded_stride, vec![0, 0, 3, 1]);
+/// ```
 fn pad_dimensions(shape: &[usize], stride: &[usize], ndims: usize) -> (Vec<usize>, Vec<usize>) {
     let n = ndims - shape.len();
     let shape = pad(shape, 1, n);
@@ -31,6 +90,18 @@ fn pad_dimensions(shape: &[usize], stride: &[usize], ndims: usize) -> (Vec<usize
     (shape, stride)
 }
 
+/// Checks if broadcasting a shape to another is possible. Panics otherwise.
+///
+/// Broadcasting is done by left-padding the tensor's shape with ones until they reach the
+/// desired dimension. Then, any axes with length 1 are repeated to match the target shape.
+///
+/// For example, suppose `shape` is `[2, 3]` and `to` is `[3, 2, 3]`.
+/// Then `shape` becomes `[1, 2, 3]` after padding and `[3, 2, 3]` after repeating the first axis.
+///
+/// # Panics
+/// - If the number of dimensions in `to` is less than the number of dimensions in `shape`.
+/// - If a dimension in `shape` does not equal the corresponding dimension in `to`
+///   and cannot be broadcasted (i.e., it is not 1 or does not match).
 fn broadcast_shape(shape: &[usize], to: &[usize]) -> Vec<usize> {
     let to = to.to_vec();
 
@@ -49,7 +120,29 @@ fn broadcast_shape(shape: &[usize], to: &[usize]) -> Vec<usize> {
     to
 }
 
-fn broadcast_stride(stride: &[usize], broadcast_shape: &[usize], original_shape: &[usize]) -> Vec<usize> {
+/// Calculates the broadcasted strides for a tensor to match the specified broadcast shape.
+///
+/// This is done be left-padding the original stride with zeros until it matches the desired dimension.
+/// The stride is set to 0 for any axes that have been repeated and kept the same otherwise.
+///
+/// # Panics
+/// - If the number of dimensions in `broadcast_shape` is less than the number of dimensions in `original_shape`.
+/// - If a dimension in `original_shape` does not equal the corresponding dimension in `broadcast_shape`
+///   and cannot be broadcasted (i.e., it is not 1 or does not match).
+///
+/// # Examples
+///
+/// ```ignore
+/// let stride = vec![4, 1];
+/// let original_shape = vec![2, 3];
+/// let broadcast_shape = vec![3, 2, 3];
+///
+/// let result = broadcast_stride(&stride, &broadcast_shape, &original_shape);
+/// assert_eq!(result, vec![0, 4, 1]);
+/// ```
+fn broadcast_stride(stride: &[usize],
+                    broadcast_shape: &[usize],
+                    original_shape: &[usize]) -> Vec<usize> {
     let ndims = broadcast_shape.len();
 
     if ndims < original_shape.len() {
@@ -76,12 +169,33 @@ fn broadcast_stride(stride: &[usize], broadcast_shape: &[usize], original_shape:
     broadcast_stride
 }
 
-// TODO tests for broadcast_stride()
-
+/// Broadcasts two compatible shapes together and returns the resulting shape.
+///
+/// Broadcasting follows the rules of NumPy-style broadcasting:
+/// - The smaller shape is left-padded with ones until it matches the length of the other shape
+/// - If one of the shapes is of length 1 at a particular axis, it can broadcast to the length of the other shape at that axis.
+/// - If both shapes have differing lengths at a certain axis and neither is 1, the two shapes are deemed incompatible for broadcasting.
+///
+/// For example, if `first` is `[8, 1, 6]` and `second` is `[7, 1]`, then `second` is left-padded
+/// to become `[1, 7, 1]`. The middle axis of `first` is repeated to have dimension 7 and the
+/// first and last axes of `second` are repeated to have dimensions 8 and 6 respectively.
+/// The resulting shape is `[8, 7, 6]`.
+///
+/// # Panics
+/// - If the two shapes are incompatible for broadcasting
+///
+/// # Examples
+/// ```ignore
+/// let shape1 = vec![8, 1, 6];
+/// let shape2 = vec![7, 1];
+/// let result = broadcast_shapes(&shape1, &shape2);
+/// assert_eq!(result, vec![8, 7, 6]);
+/// ```
 pub(super) fn broadcast_shapes(first: &[usize], second: &[usize]) -> Vec<usize> {
     let mut shape1;
     let mut shape2;
 
+    // pad shapes with ones to match in length
     if first.len() > second.len() {
         shape1 = pad(second, 1, first.len());
         shape2 = first.to_vec();
@@ -91,11 +205,16 @@ pub(super) fn broadcast_shapes(first: &[usize], second: &[usize]) -> Vec<usize> 
     }
 
     for axis in 0..shape1.len() {
+        // If one of the shapes is 1 at a particular axis,
+        // it can be repeated to match the length of the other's shape at that axis   
         if shape1[axis] == 1 {
             shape1[axis] = shape2[axis];
         } else if shape2[axis] == 1 {
             shape2[axis] = shape1[axis];
-        } else if shape1[axis] != shape2[axis] {
+        }
+
+        // if neither shape is 1 along axis, and they don't match, the shapes cannot be broadcast
+        else if shape1[axis] != shape2[axis] {
             panic!("broadcasting {first:?} is not compatible with the desired shape {second:?}");
         }
     }
