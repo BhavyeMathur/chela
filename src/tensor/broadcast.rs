@@ -1,7 +1,7 @@
 use crate::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
-use crate::Tensor;
 use crate::util::functions::pad;
+use crate::{FloatDataType, Tensor};
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     /// Broadcasts the tensor to the specified shape.
@@ -168,7 +168,7 @@ fn broadcast_stride(stride: &[usize],
 /// let result = broadcast_shapes(&shape1, &shape2);
 /// assert_eq!(result, vec![8, 7, 6]);
 /// ```
-pub(super) fn broadcast_shapes(first: &[usize], second: &[usize]) -> Vec<usize> {
+pub(crate) fn broadcast_shapes(first: &[usize], second: &[usize]) -> Vec<usize> {
     let mut shape1;
     let mut shape2;
 
@@ -199,9 +199,50 @@ pub(super) fn broadcast_shapes(first: &[usize], second: &[usize]) -> Vec<usize> 
     shape1
 }
 
+/// Determines the axes that are broadcasted when broadcasting from the `original_shape` 
+/// to the `broadcast_shape`.
+///
+/// # Panics
+/// - If `broadcast_shape` has fewer dimensions than `original_shape`.
+///
+/// # Example
+///
+/// ```ignore
+/// let broadcast_shape = vec![4, 3, 2];
+/// let original_shape = vec![3, 1];
+/// let axes = get_broadcasted_axes(&broadcast_shape, &original_shape);
+/// assert_eq!(axes, vec![0, 2]);
+/// ```
+///
+/// In this example:
+/// - Dimension `0` in the `broadcast_shape` (size `4`) is broadcasted because `original_shape` is missing
+///   that dimension.
+/// - Dimension `2` in the `broadcast_shape` (size `2`) is broadcasted because `original_shape[1]` is `1`.
+pub(crate) fn get_broadcasted_axes(broadcast_shape: &[usize],
+                                   original_shape: &[usize]) -> Vec<isize> {
+
+    if broadcast_shape.len() < original_shape.len() {
+        panic!("cannot broadcast {original_shape:?} to shape {broadcast_shape:?} with fewer dimensions");
+    }
+    
+    let ndims_diff = broadcast_shape.len() - original_shape.len();
+    let mut axes = Vec::new();
+
+    for i in 0..broadcast_shape.len() {
+        let to_dim = broadcast_shape[i];
+        let from_dim = if i < ndims_diff { 1 } else { original_shape[i - ndims_diff] };
+
+        if from_dim == 1 && to_dim > 1 || i < ndims_diff {
+            axes.push(i as isize);
+        }
+    }
+
+    axes
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::broadcast::broadcast_shapes;
+    use crate::broadcast::{broadcast_shapes, get_broadcasted_axes};
 
     #[test]
     fn test_broadcast_shapes() {
@@ -212,5 +253,38 @@ mod tests {
         let output = broadcast_shapes(&shape1, &shape2);
 
         assert_eq!(output, correct);
+    }
+
+    #[test]
+    fn test_get_broadcasted_axes() {
+        // grad_shape: [3, 3]
+        // original_shape: [3, 1]
+        // axes to sum: [1]
+        assert_eq!(get_broadcasted_axes(&[3, 3], &[3, 1]), vec![1]);
+
+        // grad_shape: [2, 3]
+        // original_shape: [3]
+        // axes to sum: [0]
+        assert_eq!(get_broadcasted_axes(&[2, 3], &[3]), vec![0]);
+
+        // grad_shape: [8, 7, 6]
+        // original_shape: [7, 1]
+        // axes to sum: [0, 2]
+        assert_eq!(get_broadcasted_axes(&[8, 7, 6], &[7, 1]), vec![0, 2]);
+        
+        // grad_shape: [4, 5, 6]
+        // original_shape: [1, 5, 1]
+        // axes to sum: [0, 2]
+        assert_eq!(get_broadcasted_axes(&[4, 5, 6], &[1, 5, 1]), vec![0, 2]);
+
+        // grad_shape: [5, 6]
+        // original_shape: [1, 6]
+        // axes to sum: [0]
+        assert_eq!(get_broadcasted_axes(&[5, 6], &[1, 6]), vec![0]);
+
+        // grad_shape: [5, 6]
+        // original_shape: [5, 1]
+        // axes to sum: [1]
+        assert_eq!(get_broadcasted_axes(&[5, 6], &[5, 1]), vec![1]);
     }
 }
