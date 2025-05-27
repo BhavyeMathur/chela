@@ -35,14 +35,14 @@ fn broadcast_shape(shape: &[usize], to: &[usize]) -> Vec<usize> {
     let to = to.to_vec();
 
     if to.len() < shape.len() {
-        panic!("cannot broadcast to fewer dimensions")
+        panic!("cannot broadcast {shape:?} to shape {to:?} with fewer dimensions")
     }
 
     let last_ndims = &to[to.len() - shape.len()..];
 
     for axis in 0..shape.len() {
         if shape[axis] != 1 && shape[axis] != last_ndims[axis] {
-            panic!("broadcast is not compatible with the desired shape");
+            panic!("broadcasting {shape:?} is not compatible with the desired shape {to:?}");
         }
     }
 
@@ -53,7 +53,7 @@ fn broadcast_stride(stride: &[usize], broadcast_shape: &[usize], original_shape:
     let ndims = broadcast_shape.len();
 
     if ndims < original_shape.len() {
-        panic!("cannot broadcast to fewer dimensions")
+        panic!("cannot broadcast {original_shape:?} to shape {broadcast_shape:?} with fewer dimensions");
     }
 
     let mut broadcast_stride = Vec::with_capacity(ndims);
@@ -69,7 +69,7 @@ fn broadcast_stride(stride: &[usize], broadcast_shape: &[usize], original_shape:
         } else if original_axis_length == broadcast_shape[axis] {
             broadcast_stride.push(stride[axis - original_first_axis]);
         } else {
-            panic!("broadcast is not compatible with the desired shape");
+            panic!("broadcasting {original_shape:?} is not compatible with the desired shape {broadcast_shape:?}");
         }
     }
 
@@ -96,7 +96,7 @@ pub(super) fn broadcast_shapes(first: &[usize], second: &[usize]) -> Vec<usize> 
         } else if shape2[axis] == 1 {
             shape2[axis] = shape1[axis];
         } else if shape1[axis] != shape2[axis] {
-            panic!("broadcast is not compatible with the desired shape");
+            panic!("broadcasting {first:?} is not compatible with the desired shape {second:?}");
         }
     }
 

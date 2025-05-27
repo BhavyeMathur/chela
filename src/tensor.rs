@@ -11,7 +11,6 @@ pub mod iterator;
 pub use iterator::*;
 
 pub mod reduce;
-pub use reduce::*;
 
 pub mod constructors;
 pub mod index_impl;

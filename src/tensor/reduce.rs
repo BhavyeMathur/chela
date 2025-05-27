@@ -1,11 +1,9 @@
-#[cfg(use_apple_vdsp)]
-use crate::accelerate::vdsp::*;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::util::to_vec::ToVec;
 use crate::{AxisType, FloatDataType, Tensor, TensorMethods};
-use num::{Bounded, NumCast};
+use num::{NumCast};
 use std::collections::VecDeque;
 
 /// Returns a tuple `(output_shape, map_stride)`
@@ -161,7 +159,7 @@ impl<T: NumericDataType> Tensor<'_, T> {
 //
 // #[cfg(not(use_apple_vdsp))]
 // impl TensorNumericReduce<f64> for Tensor<'_, f64> {}
-// 
+// TODO
 // 
 // #[cfg(use_apple_vdsp)]
 // impl TensorNumericReduce<f32> for Tensor<'_, f32> {

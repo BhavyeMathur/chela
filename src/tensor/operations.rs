@@ -40,7 +40,7 @@ macro_rules! define_binary_ops {
     }
 }
 
-macro_rules! define_float_binary_ops {
+macro_rules! define_binary_ops_with_grad {
     ($dtype:ty, $($trait_: ident, $operator: tt, $method: ident, $backwards: ident;)* ) => {
         $(
             fn $method<'a, 'b>(lhs: impl AsRef<Tensor<'a, $dtype>>,
@@ -49,13 +49,17 @@ macro_rules! define_float_binary_ops {
                 let lhs = lhs.as_ref();
                 let rhs = rhs.as_ref();
 
-                let shape = broadcast_shapes(&lhs.shape, &rhs.shape);
-                let lhs = lhs.broadcast_to(&shape);
-                let rhs = rhs.broadcast_to(&shape);
-
                 let requires_grad = lhs.requires_grad() || rhs.requires_grad();
 
-                let data = lhs.flatiter().zip(rhs.flatiter()).map(|(lhs, rhs)| lhs $operator rhs).collect();
+                let shape = broadcast_shapes(&lhs.shape, &rhs.shape);
+                let broadcasted_lhs = lhs.broadcast_to(&shape);
+                let broadcasted_rhs = rhs.broadcast_to(&shape);
+
+                let data = broadcasted_lhs.flatiter()
+                                        .zip(broadcasted_rhs.flatiter())
+                                        .map(|(a, b)| a $operator b)
+                                        .collect();
+
                 let mut result = unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad, false) };
 
                 if requires_grad {
@@ -197,7 +201,7 @@ impl<T: IntegerDataType> TensorBinaryOps<T> for T {}
 impl TensorBinaryOps<bool> for bool {}
 
 impl TensorBinaryOps<f32> for f32 {
-    define_float_binary_ops!(
+    define_binary_ops_with_grad!(
         f32,
         Add, +, add, AddBackwards;
         Sub, -, sub, SubBackwards;
@@ -207,7 +211,7 @@ impl TensorBinaryOps<f32> for f32 {
 }
 
 impl TensorBinaryOps<f64> for f64 {
-    define_float_binary_ops!(
+    define_binary_ops_with_grad!(
         f64,
         Add, +, add, AddBackwards;
         Sub, -, sub, SubBackwards;
@@ -227,7 +231,11 @@ macro_rules! define_binary_iop {
     impl<T: RawDataType + $trait_> $trait_<&Tensor<'_, T>> for Tensor<'_, T> {
         fn $method(&mut self, rhs: &Tensor<'_, T>) {
             if !self.flags.contains(TensorFlags::Writeable) {
-                panic!("Tensor is readonly");
+                panic!("tensor is readonly.");
+            }
+
+            if self.requires_grad() && self.is_leaf() {
+                panic!("a leaf tensor that requires grad cannot be used in an in-place operation.");
             }
 
             let rhs = rhs.broadcast_to(&self.shape);
