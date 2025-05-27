@@ -1,14 +1,372 @@
-use crate::axes_traits::AxisType;
+use crate::axis::AxisType;
 use crate::einsum::einsum_into_ptr;
 use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
 use std::cmp::min;
 
+impl<'a, T: MatrixOps> Tensor<'a, T> {
+    /// Calculates the matrix product of two tensors.
+    ///
+    /// - If both tensors are 1D, then their dot product is returned.
+    /// - If both tensors are 2D, then their matrix product is returned.
+    /// - If the first tensor is 2D and the second tensor is 1D, then the matrix-vector product is returned.
+    ///
+    /// # Panics
+    /// - If the dimensions/shape of the tensors is incompatible
+    ///
+    /// # Example
+    /// ```
+    /// # use chela::Tensor;
+    ///
+    /// let a = Tensor::from(vec![
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    /// ]);
+    ///
+    /// let b = Tensor::from(vec![
+    ///     [7, 8],
+    ///     [9, 10],
+    ///     [11, 12],
+    /// ]);
+    ///
+    /// let result = a.matmul(&b);
+    /// assert_eq!(result, Tensor::from(vec![
+    ///     [58, 64],
+    ///     [139, 154],
+    /// ]));
+    /// ```
+    pub fn matmul<'r>(&self, other: impl AsRef<Tensor<'a, T>>) -> Tensor<'r, T> {
+        let other = other.as_ref();
+
+        if self.ndims() == 1 && other.ndims() == 1 {
+            return self.dot(other);
+        }
+
+        if self.ndims() == 2 && other.ndims() == 1 {
+            assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-vector product: {:?} and {:?})", self.shape(), other.shape());
+            return unsafe { <T as MatrixOps>::matrix_vector_product(self, other) };
+        }
+
+        if self.ndims() == 2 && other.ndims() == 2 {
+            assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-matrix product: {:?} and {:?})", self.shape(), other.shape());
+
+            let requires_grad = self.requires_grad() || other.requires_grad();
+            let output_shape = [self.shape()[0], other.shape()[1]];
+
+            let result = Tensor::zeros_requires_grad(output_shape, requires_grad);
+            unsafe { <T as MatrixOps>::matrix_matrix_product(self, other, result.stride(), result.mut_ptr()) };
+            return result;
+        }
+
+        panic!("matmul requires a tensor with 1 or 2 dimensions");
+    }
+
+    /// Performs batch matrix multiplication on 3D tensors.
+    ///
+    /// The shape of the resulting tensor will be `[batch_size, self.shape()[1], other.shape()[2]]`,
+    /// where `batch_size` is the shared first dimension of both input tensors.
+    ///
+    /// # Panics
+    /// - If either tensor is not 3D
+    /// - If the tensors do not have dimensions compatible for batch matrix multiplication.
+    ///
+    /// # Example
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor_a = Tensor::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
+    /// let tensor_b = Tensor::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices
+    /// let result = tensor_a.bmm(&tensor_b);
+    /// assert_eq!(result.shape(), [3, 2, 5]); // result is 3 batches of 2x5 matrices
+    /// ```
+    pub fn bmm<'r>(&self, other: impl AsRef<Tensor<'a, T>>) -> Tensor<'r, T> {
+        let other = other.as_ref();
+        assert_eq!(self.ndims(), 3, "batch matrix multiplication requires 3D tensors");
+        assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D tensors");
+        assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
+
+        let requires_grad = self.requires_grad() || other.requires_grad();
+        let output_shape = [self.len(), self.shape()[1], other.shape()[2]];
+
+        let result = Tensor::zeros_requires_grad(output_shape, requires_grad);
+        unsafe { <T as MatrixOps>::batch_matrix_matrix_product(self, other, result.stride(), result.mut_ptr()); }
+        result
+    }
+}
+
+impl<'a, T: SumOfProductsType> Tensor<'a, T> {
+    /// Calculates the dot product of two 1D tensors.
+    ///
+    /// # Panics
+    /// - Panics if either tensor is not 1D
+    /// - Panics if the lengths of the two tensors are not equal
+    ///
+    /// # Examples
+    /// ```
+    /// # use chela::*;
+    /// let tensor1 = Tensor::from([1, 2, 3]);
+    /// let tensor2 = Tensor::from([4, 5, 6]);
+    /// let result = tensor1.dot(tensor2);
+    /// assert_eq!(result.value(), 32); // 1*4 + 2*5 + 3*6 = 32
+    /// ```
+    pub fn dot<'b, 'r>(&self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
+        let other = other.as_ref();
+        assert_eq!(self.ndims(), 1, "dot product requires a tensor with 1 dimension");
+        assert_eq!(other.ndims(), 1, "dot product requires a tensor with 1 dimension");
+        assert_eq!(self.len(), other.len(), "dot product requires tensors with the same length");
+
+        let requires_grad = self.requires_grad() || other.requires_grad();
+        let result = Tensor::scalar_requires_grad(T::default(), requires_grad);
+
+        unsafe {
+            <T as SumOfProductsType>::sum_of_products_in_strides_n_n_out_stride_0(&[self.mut_ptr(), other.mut_ptr(), result.mut_ptr()],
+                                                                                  &[self.stride()[0], other.stride()[0], 0],
+                                                                                  self.len())
+        };
+
+        result
+    }
+}
+
+impl<'a, T: NumericDataType> Tensor<'a, T>
+where
+    Tensor<'a, T>: TensorNumericReduce<T>
+{
+    /// Returns the trace of the tensor along its first 2 axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// assert_eq!(tensor.trace(), Tensor::scalar(1 + 5 + 9));
+    pub fn trace<'r>(&self) -> Tensor<'r, T> {
+        self.offset_trace(0)
+    }
+
+    /// Returns the sum of an offset tensor diagonal along its first 2 axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// assert_eq!(tensor.offset_trace(-1), Tensor::scalar(4 + 8));
+    pub fn offset_trace<'r>(&self, offset: isize) -> Tensor<'r, T> {
+        self.offset_trace_along(offset, 0, 1)
+    }
+
+    /// Returns the trace of a tensor along the specified axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    /// - if `axis1` and `axis2` are the same or are out-of-bounds
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// assert_eq!(tensor.trace_along(0, 1), Tensor::scalar(1 + 5 + 9));
+    pub fn trace_along<'r>(&self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'r, T> {
+        self.offset_trace_along(0, axis1, axis2)
+    }
+
+    /// Returns the sum of an offset tensor diagonal along the specified axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    /// - if `axis1` and `axis2` are the same or are out-of-bounds
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// assert_eq!(tensor.offset_trace_along(1, 0, 1), Tensor::scalar(2 + 6));
+    pub fn offset_trace_along<'r>(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'r, T> {
+        let diagonal = self.offset_diagonal_along(offset, axis1, axis2);
+        diagonal.sum_along(-1)
+    }
+}
+
+impl<'a, T: RawDataType> Tensor<'a, T> {
+    /// Returns a diagonal view of the tensor along its first 2 axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// let diagonal = tensor.diagonal();
+    /// assert_eq!(diagonal, Tensor::from([1, 5, 9]));
+    pub fn diagonal(&self) -> Tensor<'a, T> {
+        self.diagonal_along(0, 1)
+    }
+
+    /// Returns an offset diagonal view of the tensor along its first 2 axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// let diagonal = tensor.offset_diagonal(1);
+    /// assert_eq!(diagonal, Tensor::from([2, 6]));
+    pub fn offset_diagonal(&self, offset: isize) -> Tensor<'a, T> {
+        self.offset_diagonal_along(offset, 0, 1)
+    }
+
+    /// Returns a diagonal view of the tensor along the specified axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    /// - if `axis1` and `axis2` are the same or are out-of-bounds
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// let diagonal = tensor.diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
+    /// assert_eq!(diagonal, Tensor::from([1, 5, 9]));
+    pub fn diagonal_along(&self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'a, T> {
+        self.offset_diagonal_along(0, axis1, axis2)
+    }
+
+    /// Returns an offset diagonal view of the tensor along the specified axes.
+    ///
+    /// # Panics
+    /// - if the tensor has fewer than 2 dimensions.
+    /// - if `axis1` and `axis2` are the same or are out-of-bounds
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    /// let tensor = Tensor::from([
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    ///     [7, 8, 9]
+    /// ]);
+    ///
+    /// let diagonal = tensor.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
+    /// assert_eq!(diagonal, Tensor::from([4, 8]));
+    pub fn offset_diagonal_along(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'a, T> {
+        assert!(self.ndims() >= 2, "diagonals require a tensor with at least 2 dimensions");
+
+        let axis1 = axis1.get_absolute(self.ndims());
+        let axis2 = axis2.get_absolute(self.ndims());
+
+        assert_ne!(axis1, axis2, "axis1 and axis2 cannot be the same");
+
+
+        // get the new dimensions and strides of the two axes
+
+        let mut dim1 = self.shape()[axis1];
+        let mut dim2 = self.shape()[axis2];
+
+        let stride1 = self.stride()[axis1];
+        let stride2 = self.stride()[axis2];
+
+
+        // modify the dimensions and data pointer based on offset
+
+        let ptr_offset = if offset >= 0 {
+            let offset = offset as usize;
+            if offset >= dim2 {
+                panic!("invalid offset {} for axis with dimension {}", offset, dim2);
+            }
+
+            dim2 -= offset;
+            offset * stride2
+        } else {
+            let offset = -offset as usize;
+            if offset >= dim1 {
+                panic!("invalid offset -{} for axis with dimension {}", offset, dim1);
+            }
+
+            dim1 -= offset;
+            offset * stride1
+        };
+        
+
+        // compute the resultant shape and stride
+
+        let mut result_shape = Vec::with_capacity(self.ndims() - 1);
+        let mut result_stride = Vec::with_capacity(self.ndims() - 1);
+
+        for axis in 0..self.ndims() {
+            if axis == axis1 || axis == axis2 {
+                continue;
+            }
+
+            result_shape.push(self.shape()[axis]);
+            result_stride.push(self.stride()[axis]);
+        }
+
+        result_shape.push(min(dim1, dim2));
+        result_stride.push(stride1 + stride2);
+
+        // create and return the diagonal view
+        unsafe { self.reshaped_view_with_offset(ptr_offset, result_shape, result_stride) }
+    }
+}
+
+
 trait MatrixOps: SumOfProductsType {
-    unsafe fn batch_matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                      rhs: &Tensor<'b, Self>,
-                                                      result_stride: &[usize],
-                                                      mut result: *mut Self) {
+    /// Performs an unchecked batched matrix-matrix product operation
+    /// and writes the result to the given pointer
+    ///
+    /// # Safety
+    ///
+    /// - The dimensions of `lhs` and `rhs` must be `(b, i, j)` and `(b, j, k)`.
+    /// - `result` must point to a valid data buffer with dimension `(b, i, k)`
+    /// - `result_stride` must represent a valid layout for the results buffer with 
+    ///   the last 2 dimensions being contiguous.
+    /// - `result` must not overlap with `lhs` or `rhs`.
+    unsafe fn batch_matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
+                                              rhs: &Tensor<'a, Self>,
+                                              result_stride: &[usize],
+                                              mut result: *mut Self) {
         let mut lhs_slice = lhs.slice_along(Axis(0), 0);
         let mut rhs_slice = rhs.slice_along(Axis(0), 0);
 
@@ -21,13 +379,27 @@ trait MatrixOps: SumOfProductsType {
         }
     }
 
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
+    /// Performs an unchecked matrix-matrix product and writes the result to the given pointer
+    ///
+    /// # Safety
+    ///
+    /// - The dimensions of `lhs` and `rhs` must be `(i, j)` and `(j, k)`.
+    /// - `result` must point to a valid data buffer with dimension `(i, k)`.
+    /// - `result_stride` must represent a contiguous layout for the results buffer.
+    /// - `result` must not overlap with `lhs` or `rhs`.
+    unsafe fn matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
+                                        rhs: &Tensor<'a, Self>,
+                                        result_stride: &[usize],
+                                        result: *mut Self)
+    {
         einsum_into_ptr([lhs, rhs], (["ij", "jk"], "ik"), result_stride, result)
     }
 
+    /// Performs an unchecked matrix-vector product and returns the result.
+    ///
+    /// # Safety
+    ///
+    /// - The dimensions of `lhs` and `rhs` must be `(i, j)` and `(j)`.
     unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &Tensor<'a, Self>,
                                                 vector: &Tensor<'b, Self>) -> Tensor<'r, Self> {
         let rows = matrix.shape()[0];
@@ -39,13 +411,15 @@ trait MatrixOps: SumOfProductsType {
         let mut matrix_row = matrix.mut_ptr();
         let mut dst = result.as_mut_ptr();
 
+        let requires_grad = matrix.requires_grad() || vector.requires_grad();
+
         for _ in 0..rows {
             Self::sum_of_products_in_strides_n_n_out_stride_0(&[matrix_row, vector.mut_ptr(), dst], strides, cols);
             matrix_row = matrix_row.add(matrix.stride()[0]);
             dst = dst.add(1);
         }
 
-        Tensor::from_contiguous_owned_buffer(vec![rows], result)
+        Tensor::from_contiguous_owned_buffer(vec![rows], result, requires_grad, false)
     }
 }
 
@@ -53,10 +427,10 @@ impl<T: IntegerDataType> MatrixOps for T {}
 
 impl MatrixOps for f32 {
     #[cfg(use_apple_blas)]
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
+    unsafe fn matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
+                                        rhs: &Tensor<'a, Self>,
+                                        result_stride: &[usize],
+                                        result: *mut Self) {
         use crate::accelerate::cblas::{cblas_sgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
 
         // BLAS does not support matrices that don't have contiguous rows
@@ -92,6 +466,8 @@ impl MatrixOps for f32 {
         let cols = matrix.shape()[1] as i32;
         let mut result = vec![Self::default(); rows];
 
+        let requires_grad = matrix.requires_grad() || vector.requires_grad();
+
         unsafe {
             cblas_sgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
                         rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
@@ -99,17 +475,17 @@ impl MatrixOps for f32 {
                         0.0, result.as_mut_ptr(), 1
             );
 
-            Tensor::from_contiguous_owned_buffer(vec![rows], result)
+            Tensor::from_contiguous_owned_buffer(vec![rows], result, requires_grad)
         }
     }
 }
 
 impl MatrixOps for f64 {
     #[cfg(use_apple_blas)]
-    unsafe fn matrix_matrix_product<'a, 'b, 'r>(lhs: &Tensor<'a, Self>,
-                                                rhs: &Tensor<'b, Self>,
-                                                result_stride: &[usize],
-                                                result: *mut Self) {
+    unsafe fn matrix_matrix_product<'a>(lhs: &Tensor<'a, Self>,
+                                        rhs: &Tensor<'a, Self>,
+                                        result_stride: &[usize],
+                                        result: *mut Self) {
         use crate::accelerate::cblas::{cblas_dgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
 
         // BLAS does not support matrices that don't have contiguous rows
@@ -145,6 +521,8 @@ impl MatrixOps for f64 {
         let cols = matrix.shape()[1] as i32;
         let mut result = vec![Self::default(); rows];
 
+        let requires_grad = matrix.requires_grad() || vector.requires_grad();
+
         unsafe {
             cblas_dgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
                         rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
@@ -152,335 +530,7 @@ impl MatrixOps for f64 {
                         0.0, result.as_mut_ptr(), 1
             );
 
-            Tensor::from_contiguous_owned_buffer(vec![rows], result)
+            Tensor::from_contiguous_owned_buffer(vec![rows], result, requires_grad)
         }
-    }
-}
-
-impl<T: MatrixOps> Tensor<'_, T>
-where
-    T: 'static // always satisfied because T is a primitive data type
-{
-    /// Calculates the matrix product of two tensors.
-    ///
-    /// - If both tensors are 1D, then their dot product is returned.
-    /// - If both tensors are 2D, then their matrix product is returned.
-    /// - If the first tensor is 2D and the second tensor is 1D, then the matrix-vector product is returned.
-    ///
-    /// # Panics
-    /// - If the dimensions/shape of the tensors is incompatible
-    ///
-    /// # Example
-    /// ```
-    /// # use chela::Tensor;
-    ///
-    /// let a = Tensor::from(vec![
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    /// ]);
-    ///
-    /// let b = Tensor::from(vec![
-    ///     [7, 8],
-    ///     [9, 10],
-    ///     [11, 12],
-    /// ]);
-    ///
-    /// let result = a.matmul(&b);
-    /// assert_eq!(result, Tensor::from(vec![
-    ///     [58, 64],
-    ///     [139, 154],
-    /// ]));
-    /// ```
-    pub fn matmul<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
-        let other = other.as_ref();
-
-        if self.ndims() == 1 && other.ndims() == 1 {
-            return self.dot(other);
-        }
-
-        if self.ndims() == 2 && other.ndims() == 1 {
-            assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-vector product: {:?} and {:?})", self.shape(), other.shape());
-            return unsafe { <T as MatrixOps>::matrix_vector_product(self, other) };
-        }
-
-        if self.ndims() == 2 && other.ndims() == 2 {
-            assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-matrix product: {:?} and {:?})", self.shape(), other.shape());
-
-            let result = Tensor::zeros([self.shape()[0], other.shape()[1]]);
-            unsafe { <T as MatrixOps>::matrix_matrix_product(self, other, result.stride(), result.mut_ptr()) };
-            return result;
-        }
-
-        panic!("matmul requires a tensor with 1 or 2 dimensions");
-    }
-
-    pub fn bmm<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
-        let other = other.as_ref();
-        assert_eq!(self.ndims(), 3, "batch matrix multiplication requires 3D tensors");
-        assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D tensors");
-        assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
-
-        let result = Tensor::zeros([self.len(), self.shape()[1], other.shape()[2]]);
-        unsafe { <T as MatrixOps>::batch_matrix_matrix_product(self, other, result.stride(), result.mut_ptr()); }
-        result
-    }
-}
-
-impl<T: SumOfProductsType> Tensor<'_, T>
-where
-    T: 'static // always satisfied because T is a primitive data type
-{
-    /// Calculates the dot product of two 1D tensors.
-    ///
-    /// # Panics
-    /// - Panics if either tensor is not 1D
-    /// - Panics if the lengths of the two tensors are not equal
-    ///
-    /// # Examples
-    /// ```
-    /// # use chela::*;
-    /// let tensor1 = Tensor::from([1, 2, 3]);
-    /// let tensor2 = Tensor::from([4, 5, 6]);
-    /// let result = tensor1.dot(tensor2);
-    /// assert_eq!(result.value(), 32); // 1*4 + 2*5 + 3*6 = 32
-    /// ```
-    pub fn dot<'a, 'b, 'r>(&'a self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
-        let other = other.as_ref();
-        assert_eq!(self.ndims(), 1, "dot product requires a tensor with 1 dimension");
-        assert_eq!(other.ndims(), 1, "dot product requires a tensor with 1 dimension");
-        assert_eq!(self.len(), other.len(), "dot product requires tensors with the same length");
-
-        let result = Tensor::scalar(T::default());
-
-        unsafe {
-            <T as SumOfProductsType>::sum_of_products_in_strides_n_n_out_stride_0(&[self.mut_ptr(), other.mut_ptr(), result.mut_ptr()],
-                                                                                  &[self.stride()[0], other.stride()[0], 0],
-                                                                                  self.len())
-        };
-
-        result
-    }
-}
-
-impl<'a, T: NumericDataType> Tensor<'a, T>
-where
-    Tensor<'a, T>: TensorNumericReduce<T>
-{
-    /// Returns the trace of the tensor along its first 2 axes.
-    ///
-    /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use chela::*;
-    /// let tensor = Tensor::from([
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    ///     [7, 8, 9]
-    /// ]);
-    ///
-    /// assert_eq!(tensor.trace(), Tensor::scalar(1 + 5 + 9));
-    pub fn trace<'b>(&'a self) -> Tensor<'b, T> {
-        self.offset_trace(0)
-    }
-
-    /// Returns the sum of an offset tensor diagonal along its first 2 axes.
-    ///
-    /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use chela::*;
-    /// let tensor = Tensor::from([
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    ///     [7, 8, 9]
-    /// ]);
-    ///
-    /// assert_eq!(tensor.offset_trace(-1), Tensor::scalar(4 + 8));
-    pub fn offset_trace<'b>(&'a self, offset: isize) -> Tensor<'b, T> {
-        self.offset_trace_along(offset, 0, 1)
-    }
-
-    /// Returns the trace of a tensor along the specified axes.
-    ///
-    /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
-    /// - if `axis1` and `axis2` are the same or are out-of-bounds
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use chela::*;
-    /// let tensor = Tensor::from([
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    ///     [7, 8, 9]
-    /// ]);
-    ///
-    /// assert_eq!(tensor.trace_along(0, 1), Tensor::scalar(1 + 5 + 9));
-    pub fn trace_along<'b>(&'a self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'b, T> {
-        self.offset_trace_along(0, axis1, axis2)
-    }
-
-    /// Returns the sum of an offset tensor diagonal along the specified axes.
-    ///
-    /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
-    /// - if `axis1` and `axis2` are the same or are out-of-bounds
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use chela::*;
-    /// let tensor = Tensor::from([
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    ///     [7, 8, 9]
-    /// ]);
-    ///
-    /// assert_eq!(tensor.offset_trace_along(1, 0, 1), Tensor::scalar(2 + 6));
-    pub fn offset_trace_along<'b>(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<'b, T> {
-        let diagonal = self.offset_diagonal_along(offset, axis1, axis2);
-        diagonal.sum_along(-1)
-    }
-}
-
-impl<T: RawDataType> Tensor<'_, T> {
-    /// Returns a diagonal view of the tensor along its first 2 axes.
-    ///
-    /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use chela::*;
-    /// let tensor = Tensor::from([
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    ///     [7, 8, 9]
-    /// ]);
-    ///
-    /// let diagonal = tensor.diagonal();
-    /// assert_eq!(diagonal, Tensor::from([1, 5, 9]));
-    pub fn diagonal(&self) -> Tensor<T> {
-        self.diagonal_along(0, 1)
-    }
-
-    /// Returns an offset diagonal view of the tensor along its first 2 axes.
-    ///
-    /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use chela::*;
-    /// let tensor = Tensor::from([
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    ///     [7, 8, 9]
-    /// ]);
-    ///
-    /// let diagonal = tensor.offset_diagonal(1);
-    /// assert_eq!(diagonal, Tensor::from([2, 6]));
-    pub fn offset_diagonal(&self, offset: isize) -> Tensor<T> {
-        self.offset_diagonal_along(offset, 0, 1)
-    }
-
-    /// Returns a diagonal view of the tensor along the specified axes.
-    ///
-    /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
-    /// - if `axis1` and `axis2` are the same or are out-of-bounds
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use chela::*;
-    /// let tensor = Tensor::from([
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    ///     [7, 8, 9]
-    /// ]);
-    ///
-    /// let diagonal = tensor.diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
-    /// assert_eq!(diagonal, Tensor::from([1, 5, 9]));
-    pub fn diagonal_along(&self, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<T> {
-        self.offset_diagonal_along(0, axis1, axis2)
-    }
-
-    /// Returns an offset diagonal view of the tensor along the specified axes.
-    ///
-    /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
-    /// - if `axis1` and `axis2` are the same or are out-of-bounds
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use chela::*;
-    /// let tensor = Tensor::from([
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
-    ///     [7, 8, 9]
-    /// ]);
-    ///
-    /// let diagonal = tensor.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
-    /// assert_eq!(diagonal, Tensor::from([4, 8]));
-    pub fn offset_diagonal_along(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> Tensor<T> {
-        assert!(self.ndims() >= 2, "diagonals require a tensor with at least 2 dimensions");
-
-        let axis1 = axis1.get_absolute(self.ndims());
-        let axis2 = axis2.get_absolute(self.ndims());
-
-        assert_ne!(axis1, axis2, "axis1 and axis2 cannot be the same");
-
-
-        // get the new dimensions and strides of the two axes
-
-        let mut dim1 = self.shape()[axis1];
-        let mut dim2 = self.shape()[axis2];
-
-        let stride1 = self.stride()[axis1];
-        let stride2 = self.stride()[axis2];
-
-        let ptr_offset;
-
-        if offset >= 0 {
-            let offset = offset as usize;
-            if offset >= dim2 {
-                panic!("invalid offset {} for axis with dimension {}", offset, dim2);
-            }
-
-            dim2 -= offset;
-            ptr_offset = offset * stride2;
-        } else {
-            let offset = -offset as usize;
-            if offset >= dim1 {
-                panic!("invalid offset -{} for axis with dimension {}", offset, dim1);
-            }
-
-            dim1 -= offset;
-            ptr_offset = offset * stride1;
-        }
-
-
-        // compute the resultant shape and stride
-
-        let mut result_shape = Vec::with_capacity(self.ndims() - 1);
-        let mut result_stride = Vec::with_capacity(self.ndims() - 1);
-
-        for axis in 0..self.ndims() {
-            if axis == axis1 || axis == axis2 {
-                continue;
-            }
-
-            result_shape.push(self.shape()[axis]);
-            result_stride.push(self.stride()[axis]);
-        }
-
-        result_shape.push(min(dim1, dim2));
-        result_stride.push(stride1 + stride2);
-
-        // create and return the diagonal view
-        unsafe { self.reshaped_view_with_offset(ptr_offset, result_shape, result_stride) }
     }
 }

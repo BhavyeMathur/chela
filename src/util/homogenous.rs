@@ -3,7 +3,7 @@
 // [[0, 1], [2]] - not homogenous
 
 use crate::recursive_trait_base_cases;
-use crate::traits::shape::Shape;
+use crate::util::shape::Shape;
 
 pub(crate) trait Homogenous {
     fn check_homogenous(&self) -> bool;

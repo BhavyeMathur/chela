@@ -1,11 +1,12 @@
 use crate::dtype::NumericDataType;
+use crate::gradient_function::NoneBackwards;
 use crate::tensor::dtype::RawDataType;
 use crate::tensor::flags::TensorFlags;
 use crate::tensor::Tensor;
-use crate::traits::flatten::Flatten;
-use crate::traits::nested::Nested;
-use crate::traits::shape::Shape;
-use crate::traits::to_vec::ToVec;
+use crate::util::flatten::Flatten;
+use crate::util::nested::Nested;
+use crate::util::shape::Shape;
+use crate::util::to_vec::ToVec;
 use crate::{FloatDataType, TensorMethods};
 use num::NumCast;
 use std::mem::ManuallyDrop;
@@ -52,24 +53,34 @@ pub(crate) fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
     stride
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
-    /// Constructs a new tensor from the given data buffer and metadata (shape and stride).
+impl<'a, T: RawDataType> Tensor<'a, T> {
+    /// Constructs a new tensor from the given data buffer and shape assuming a contiguous layout
     ///
     /// # Parameters
     /// - `shape`: A vector that defines the dimensions of the tensor.
-    /// - `stride`: A vector that defines the strides of the tensor.
     /// - `data`: The underlying buffer that holds the tensor's elements.
+    /// - `requires_grad`: If gradients need to be computed for this tensor.
     ///
     /// # Safety
     /// - `data` must remain valid and not be used elsewhere after being passed to this function.
-    /// - `stride` and `shape` must describe a valid (not necessarily contiguous) memory layout for `data`
-    pub(super) unsafe fn from_owned_buffer(
-        shape: Vec<usize>,
-        stride: Vec<usize>,
-        data: Vec<T>,
-    ) -> Self {
+    /// - `shape.iter().product()` must equal `data.len()`
+    pub(crate) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>,
+                                                      data: Vec<T>,
+                                                      requires_grad: bool,
+                                                      user_created: bool) -> Self {
+        let mut flags = TensorFlags::Owned | TensorFlags::Contiguous | TensorFlags::UniformStride | TensorFlags::Writeable;
+
+        if requires_grad {
+            flags |= TensorFlags::RequiresGrad;
+        }
+
+        if user_created {
+            flags |= TensorFlags::UserCreated;
+        }
+
         // take control of the data so that Rust doesn't drop it once the vector goes out of scope
         let mut data = ManuallyDrop::new(data);
+        let stride = stride_from_shape(&shape);
 
         Self {
             ptr: NonNull::new_unchecked(data.as_mut_ptr()),
@@ -78,24 +89,12 @@ impl<T: RawDataType> Tensor<'_, T> {
 
             shape,
             stride,
-            flags: TensorFlags::Owned | TensorFlags::Contiguous | TensorFlags::UniformStride | TensorFlags::Writeable,
+            flags,
+
+            grad_fn: NoneBackwards::new(),
 
             _marker: Default::default(),
         }
-    }
-
-    /// Constructs a new tensor from the given data buffer and shape assuming a contiguous layout
-    ///
-    /// # Parameters
-    /// - `shape`: A vector that defines the dimensions of the tensor.
-    /// - `data`: The underlying buffer that holds the tensor's elements.
-    ///
-    /// # Safety
-    /// - `data` must remain valid and not be used elsewhere after being passed to this function.
-    /// - `shape.iter().product()` must equal `data.len()`
-    pub(crate) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>, data: Vec<T>) -> Self {
-        let stride = stride_from_shape(&shape);
-        Self::from_owned_buffer(shape, stride, data)
     }
 
     /// Constructs an n-dimensional `Tensor` from input data such as a vector or array.
@@ -118,20 +117,14 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// assert_eq!(tensor.ndims(), 1);
     /// ```
     pub fn from<const D: usize>(data: impl Flatten<T> + Shape + Nested<{ D }>) -> Self {
-        assert!(
-            data.check_homogenous(),
-            "Tensor::from() failed, found inhomogeneous dimensions"
-        );
+        assert!(data.check_homogenous(), "Tensor::from() failed, found inhomogeneous dimensions");
 
         let shape = data.shape();
         let data = data.flatten();
 
-        assert!(
-            !data.is_empty(),
-            "Tensor::from() failed, cannot create data buffer from empty data"
-        );
+        assert!(!data.is_empty(), "Tensor::from() failed, cannot create data buffer from empty data");
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, data) }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false, true) }
     }
 
     /// Creates a tensor filled with a specified value and given shape.
@@ -158,7 +151,35 @@ impl<T: RawDataType> Tensor<'_, T> {
         let data = vec![n; shape.iter().product()];
         assert!(!data.is_empty(), "Cannot create an empty tensor!");
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, data) }
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false, true) }
+    }
+
+    /// Creates a tensor filled with a specified value and given shape.
+    ///
+    /// # Parameters
+    ///
+    /// * `n` - The value to fill the tensor with (can be any valid data type like float, integer, or bool).
+    /// * `shape` - An array or vector representing the shape of the tensor (e.g. `[2, 3, 5]`).
+    /// * `requires_grad` - If gradients need to be computed for this tensor.
+    ///
+    /// # Panics
+    /// This function panics if the provided shape is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let tensor = Tensor::full_requires_grad(5i32, [2, 3], true); // 2x3 tensor filled with 5.
+    /// let tensor = Tensor::full_requires_grad(true, [2, 3, 5], true); // 2x3x5 tensor filled with 'true'
+    /// ```
+    pub(crate) fn full_requires_grad(n: T, shape: impl ToVec<usize>, requires_grad: bool) -> Self {
+        let shape = shape.to_vec();
+
+        let data = vec![n; shape.iter().product()];
+        assert!(!data.is_empty(), "Cannot create an empty tensor!");
+
+        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad, false) }
     }
 
     /// Creates a new tensor filled with zeros with the given shape.
@@ -183,6 +204,29 @@ impl<T: RawDataType> Tensor<'_, T> {
         Self::full(false.into(), shape)
     }
 
+    /// Creates a new tensor filled with zeros with the given shape.
+    ///
+    /// # Parameters
+    /// - `shape`: An array or vector representing the shape of the tensor (e.g. `[2, 3, 5]`).
+    /// - `requires_grad` - If gradients need to be computed for this tensor.
+    ///
+    /// # Panics
+    /// This function panics if the provided shape is empty.
+    ///
+    /// # Examples
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let tensor = Tensor::<i32>::zeros_requires_grad([2, 3], true);
+    /// let tensor = Tensor::<bool>::zeros_requires_grad([2, 3], true);  // filled with 'false'
+    /// ```
+    pub(crate) fn zeros_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
+    where
+        T: From<bool>,
+    {
+        Self::full_requires_grad(false.into(), shape, requires_grad)
+    }
+
     /// Creates a new tensor filled with ones with the given shape.
     ///
     /// # Parameters
@@ -205,6 +249,28 @@ impl<T: RawDataType> Tensor<'_, T> {
         Self::full(true.into(), shape)
     }
 
+    /// Creates a new tensor filled with ones with the given shape.
+    ///
+    /// # Parameters
+    /// - `shape`: An array or vector representing the shape of the tensor (e.g. `[2, 3, 5]`).
+    /// - `requires_grad` - If gradients need to be computed for this tensor.
+    ///
+    /// # Panics
+    /// This function panics if the provided shape is empty.
+    ///
+    /// # Examples
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let tensor = Tensor::<i32>::ones_requires_grad([2, 3], true);
+    /// let tensor = Tensor::<bool>::ones_requires_grad([2, 3], true);  // filled with 'true'
+    /// ```
+    pub(crate) fn ones_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
+    where
+        T: From<bool>,
+    {
+        Self::full_requires_grad(true.into(), shape, requires_grad)
+    }
 
     /// Creates a 0-dimensional (shapeless) tensor containing a single value.
     ///
@@ -221,6 +287,24 @@ impl<T: RawDataType> Tensor<'_, T> {
     /// ```
     pub fn scalar(n: T) -> Self {
         Tensor::full(n, [])
+    }
+
+    /// Creates a 0-dimensional (shapeless) tensor containing a single value.
+    ///
+    /// # Parameters
+    /// - `n`: The value to be stored in the scalar tensor.
+    /// - `requires_grad` - If gradients need to be computed for this tensor.
+    ///
+    /// # Example
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let scalar_tensor = Tensor::scalar_requires_grad(42, true);
+    /// assert_eq!(scalar_tensor.shape(), []);
+    /// assert_eq!(scalar_tensor.value(), 42);
+    /// ```
+    pub(crate) fn scalar_requires_grad(n: T, requires_grad: bool) -> Self {
+        Tensor::full_requires_grad(n, [], requires_grad)
     }
 
     // Maybe we should support empty tensors one day.
@@ -273,14 +357,7 @@ impl<T: NumericDataType> Tensor<'_, T> {
     /// let tensor = Tensor::arange(0i32, 5); // [0, 1, 2, 3, 4].
     /// ```
     pub fn arange(start: T, stop: T) -> Tensor<'static, T> {
-        let n = NumCast::from((stop - start).ceil()).unwrap();
-
-        let mut data: Vec<T> = vec![T::default(); n];
-        for i in 0..n {
-            data[i] = <T as NumCast>::from(i).unwrap() + start;
-        }
-
-        unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data) }
+        Self::arange_with_step(start, stop, T::one())
     }
 
     /// Generates a 1D tensor with evenly spaced values within a specified range.
@@ -302,11 +379,11 @@ impl<T: NumericDataType> Tensor<'_, T> {
         let n = NumCast::from(n).unwrap();
 
         let mut data: Vec<T> = vec![T::default(); n];
-        for i in 0..n {
-            data[i] = <T as NumCast>::from(i).unwrap() * step + start;
+        for (i, item) in data.iter_mut().enumerate() {
+            *item = <T as NumCast>::from(i).unwrap() * step + start;
         }
 
-        unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data) }
+        unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data, false, true) }
     }
 }
 
@@ -335,7 +412,7 @@ impl<T: FloatDataType> Tensor<'_, T> {
         assert!(num > 0);
 
         if num == 1 {
-            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start]) };
+            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
         }
 
         let step = (stop - start) / (<T as NumCast>::from(num).unwrap() - T::one());
@@ -368,7 +445,7 @@ impl<T: FloatDataType> Tensor<'_, T> {
         assert!(num > 0);
 
         if num == 1 {
-            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start]) };
+            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
         }
 
         let step = (stop - start) / <T as NumCast>::from(num).unwrap();
@@ -379,7 +456,7 @@ impl<T: FloatDataType> Tensor<'_, T> {
 impl<T: RawDataType> Drop for Tensor<'_, T> {
     /// This method is implicitly invoked when the tensor is deleted to clean up its memory if
     /// the tensor owns its data (i.e. it is not a view into another tensor).
-    /// 
+    ///
     /// Resets `self.len` and `self.capacity` to 0.
     fn drop(&mut self) {
         if self.flags.contains(TensorFlags::Owned) {

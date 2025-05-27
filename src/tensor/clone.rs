@@ -1,12 +1,13 @@
 use crate::dtype::RawDataType;
-use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride};
+use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::iterator::flat_index_generator::FlatIndexGenerator;
 use crate::{Tensor, TensorMethods};
 use std::ptr::copy_nonoverlapping;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn clone<'b>(&'a self) -> Tensor<'b, T> {
-        unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data()) }
+    #[allow(clippy::should_implement_trait)]
+    pub fn clone<'r>(&self) -> Tensor<'r, T> {
+        unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data(), self.requires_grad(), false) }
     }
 
     pub(super) fn clone_data(&self) -> Vec<T> {
@@ -50,7 +51,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             contiguous_stride = 1;
         }
 
-        let src = self.ptr() as *const T;
+        let src = self.ptr();
         let mut dst = data.as_mut_ptr();
 
         for i in FlatIndexGenerator::from(&shape, &stride) {

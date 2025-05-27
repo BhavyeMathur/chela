@@ -1,11 +1,12 @@
+use crate::operations::TensorBinaryOps;
 use num::traits::MulAdd;
 use num::{Bounded, Float, NumCast, One, ToPrimitive, Zero};
+use rand::distributions::uniform::SampleUniform;
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
-use rand::distributions::uniform::SampleUniform;
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
-pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync {}
+pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync + TensorBinaryOps<Self> + 'static {}
 
 impl RawDataType for u8 {}
 impl RawDataType for u16 {}
@@ -28,8 +29,7 @@ impl RawDataType for bool {}
 
 pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Zero + One + NumCast
 + Sum + Product + AddAssign + SubAssign + MulAssign + From<bool>
-+ Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self>
-{
++ Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self> {
     type AsFloatType: FloatDataType;
 
     fn to_float(&self) -> Self::AsFloatType {
@@ -39,11 +39,11 @@ pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Ze
     fn abs(&self) -> Self;
 
     fn ceil(&self) -> Self {
-        self.clone()
+        *self
     }
 
     fn floor(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -51,7 +51,7 @@ impl NumericDataType for u8 {
     type AsFloatType = f32;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -59,7 +59,7 @@ impl NumericDataType for u16 {
     type AsFloatType = f32;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -67,7 +67,7 @@ impl NumericDataType for u32 {
     type AsFloatType = f32;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -75,7 +75,7 @@ impl NumericDataType for u64 {
     type AsFloatType = f64;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -83,7 +83,7 @@ impl NumericDataType for u128 {
     type AsFloatType = f64;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -91,7 +91,7 @@ impl NumericDataType for usize {
     type AsFloatType = f64;
 
     fn abs(&self) -> Self {
-        self.clone()
+        *self
     }
 }
 
@@ -191,7 +191,7 @@ impl IntegerDataType for i64 {}
 impl IntegerDataType for i128 {}
 impl IntegerDataType for isize {}
 
-pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform {}
+pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform + Neg<Output=Self> {}
 
 impl FloatDataType for f32 {}
 impl FloatDataType for f64 {}

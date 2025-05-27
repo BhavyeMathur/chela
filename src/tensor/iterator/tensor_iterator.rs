@@ -1,7 +1,6 @@
 use crate::dtype::RawDataType;
 use crate::iterator::util::split_by_indices;
-use crate::tensor::flags::TensorFlags;
-use crate::traits::haslength::HasLength;
+use crate::util::haslength::HasLength;
 use crate::Tensor;
 
 #[non_exhaustive]
@@ -23,9 +22,9 @@ impl<T: RawDataType> Tensor<'_, T> {
 }
 
 impl<'a, T: RawDataType> NdIterator<'a, T> {
-    pub(super) fn from<I>(tensor: &'a Tensor<T>, axes: I) -> Self
+    pub(super) fn from<I>(tensor: &Tensor<'a, T>, axes: I) -> Self
     where
-        I: IntoIterator<Item=isize> + HasLength + Clone,
+        I: IntoIterator<Item=usize> + HasLength + Clone,
     {
         let ndims = axes.len();
         let (shape, output_shape) = split_by_indices(&tensor.shape, axes.clone());
@@ -51,38 +50,20 @@ impl<'a, T: RawDataType> Iterator for NdIterator<'a, T> {
             return None;
         }
 
-        let return_value = unsafe { self.result.lifetime_cast() };
+        let return_value = self.result.view();
         self.iterator_index += 1;
-
+        
         for i in (0..self.shape.len()).rev() {
             if self.indices[i] != self.shape[i] {
                 self.indices[i] += 1;
                 unsafe { self.result.offset_ptr(self.stride[i] as isize); }
                 break;
             }
-
+        
             unsafe { self.result.offset_ptr(-((self.stride[i] * (self.shape[i] - 1)) as isize)); }
             self.indices[i] = 0;
         }
 
         Some(return_value)
-    }
-}
-
-impl<'a, T: RawDataType> Tensor<'a, T> {
-    /// Creates a view of the tensor with arbitrary lifetime
-    /// Safety: ensure returned tensor actually has a valid lifetime!
-    unsafe fn lifetime_cast<'b>(&'a self) -> Tensor<'b, T> {
-        Tensor {
-            ptr: self.ptr,
-            len: self.len,
-            capacity: self.capacity,
-
-            shape: self.shape.clone(),
-            stride: self.stride.clone(),
-            flags: self.flags - TensorFlags::Owned,
-
-            _marker: Default::default(),
-        }
     }
 }

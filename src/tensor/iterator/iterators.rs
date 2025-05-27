@@ -2,7 +2,7 @@ use crate::dtype::RawDataType;
 use crate::iterator::flat_iterator::FlatIterator;
 use crate::tensor_iterator::NdIterator;
 use crate::Tensor;
-use crate::axes_traits::{AxesType, AxisType};
+use crate::axis::{AxesType, AxisType};
 use crate::buffer_iterator::BufferIterator;
 
 impl<T: RawDataType> Tensor<'_, T> {
@@ -15,16 +15,16 @@ impl<T: RawDataType> Tensor<'_, T> {
     }
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
-    pub fn iter(&self) -> NdIterator<T> {
+impl<'a, T: RawDataType> Tensor<'a, T> {
+    pub fn iter(&self) -> NdIterator<'a, T> {
         NdIterator::from(self, [0])
     }
 
-    pub fn iter_along(&self, axis: impl AxisType) -> NdIterator<T> {
-        NdIterator::from(self, [axis.isize()])
+    pub fn iter_along(&self, axis: impl AxisType) -> NdIterator<'a, T> {
+        NdIterator::from(self, [axis.get_absolute(self.shape.len())])
     }
 
-    pub fn nditer(&self, axes: impl AxesType) -> NdIterator<T> {
+    pub fn nditer(&self, axes: impl AxesType) -> NdIterator<'a, T> {
         NdIterator::from(self, axes)
     }
 }

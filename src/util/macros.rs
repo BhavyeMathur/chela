@@ -1,3 +1,29 @@
+// TODO make sure this doesn't export the macro to the public API
+
+#[macro_export(local_inner_macros)]
+macro_rules! recursive_trait_base_cases {
+    ( $macro_name: ident ) => {
+        $macro_name!(i8);
+        $macro_name!(i16);
+        $macro_name!(i32);
+        $macro_name!(i64);
+        $macro_name!(i128);
+        $macro_name!(isize);
+
+        $macro_name!(u8);
+        $macro_name!(u16);
+        $macro_name!(u32);
+        $macro_name!(u64);
+        $macro_name!(u128);
+        $macro_name!(usize);
+
+        $macro_name!(f32);
+        $macro_name!(f64);
+
+        $macro_name!(bool);
+    };
+}
+
 #[macro_export]
 macro_rules! implement_test_for_dtypes {
     ($name:ident, $body:block, $($t:ty),*) => {
@@ -113,10 +139,14 @@ macro_rules! test_for_all_dtypes {
 
 #[macro_export]
 macro_rules! assert_almost_eq {
-    ($left:expr, $right:expr) => {
-        if ((&($left) - &($right)).max().flatiter().next().unwrap() as f64).abs() > 0.2 {
+    ($left:expr, $right:expr, $tol:expr) => {
+        if ((&($left) - &($right)).max().flatiter().next().unwrap() as f64).abs() > $tol {
             assert_eq!($left, $right);
         }
+    };
+
+    ($left:expr, $right:expr) => {
+        assert_almost_eq!($left, $right, 1e-5);
     };
 }
 

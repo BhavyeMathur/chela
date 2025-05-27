@@ -1,10 +1,10 @@
-use crate::axis::indexer::Indexer;
-
 use crate::axis::Axis;
 use crate::dtype::RawDataType;
+use crate::index::Indexer;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::tensor::flags::TensorFlags;
-use crate::{Tensor, TensorMethods};
+use crate::{AxisType, Tensor, TensorMethods};
+use crate::gradient_function::NoneBackwards;
 
 pub(super) fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
     flags -= TensorFlags::Owned;
@@ -42,12 +42,9 @@ fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {
 
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn slice_along<'out, S: Indexer>(&'a self, axis: Axis, index: S) -> Tensor<'out, T>
-    where
-        'a: 'out,
+    pub fn slice_along<S: Indexer>(&self, axis: Axis, index: S) -> Tensor<'a, T>
     {
-        assert!(axis.0 >= 0, "negative axes not supported currently");
-        let axis = axis.0 as usize;
+        let axis = axis.get_absolute(self.ndims());
 
         let mut new_shape = self.shape.clone();
         let mut new_stride = self.stride.clone();
@@ -62,7 +59,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         let offset = self.stride[axis] * index.index_of_first_element();
 
         let len = calculate_strided_buffer_length(&new_shape, &new_stride);
-        let flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride);
+        let flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride) - TensorFlags::UserCreated;
 
         Tensor {
             ptr: unsafe { self.ptr.add(offset) },
@@ -72,12 +69,14 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             shape: new_shape,
             stride: new_stride,
             flags,
+            
+            grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,
         }
     }
 
-    pub fn slice<S, I>(&'a self, index: I) -> Tensor<'a, T>
+    pub fn slice<S, I>(&self, index: I) -> Tensor<'a, T>
     where
         S: Indexer,
         I: IntoIterator<Item=S>,
@@ -106,7 +105,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
 
         let len = calculate_strided_buffer_length(&new_shape, &new_stride);
-        let flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride);
+        let flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride) - TensorFlags::UserCreated;
 
         Tensor {
             ptr: unsafe { self.ptr.add(offset) },
@@ -116,6 +115,8 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
             shape: new_shape,
             stride: new_stride,
             flags,
+            
+            grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,
         }

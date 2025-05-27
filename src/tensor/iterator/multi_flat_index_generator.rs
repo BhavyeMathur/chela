@@ -88,7 +88,7 @@ impl MultiFlatIndexGenerator {
         let size = shape.iter().product();
 
         let mut new_shape = [0; MAX_DIMS];
-        new_shape[0..ndims].copy_from_slice(&shape);
+        new_shape[0..ndims].copy_from_slice(shape);
 
         let mut new_strides = [[0; MAX_ARGS]; MAX_DIMS];
         for j in 0..ndims {
@@ -98,7 +98,7 @@ impl MultiFlatIndexGenerator {
         Self {
             ndims,
             nops,
-            shape: new_shape.clone(),
+            shape: new_shape,
             strides: new_strides,
             size,
             iterator_index: 0,
@@ -151,7 +151,7 @@ impl Iterator for MultiFlatIndexGenerator {
             return None;
         }
 
-        let return_indices = self.flat_indices.clone();
+        let return_indices = self.flat_indices;
         unsafe { self.increment_flat_indices() };
         self.iterator_index += 1;
 
@@ -164,13 +164,13 @@ impl Clone for MultiFlatIndexGenerator {
         Self {
             ndims: self.ndims,
             nops: self.nops,
-            shape: self.shape.clone(),
-            strides: self.strides.clone(),
+            shape: self.shape,
+            strides: self.strides,
 
             size: self.size,
             iterator_index: self.iterator_index,
 
-            indices: self.indices.clone(),
+            indices: self.indices,
             flat_indices: self.flat_indices,
         }
     }

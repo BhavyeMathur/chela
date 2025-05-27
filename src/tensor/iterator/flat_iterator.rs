@@ -18,9 +18,6 @@ impl<T: RawDataType> Iterator for FlatIterator<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.buffer_iterator.next() {
-            None => None,
-            Some(ptr) => Some(unsafe { *ptr })
-        }
+        self.buffer_iterator.next().map(|ptr| unsafe { *ptr })
     }
 }

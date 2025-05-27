@@ -1,5 +1,6 @@
-use crate::traits::haslength::HasLength;
-use crate::Axis;
+use crate::util::haslength::HasLength;
+
+pub struct Axis(pub isize);
 
 pub trait AxisType {
     fn isize(&self) -> isize;
@@ -52,8 +53,8 @@ impl AxisType for isize {
 }
 
 
-pub trait AxesType: IntoIterator<Item=isize> + HasLength + Clone {}
+pub trait AxesType: IntoIterator<Item=usize> + HasLength + Clone {}
 
-impl<const N: usize> AxesType for [isize; N] {}
+impl<const N: usize> AxesType for [usize; N] {}
 
-impl AxesType for Vec<isize> {}
+impl AxesType for Vec<usize> {}

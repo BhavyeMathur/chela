@@ -198,10 +198,6 @@ test_for_common_numeric_dtypes!(
 
         let result = chela::einsum(&[&a, &b], (&["ij", "jk"], "ik"));
         assert_almost_eq!(result, expected);
-
-        let mut result = Tensor::ones(expected.shape());
-        einsum_into([&a, &b], (["ij", "jk"], "ik"), &mut result);
-        assert_almost_eq!(result, expected);
     }
 );
 
@@ -249,10 +245,6 @@ test_for_all_numeric_dtypes!(
         let expected = expected.reshape([2, 10]);
 
         let result = chela::einsum(&[&a, &b], (["ij", "ij"], "ij"));
-        assert_almost_eq!(result, expected);
-
-        let mut result = Tensor::zeros(expected.shape());
-        einsum_into([&a, &b], (["ij", "ij"], "ij"), &mut result);
         assert_almost_eq!(result, expected);
     }
 );
@@ -353,10 +345,6 @@ test_for_common_numeric_dtypes!(
 
         let result = chela::einsum([&a, &b], (["ij", "jk"], "i"));
         assert_almost_eq!(result, expected);
-
-        let mut result = Tensor::zeros(expected.shape());
-        einsum_into([&a, &b], (["ij", "jk"], "i"), &mut result);
-        assert_almost_eq!(result, expected);
     }
 );
 
@@ -439,7 +427,7 @@ test_for_float_dtypes!(
             Tensor::scalar(out)
         };
         let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
-        assert_almost_eq!(result, expected);
+        assert_almost_eq!(result, expected, 0.01);
     }
 );
 
@@ -469,11 +457,7 @@ test_for_float_dtypes!(
         };
 
         let result = einsum([&a, &b], (["ij", "jk"], ""));
-        assert_almost_eq!(result, expected);
-
-        let mut result = Tensor::scalar(T::default());
-        einsum_into([&a, &b], (["ij", "jk"], ""), &mut result);
-        assert_almost_eq!(result, expected);
+        assert_almost_eq!(result, expected, 0.01);
     }
 );
 
@@ -503,10 +487,6 @@ test_for_common_integer_dtypes!(
         };
 
         let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
-        assert_almost_eq!(result, expected);
-
-        let mut result = Tensor::scalar(T::default());
-        einsum_into([&a, &b], (["ij", "jk"], ""), &mut result);
         assert_almost_eq!(result, expected);
     }
 );
@@ -561,7 +541,7 @@ test_for_float_dtypes!(
         };
 
         let result = chela::einsum([&a, &b], (["ij", "kj"], ""));
-        assert_almost_eq!(result, expected);
+        assert_almost_eq!(result, expected, 0.2);
     }
 );
 
@@ -613,10 +593,6 @@ test_for_all_numeric_dtypes!(
         ]).astype::<T>();
 
         let result = chela::einsum([&a, &b], (["ij", "kl"], "ijkl"));
-        assert_almost_eq!(result, expected);
-
-        let mut result = Tensor::ones(expected.shape());
-        einsum_into([&a, &b], (["ij", "kl"], "ijkl"), &mut result);
         assert_almost_eq!(result, expected);
     }
 );

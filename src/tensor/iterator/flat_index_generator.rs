@@ -100,13 +100,13 @@ impl Clone for FlatIndexGenerator {
     fn clone(&self) -> Self {
         Self {
             ndims: self.ndims,
-            shape: self.shape.clone(),
-            stride: self.stride.clone(),
+            shape: self.shape,
+            stride: self.stride,
 
             size: self.size,
             iterator_index: self.iterator_index,
 
-            indices: self.indices.clone(),
+            indices: self.indices,
             flat_index: self.flat_index,
         }
     }
