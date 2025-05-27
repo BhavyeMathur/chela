@@ -16,7 +16,7 @@ pub(crate) const CBLAS_TRANS: i32 = 112;
 
 #[cfg(use_apple_blas)]
 #[link(name = "cblas")]
-extern {
+extern "C" {
     // Fill
     pub(crate) fn catlas_sset(N: c_int, alpha: c_float, X: *const c_float, incX: c_int);
 

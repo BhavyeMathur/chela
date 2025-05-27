@@ -1,7 +1,7 @@
 use crate::axis::AxisType;
 use crate::einsum::einsum_into_ptr;
 use crate::linalg::sum_of_products::SumOfProductsType;
-use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods, TensorNumericReduce};
+use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, Tensor, TensorMethods};
 use std::cmp::min;
 
 impl<'a, T: MatrixOps> Tensor<'a, T> {
@@ -127,10 +127,7 @@ impl<'a, T: SumOfProductsType> Tensor<'a, T> {
     }
 }
 
-impl<'a, T: NumericDataType> Tensor<'a, T>
-where
-    Tensor<'a, T>: TensorNumericReduce<T>
-{
+impl<'a, T: NumericDataType> Tensor<'a, T> {
     /// Returns the trace of the tensor along its first 2 axes.
     ///
     /// # Panics

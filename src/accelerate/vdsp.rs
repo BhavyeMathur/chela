@@ -4,7 +4,7 @@ use std::ffi::{c_double, c_float};
 
 #[cfg(use_apple_accelerate)]
 #[link(name = "Accelerate")]
-extern {
+extern "C" {
     // vector sum
     pub(crate) fn vDSP_sve(__A: *const c_float, __I: isize, __C: *mut c_float, __N: isize);
 
