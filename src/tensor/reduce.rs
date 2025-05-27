@@ -1,6 +1,6 @@
 #[cfg(use_apple_vdsp)]
 use crate::accelerate::vdsp::*;
-use crate::dtype::{IntegerDataType, NumericDataType, RawDataType};
+use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::util::to_vec::ToVec;
