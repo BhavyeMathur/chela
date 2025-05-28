@@ -65,7 +65,7 @@ fn test_reshape_requires_grad() {
         let mut a = Tensor::<u32>::ones([1, 2, 3]);
         a.set_requires_grad(requires_grad);
 
-        let b = a.reshape([6, 1]);
+        let b = (&a).reshape([6, 1]);
         assert_eq!(b.requires_grad(), requires_grad);
         assert!(!requires_grad || !b.is_leaf());
 
@@ -85,11 +85,11 @@ fn test_reshape_requires_grad() {
         assert_eq!(b.requires_grad(), requires_grad);
         assert!(!requires_grad || !b.is_leaf());
 
-        let b = a.squeeze();
+        let b = (&a).squeeze();
         assert_eq!(b.requires_grad(), requires_grad);
         assert!(!requires_grad || !b.is_leaf());
 
-        let b = a.unsqueeze(Axis(-1));
+        let b = (&a).unsqueeze(Axis(-1));
         assert_eq!(b.requires_grad(), requires_grad);
         assert!(!requires_grad || !b.is_leaf());
     }

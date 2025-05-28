@@ -7,8 +7,6 @@ use crate::{AxisType, Tensor, TensorMethods};
 use crate::gradient_function::NoneBackwards;
 
 pub(super) fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
-    flags -= TensorFlags::Owned;
-
     match has_uniform_stride(shape, stride) {
         None => {
             flags -= TensorFlags::UniformStride;
@@ -59,7 +57,10 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         let offset = self.stride[axis] * index.index_of_first_element();
 
         let len = calculate_strided_buffer_length(&new_shape, &new_stride);
-        let flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride) - TensorFlags::UserCreated;
+        
+        let mut flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride);
+        flags -= TensorFlags::Owned;
+        flags -= TensorFlags::UserCreated;
 
         Tensor {
             ptr: unsafe { self.ptr.add(offset) },
@@ -105,7 +106,9 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
 
         let len = calculate_strided_buffer_length(&new_shape, &new_stride);
-        let flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride) - TensorFlags::UserCreated;
+        let mut flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride);
+        flags -= TensorFlags::Owned;
+        flags -= TensorFlags::UserCreated;
 
         Tensor {
             ptr: unsafe { self.ptr.add(offset) },

@@ -10,13 +10,15 @@ pub use methods::*;
 pub mod iterator;
 pub use iterator::*;
 
+pub mod reshape;
+pub use reshape::*;
+
 pub mod reduce;
 
 pub mod constructors;
 pub mod index_impl;
 pub mod slice;
 pub mod fill;
-pub mod reshape;
 pub mod clone;
 pub mod equals;
 pub mod broadcast;

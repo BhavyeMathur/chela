@@ -5,11 +5,12 @@ use crate::tensor::flags::TensorFlags;
 use crate::{NumericDataType, Tensor};
 
 #[allow(clippy::len_without_is_empty)]
-pub trait TensorMethods {
+pub trait TensorMethods: Sized {
     /// Returns the dimensions of the tensor along each axis.
     ///
     /// ```rust
     /// # use chela::*;
+    /// 
     /// let a = Tensor::from([3, 4, 5]);
     /// assert_eq!(a.shape(), &[3]);
     ///
@@ -174,6 +175,23 @@ pub trait TensorMethods {
 }
 
 impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
+    #[inline]
+    fn shape(&self) -> &[usize] {
+        &self.shape
+    }
+
+    #[inline]
+    fn stride(&self) -> &[usize] {
+        &self.stride
+    }
+
+    #[inline]
+    fn flags(&self) -> TensorFlags {
+        self.flags
+    }
+}
+
+impl<T: RawDataType> TensorMethods for &Tensor<'_, T> {
     #[inline]
     fn shape(&self) -> &[usize] {
         &self.shape

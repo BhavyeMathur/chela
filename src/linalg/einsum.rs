@@ -8,6 +8,7 @@ use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::tensor::{MAX_ARGS, MAX_DIMS};
 use crate::util::functions::{permute_array, transpose_2d_array};
 use crate::{Tensor, TensorMethods};
+use crate::reshape::ReshapeImpl;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -247,7 +248,7 @@ fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
         }
     }
 
-    unsafe { Tensor::reshaped_view(operand, new_shape, new_stride) }
+    unsafe { operand.reshaped_view(new_shape, new_stride) }
 }
 
 

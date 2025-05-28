@@ -1,7 +1,8 @@
 use crate::dtype::RawDataType;
+use crate::reshape::{ReshapeImpl};
 use crate::tensor::flags::TensorFlags;
 use crate::util::functions::pad;
-use crate::{FloatDataType, Tensor};
+use crate::Tensor;
 
 impl<'a, T: RawDataType> Tensor<'a, T> {
     /// Broadcasts the tensor to the specified shape.
