@@ -133,6 +133,14 @@ fn test_autograd5() {
     let y = (&c - &b) / (&c + &a);
     let z = -&x + &y - (&x * &x) + (&x * &y) / &a;
     z.backward();
+
+    assert_almost_eq!(a.gradient().unwrap(), Tensor::from([-5.6277f32, -3.5112, -23.9599]), 1e-4);
+
+    assert_almost_eq!(b.gradient().unwrap(), Tensor::from([[ 0.3333, 0.8750, 32.2667],
+                                                           [ 5.2f32, 1.7613, 8.5238],
+                                                           [ 0.2751, 2.6019, 6.9520]]), 1e-4);
+
+    assert_almost_eq!(c.gradient().unwrap(), Tensor::from([[-17.84f32], [-24.5101], [-40.1665]]), 1e-4);
 }
 
 #[test]

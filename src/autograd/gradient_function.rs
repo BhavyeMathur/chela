@@ -5,6 +5,11 @@ use std::rc::Rc;
 pub(crate) type GradientFunction<T> = Rc<RefCell<dyn GradientFuncTrait<T>>>;
 
 pub(crate) trait GradientFuncTrait<T: RawDataType> {
+    /// Computes the gradient of this function with respect to its sources using the chain rule.
+    ///
+    /// # Parameters
+    /// 
+    /// - `grad`: the gradient of the function being differentiated with respect to `self`.
     fn backward(&mut self, grad: &Tensor<T>);
 
     /// Returns the gradient of the function being differentiated with respect to `self`
@@ -12,12 +17,15 @@ pub(crate) trait GradientFuncTrait<T: RawDataType> {
     fn gradient<'a>(&'a self) -> Option<Tensor<'a, T>> {
         None
     }
-
-    fn zero(&mut self) {}
 }
 
+/// The default backwards node for non-leaf Tensors.
 pub(crate) struct NoneBackwards {}
 
+/// The default backwards node for leaf Tensors.
+/// 
+/// Accumulates the gradient of the function being differentiated with respect to `self`
+/// into the `tensor_grad` attribute of this struct.
 pub(crate) struct AccumulateGrad<T: NumericDataType> {
     tensor_grad: Tensor<'static, T>,
 }
@@ -33,10 +41,6 @@ impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
 
     fn gradient<'a>(&'a self) -> Option<Tensor<'a, T>> {
         Some(self.tensor_grad.view())
-    }
-
-    fn zero(&mut self) {
-        self.tensor_grad.zero();
     }
 }
 
