@@ -15,6 +15,9 @@ paste = "1.0.15"
 [build-dependencies]
 pkg-config = "0.3.32"
 
+[dev-dependencies]
+trybuild = "1.0"
+
 [lints.rust]
 private_bounds = "allow"
 dead_code = "allow"

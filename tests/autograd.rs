@@ -128,15 +128,12 @@ fn test_autograd5() {
     a.set_requires_grad(true);
     b.set_requires_grad(true);
     c.set_requires_grad(true);
-    
+
     let x = (&a / &b) + &c;
     let y = (&c - &b) / (&c + &a);
     let z = -&x + &y - (&x * &x) + (&x * &y) / &a;
-    // let z = -&x + &y - (&x * &x) + (&x * &y) / (&a);
-    println!("z: {z:?}");
     z.backward();
 }
-
 
 #[test]
 fn test_autograd_mul_neg() {

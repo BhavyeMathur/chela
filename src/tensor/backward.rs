@@ -8,7 +8,7 @@ impl<'a, T: FloatDataType> Tensor<'a, T> {
     }
 
     pub fn gradient(&'a self) -> Option<Tensor<'a, T>> {
-        self.grad_fn.borrow().gradient()
+        unsafe { (*self.grad_fn.as_ptr()).gradient() }
     }
 
     pub fn zero_gradient(&self) {

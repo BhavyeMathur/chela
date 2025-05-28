@@ -7,7 +7,9 @@ pub(crate) type GradientFunction<T> = Rc<RefCell<dyn GradientFuncTrait<T>>>;
 pub(crate) trait GradientFuncTrait<T: RawDataType> {
     fn backward(&mut self, grad: &Tensor<T>);
 
-    fn gradient(&self) -> Option<Tensor<'static, T>> {
+    /// Returns the gradient of the function being differentiated with respect to `self`
+    /// if this function is a leaf. Otherwise, returns `None`.
+    fn gradient<'a>(&'a self) -> Option<Tensor<'a, T>> {
         None
     }
 
@@ -29,8 +31,8 @@ impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
         self.tensor_grad += grad;
     }
 
-    fn gradient(&self) -> Option<Tensor<'static, T>> {
-        Some(self.tensor_grad.clone())  // TODO can we get away without cloning?
+    fn gradient<'a>(&'a self) -> Option<Tensor<'a, T>> {
+        Some(self.tensor_grad.view())
     }
 
     fn zero(&mut self) {
