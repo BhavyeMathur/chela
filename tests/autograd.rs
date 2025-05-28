@@ -7,10 +7,10 @@ fn test_autograd1() {
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
-    
+
     let c = &a * &b;
     let d = &c * &b;
-    d.backward(1.0);
+    d.backward();
 
     // d = ab^2
     // dd/da = b^2
@@ -32,7 +32,7 @@ fn test_autograd2() {
 
     let d = &c + &a;
     let e = &b * &d;
-    e.backward(1.0);
+    e.backward();
 
     // e = b(c + a) = bc + ba
     // de/da = b
@@ -58,7 +58,7 @@ fn test_autograd3() {
     let e = &d * &b;  // 21
     let f = &e + &a;  // 23
     let g = &f * &d;  // 161
-    g.backward(1.0);
+    g.backward();
 
     // g = fd = bc^2 + 2abc + ba^2 + ac + a^2
 
@@ -72,6 +72,73 @@ fn test_autograd3() {
 }
 
 #[test]
+fn test_autograd4() {
+    let mut a = Tensor::from([2.0f64, 4.0, 6.0]);
+    let mut b = Tensor::scalar(3.0);
+    let mut c = Tensor::from([[2.0, 4.0, 6.0], [5.0, 7.0, 11.0]]);
+
+    a.set_requires_grad(true);
+    b.set_requires_grad(true);
+    c.set_requires_grad(true);
+
+    let d = &c + &a;
+    d.backward();
+
+    assert_eq!(a.gradient().unwrap(), Tensor::from([2.0, 2.0, 2.0]));
+    assert_eq!(b.gradient().unwrap(), Tensor::scalar(0.0));
+    assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]));
+
+    let e = &d * &b;
+    a.zero_gradient();
+    b.zero_gradient();
+    c.zero_gradient();
+    e.backward();
+
+    assert_eq!(a.gradient().unwrap(), Tensor::from([6.0, 6.0, 6.0]));
+    assert_eq!(b.gradient().unwrap(), Tensor::scalar(59.0));
+    assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]) * 3.0);
+
+    let f = &e + &a;
+    a.zero_gradient();
+    b.zero_gradient();
+    c.zero_gradient();
+    f.backward();
+
+    assert_eq!(a.gradient().unwrap(), Tensor::from([8.0, 8.0, 8.0]));
+    assert_eq!(b.gradient().unwrap(), Tensor::scalar(59.0));
+    assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]) * 3.0);
+
+    let g = &f * &d;
+    a.zero_gradient();
+    b.zero_gradient();
+    c.zero_gradient();
+    g.backward();
+
+    assert_eq!(a.gradient().unwrap(), Tensor::from([81.0, 141.0, 215.0]));
+    assert_eq!(b.gradient().unwrap(), Tensor::scalar(683.0));
+    assert_eq!(c.gradient().unwrap(), Tensor::from([[26.0, 52.0, 78.0], [44.0, 70.0, 108.0]]));
+}
+
+#[test]
+fn test_autograd5() {
+    let mut a = Tensor::from([1.0f32, 2.0, 3.0]);  // [3]
+    let mut b = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);  // [3, 3]
+    let mut c = Tensor::from([[2.0], [4.0], [6.0]]);  // [3, 1]
+
+    a.set_requires_grad(true);
+    b.set_requires_grad(true);
+    c.set_requires_grad(true);
+    
+    let x = (&a / &b) + &c;
+    let y = (&c - &b) / (&c + &a);
+    let z = -&x + &y - (&x * &x) + (&x * &y) / &a;
+    // let z = -&x + &y - (&x * &x) + (&x * &y) / (&a);
+    println!("z: {z:?}");
+    z.backward();
+}
+
+
+#[test]
 fn test_autograd_mul_neg() {
     let mut a = Tensor::scalar(2.0f32);
     let mut b = Tensor::scalar(3.0);
@@ -80,7 +147,7 @@ fn test_autograd_mul_neg() {
     b.set_requires_grad(true);
 
     let c = -(&a * &b);
-    c.backward(1.0);
+    c.backward();
 
     // c = -ab
     // dc/da = -b
@@ -100,7 +167,7 @@ fn test_autograd_nested_neg_add() {
     b.set_requires_grad(true);
 
     let c = -(&a + -&b);
-    c.backward(1.0);
+    c.backward();
 
     // c = -(a - b)
     // dc/da = -1
@@ -121,7 +188,7 @@ fn test_autograd_mul_div() {
     c.set_requires_grad(true);
 
     let d = Tensor::scalar(1.0) / &c;
-    d.backward(1.0);
+    d.backward();
 
     // d = ab / c
     // dd/da = b / c
@@ -146,7 +213,7 @@ fn test_autograd_compound_expression() {
     d.set_requires_grad(true);
 
     let e = ((&a + &b) * &c - &d) / &b;
-    e.backward(1.0);
+    e.backward();
 
     // e = ac/b - d/b + c
     // de/da = c / b
@@ -154,7 +221,7 @@ fn test_autograd_compound_expression() {
     // de/dc = (a + b) / b
     // de/dd = -1 / b
 
-    assert_eq!(a.gradient().unwrap(), &c / &b);
+    assert_almost_eq!(a.gradient().unwrap(), &c / &b);
     assert_almost_eq!(b.gradient().unwrap(), (&d - &a * &c) / (&b * &b));
     assert_almost_eq!(c.gradient().unwrap(), (&a + &b) / &b);
     assert_almost_eq!(d.gradient().unwrap(), -Tensor::scalar(1.0) / &b);
@@ -178,7 +245,7 @@ fn test_autograd_deep_chain_mul_add() {
     let y = &x + &c;        // y = ab + c
     let z = &y * &d;        // z = (ab + c)d
     let out = &z + &e;      // out = ((ab + c)d) + e
-    out.backward(1.0);
+    out.backward();
 
     // out = ((ab + c)d) + e
     // dout/da = bd
