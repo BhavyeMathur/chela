@@ -2,8 +2,8 @@ use chela::*;
 
 #[test]
 fn test_autograd1() {
-    let mut a = Tensor::scalar(2.0f32);
-    let mut b = Tensor::scalar(3.0);
+    let mut a = NdArray::scalar(2.0f32);
+    let mut b = NdArray::scalar(3.0);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -22,9 +22,9 @@ fn test_autograd1() {
 
 #[test]
 fn test_autograd2() {
-    let mut a = Tensor::scalar(2.0f32);
-    let mut b = Tensor::scalar(3.0);
-    let mut c = Tensor::scalar(5.0);
+    let mut a = NdArray::scalar(2.0f32);
+    let mut b = NdArray::scalar(3.0);
+    let mut c = NdArray::scalar(5.0);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -46,9 +46,9 @@ fn test_autograd2() {
 
 #[test]
 fn test_autograd3() {
-    let mut a = Tensor::scalar(2.0f64);
-    let mut b = Tensor::scalar(3.0);
-    let mut c = Tensor::scalar(5.0);
+    let mut a = NdArray::scalar(2.0f64);
+    let mut b = NdArray::scalar(3.0);
+    let mut c = NdArray::scalar(5.0);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -73,9 +73,9 @@ fn test_autograd3() {
 
 #[test]
 fn test_autograd4() {
-    let mut a = Tensor::from([2.0f64, 4.0, 6.0]);
-    let mut b = Tensor::scalar(3.0);
-    let mut c = Tensor::from([[2.0, 4.0, 6.0], [5.0, 7.0, 11.0]]);
+    let mut a = NdArray::from([2.0f64, 4.0, 6.0]);
+    let mut b = NdArray::scalar(3.0);
+    let mut c = NdArray::from([[2.0, 4.0, 6.0], [5.0, 7.0, 11.0]]);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -84,9 +84,9 @@ fn test_autograd4() {
     let d = &c + &a;
     d.backward();
 
-    assert_eq!(a.gradient().unwrap(), Tensor::from([2.0, 2.0, 2.0]));
-    assert_eq!(b.gradient().unwrap(), Tensor::scalar(0.0));
-    assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]));
+    assert_eq!(a.gradient().unwrap(), NdArray::from([2.0, 2.0, 2.0]));
+    assert_eq!(b.gradient().unwrap(), NdArray::scalar(0.0));
+    assert_eq!(c.gradient().unwrap(), NdArray::<f64>::ones([2, 3]));
 
     let e = &d * &b;
     a.zero_gradient();
@@ -94,9 +94,9 @@ fn test_autograd4() {
     c.zero_gradient();
     e.backward();
 
-    assert_eq!(a.gradient().unwrap(), Tensor::from([6.0, 6.0, 6.0]));
-    assert_eq!(b.gradient().unwrap(), Tensor::scalar(59.0));
-    assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]) * 3.0);
+    assert_eq!(a.gradient().unwrap(), NdArray::from([6.0, 6.0, 6.0]));
+    assert_eq!(b.gradient().unwrap(), NdArray::scalar(59.0));
+    assert_eq!(c.gradient().unwrap(), NdArray::<f64>::ones([2, 3]) * 3.0);
 
     let f = &e + &a;
     a.zero_gradient();
@@ -104,9 +104,9 @@ fn test_autograd4() {
     c.zero_gradient();
     f.backward();
 
-    assert_eq!(a.gradient().unwrap(), Tensor::from([8.0, 8.0, 8.0]));
-    assert_eq!(b.gradient().unwrap(), Tensor::scalar(59.0));
-    assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]) * 3.0);
+    assert_eq!(a.gradient().unwrap(), NdArray::from([8.0, 8.0, 8.0]));
+    assert_eq!(b.gradient().unwrap(), NdArray::scalar(59.0));
+    assert_eq!(c.gradient().unwrap(), NdArray::<f64>::ones([2, 3]) * 3.0);
 
     let g = &f * &d;
     a.zero_gradient();
@@ -114,16 +114,16 @@ fn test_autograd4() {
     c.zero_gradient();
     g.backward();
 
-    assert_eq!(a.gradient().unwrap(), Tensor::from([81.0, 141.0, 215.0]));
-    assert_eq!(b.gradient().unwrap(), Tensor::scalar(683.0));
-    assert_eq!(c.gradient().unwrap(), Tensor::from([[26.0, 52.0, 78.0], [44.0, 70.0, 108.0]]));
+    assert_eq!(a.gradient().unwrap(), NdArray::from([81.0, 141.0, 215.0]));
+    assert_eq!(b.gradient().unwrap(), NdArray::scalar(683.0));
+    assert_eq!(c.gradient().unwrap(), NdArray::from([[26.0, 52.0, 78.0], [44.0, 70.0, 108.0]]));
 }
 
 #[test]
 fn test_autograd5() {
-    let mut a = Tensor::from([1.0f32, 2.0, 3.0]);  // [3]
-    let mut b = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);  // [3, 3]
-    let mut c = Tensor::from([[2.0], [4.0], [6.0]]);  // [3, 1]
+    let mut a = NdArray::from([1.0f32, 2.0, 3.0]);  // [3]
+    let mut b = NdArray::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);  // [3, 3]
+    let mut c = NdArray::from([[2.0], [4.0], [6.0]]);  // [3, 1]
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -134,19 +134,19 @@ fn test_autograd5() {
     let z = -&x + &y - (&x * &x) + (&x * &y) / &a;
     z.backward();
 
-    assert_almost_eq!(a.gradient().unwrap(), Tensor::from([-5.6277f32, -3.5112, -23.9599]), 1e-4);
+    assert_almost_eq!(a.gradient().unwrap(), NdArray::from([-5.6277f32, -3.5112, -23.9599]), 1e-4);
 
-    assert_almost_eq!(b.gradient().unwrap(), Tensor::from([[ 0.3333, 0.8750, 32.2667],
+    assert_almost_eq!(b.gradient().unwrap(), NdArray::from([[ 0.3333, 0.8750, 32.2667],
                                                            [ 5.2f32, 1.7613, 8.5238],
                                                            [ 0.2751, 2.6019, 6.9520]]), 1e-4);
 
-    assert_almost_eq!(c.gradient().unwrap(), Tensor::from([[-17.84f32], [-24.5101], [-40.1665]]), 1e-4);
+    assert_almost_eq!(c.gradient().unwrap(), NdArray::from([[-17.84f32], [-24.5101], [-40.1665]]), 1e-4);
 }
 
 #[test]
 fn test_autograd_mul_neg() {
-    let mut a = Tensor::scalar(2.0f32);
-    let mut b = Tensor::scalar(3.0);
+    let mut a = NdArray::scalar(2.0f32);
+    let mut b = NdArray::scalar(3.0);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -158,15 +158,15 @@ fn test_autograd_mul_neg() {
     // dc/da = -b
     // dc/db = -a
 
-    assert_eq!(a.gradient(), Some(Tensor::scalar(-3.0)));
-    assert_eq!(b.gradient(), Some(Tensor::scalar(-2.0)));
+    assert_eq!(a.gradient(), Some(NdArray::scalar(-3.0)));
+    assert_eq!(b.gradient(), Some(NdArray::scalar(-2.0)));
 }
 
 
 #[test]
 fn test_autograd_nested_neg_add() {
-    let mut a = Tensor::scalar(5.0f32);
-    let mut b = Tensor::scalar(2.0);
+    let mut a = NdArray::scalar(5.0f32);
+    let mut b = NdArray::scalar(2.0);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -178,21 +178,21 @@ fn test_autograd_nested_neg_add() {
     // dc/da = -1
     // dc/db = 1
 
-    assert_eq!(a.gradient(), Some(Tensor::scalar(-1.0)));
-    assert_eq!(b.gradient(), Some(Tensor::scalar(1.0)));
+    assert_eq!(a.gradient(), Some(NdArray::scalar(-1.0)));
+    assert_eq!(b.gradient(), Some(NdArray::scalar(1.0)));
 }
 
 #[test]
 fn test_autograd_mul_div() {
-    let mut a = Tensor::scalar(2.0f32);
-    let mut b = Tensor::scalar(3.0);
-    let mut c = Tensor::scalar(4.0);
+    let mut a = NdArray::scalar(2.0f32);
+    let mut b = NdArray::scalar(3.0);
+    let mut c = NdArray::scalar(4.0);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
     c.set_requires_grad(true);
 
-    let d = Tensor::scalar(1.0) / &c;
+    let d = &a * &b / &c;
     d.backward();
 
     // d = ab / c
@@ -202,15 +202,15 @@ fn test_autograd_mul_div() {
 
     assert_eq!(a.gradient().unwrap(), &b / &c);
     assert_eq!(b.gradient().unwrap(), &a / &c);
-    assert_almost_eq!(c.gradient().unwrap(), Tensor::scalar(-1.0) / (&c * &c));
+    assert_almost_eq!(c.gradient().unwrap(), -&a * &b / (&c * &c));
 }
 
 #[test]
 fn test_autograd_compound_expression() {
-    let mut a = Tensor::scalar(2.0f32);
-    let mut b = Tensor::scalar(3.0);
-    let mut c = Tensor::scalar(4.0);
-    let mut d = Tensor::scalar(5.0);
+    let mut a = NdArray::scalar(2.0f32);
+    let mut b = NdArray::scalar(3.0);
+    let mut c = NdArray::scalar(4.0);
+    let mut d = NdArray::scalar(5.0);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -229,16 +229,16 @@ fn test_autograd_compound_expression() {
     assert_almost_eq!(a.gradient().unwrap(), &c / &b);
     assert_almost_eq!(b.gradient().unwrap(), (&d - &a * &c) / (&b * &b));
     assert_almost_eq!(c.gradient().unwrap(), (&a + &b) / &b);
-    assert_almost_eq!(d.gradient().unwrap(), -Tensor::scalar(1.0) / &b);
+    assert_almost_eq!(d.gradient().unwrap(), -NdArray::scalar(1.0) / &b);
 }
 
 #[test]
 fn test_autograd_deep_chain_mul_add() {
-    let mut a = Tensor::scalar(1.0f64);
-    let mut b = Tensor::scalar(2.0);
-    let mut c = Tensor::scalar(3.0);
-    let mut d = Tensor::scalar(4.0);
-    let mut e = Tensor::scalar(5.0);
+    let mut a = NdArray::scalar(1.0f64);
+    let mut b = NdArray::scalar(2.0);
+    let mut c = NdArray::scalar(3.0);
+    let mut d = NdArray::scalar(4.0);
+    let mut e = NdArray::scalar(5.0);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -259,9 +259,9 @@ fn test_autograd_deep_chain_mul_add() {
     // dout/dd = ab + c
     // dout/de = 1
 
-    assert_eq!(a.gradient(), Some(Tensor::scalar(2.0 * 4.0))); // bd = 8
-    assert_eq!(b.gradient(), Some(Tensor::scalar(1.0 * 4.0))); // ad = 4
-    assert_eq!(c.gradient(), Some(Tensor::scalar(4.0)));       // d
-    assert_eq!(d.gradient(), Some(Tensor::scalar(1.0 * 2.0 + 3.0))); // ab + c = 5
-    assert_eq!(e.gradient(), Some(Tensor::scalar(1.0)));       // 1
+    assert_eq!(a.gradient(), Some(NdArray::scalar(2.0 * 4.0))); // bd = 8
+    assert_eq!(b.gradient(), Some(NdArray::scalar(1.0 * 4.0))); // ad = 4
+    assert_eq!(c.gradient(), Some(NdArray::scalar(4.0)));       // d
+    assert_eq!(d.gradient(), Some(NdArray::scalar(1.0 * 2.0 + 3.0))); // ab + c = 5
+    assert_eq!(e.gradient(), Some(NdArray::scalar(1.0)));       // 1
 }

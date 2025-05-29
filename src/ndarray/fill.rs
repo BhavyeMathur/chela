@@ -1,6 +1,6 @@
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
-use crate::{Tensor, TensorMethods};
+use crate::{NdArray, TensorMethods};
 
 unsafe fn fill_strided<T: Copy>(mut start: *mut T, value: T, stride: usize, n: usize) {
     for _ in 0..n {
@@ -20,7 +20,7 @@ pub(crate) unsafe fn fill_shape_and_stride<T: Copy>(mut start: *mut T, value: T,
     }
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
+impl<T: RawDataType> NdArray<'_, T> {
     pub fn fill(&mut self, value: T) {
         if self.is_contiguous() {
             return unsafe { fill_strided(self.mut_ptr(), value, 1, self.len); };
@@ -31,7 +31,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     }
 }
 
-impl<T: RawDataType + From<bool>> Tensor<'_, T> {
+impl<T: RawDataType + From<bool>> NdArray<'_, T> {
     pub fn zero(&mut self) {
         self.fill(false.into());
     }

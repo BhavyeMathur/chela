@@ -3,7 +3,7 @@ error[E0597]: `a` does not live long enough
    |
 4  |     let _grad = {
    |         ----- borrow later stored here
-5  |         let mut a = Tensor::from([1.0f32, 2.0, 3.0]);
+5  |         let mut a = NdArray::from([1.0f32, 2.0, 3.0]);
    |             ----- binding `a` declared here
 ...
 9  |         a.gradient().unwrap()

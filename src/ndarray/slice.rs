@@ -2,23 +2,23 @@ use crate::axis::Axis;
 use crate::dtype::RawDataType;
 use crate::index::Indexer;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
-use crate::tensor::flags::TensorFlags;
-use crate::{AxisType, Tensor, TensorMethods};
+use crate::ndarray::flags::NdArrayFlags;
+use crate::{AxisType, NdArray, TensorMethods};
 use crate::gradient_function::NoneBackwards;
 
-pub(super) fn update_flags_with_contiguity(mut flags: TensorFlags, shape: &[usize], stride: &[usize]) -> TensorFlags {
+pub(super) fn update_flags_with_contiguity(mut flags: NdArrayFlags, shape: &[usize], stride: &[usize]) -> NdArrayFlags {
     match has_uniform_stride(shape, stride) {
         None => {
-            flags -= TensorFlags::UniformStride;
-            flags -= TensorFlags::Contiguous;
+            flags -= NdArrayFlags::UniformStride;
+            flags -= NdArrayFlags::Contiguous;
         }
         Some(stride) => {
-            flags |= TensorFlags::UniformStride;
+            flags |= NdArrayFlags::UniformStride;
 
             if stride <= 1 {
-                flags |= TensorFlags::Contiguous;
+                flags |= NdArrayFlags::Contiguous;
             } else {
-                flags -= TensorFlags::Contiguous;
+                flags -= NdArrayFlags::Contiguous;
             }
         }
     }
@@ -39,8 +39,8 @@ fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {
 }
 
 
-impl<'a, T: RawDataType> Tensor<'a, T> {
-    pub fn slice_along<S: Indexer>(&self, axis: Axis, index: S) -> Tensor<'a, T>
+impl<'a, T: RawDataType> NdArray<'a, T> {
+    pub fn slice_along<S: Indexer>(&self, axis: Axis, index: S) -> NdArray<'a, T>
     {
         let axis = axis.get_absolute(self.ndims());
 
@@ -59,10 +59,10 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         let len = calculate_strided_buffer_length(&new_shape, &new_stride);
         
         let mut flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride);
-        flags -= TensorFlags::Owned;
-        flags -= TensorFlags::UserCreated;
+        flags -= NdArrayFlags::Owned;
+        flags -= NdArrayFlags::UserCreated;
 
-        Tensor {
+        NdArray {
             ptr: unsafe { self.ptr.add(offset) },
             len,
             capacity: len,
@@ -77,7 +77,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         }
     }
 
-    pub fn slice<S, I>(&self, index: I) -> Tensor<'a, T>
+    pub fn slice<S, I>(&self, index: I) -> NdArray<'a, T>
     where
         S: Indexer,
         I: IntoIterator<Item=S>,
@@ -107,10 +107,10 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
 
         let len = calculate_strided_buffer_length(&new_shape, &new_stride);
         let mut flags = update_flags_with_contiguity(self.flags, &new_shape, &new_stride);
-        flags -= TensorFlags::Owned;
-        flags -= TensorFlags::UserCreated;
+        flags -= NdArrayFlags::Owned;
+        flags -= NdArrayFlags::UserCreated;
 
-        Tensor {
+        NdArray {
             ptr: unsafe { self.ptr.add(offset) },
             len,
             capacity: len,

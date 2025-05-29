@@ -1,7 +1,7 @@
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
-use crate::tensor::flags::TensorFlags;
-use crate::{Tensor};
+use crate::ndarray::flags::NdArrayFlags;
+use crate::{NdArray};
 
 #[allow(clippy::len_without_is_empty)]
 pub trait TensorMethods: Sized {
@@ -9,14 +9,14 @@ pub trait TensorMethods: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// 
-    /// let a = Tensor::from([3, 4, 5]);
+    ///
+    /// let a = NdArray::from([3, 4, 5]);
     /// assert_eq!(a.shape(), &[3]);
     ///
-    /// let b = Tensor::from([[3], [5]]);
+    /// let b = NdArray::from([[3], [5]]);
     /// assert_eq!(b.shape(), &[2, 1]);
     ///
-    /// let c = Tensor::scalar(0);
+    /// let c = NdArray::scalar(0);
     /// assert_eq!(c.shape(), &[]);
     /// ```
     fn shape(&self) -> &[usize];
@@ -28,7 +28,7 @@ pub trait TensorMethods: Sized {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let a = Tensor::from([[3, 4], [5, 6]]);
+    /// let a = NdArray::from([[3, 4], [5, 6]]);
     /// assert_eq!(a.stride(), &[2, 1]);
     /// ```
     fn stride(&self) -> &[usize];
@@ -37,13 +37,13 @@ pub trait TensorMethods: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([3, 4, 5]);
+    /// let a = NdArray::from([3, 4, 5]);
     /// assert_eq!(a.ndims(), 1);
     ///
-    /// let b = Tensor::from([[3], [5]]);
+    /// let b = NdArray::from([[3], [5]]);
     /// assert_eq!(b.ndims(), 2);
     ///
-    /// let c = Tensor::scalar(0);
+    /// let c = NdArray::scalar(0);
     /// assert_eq!(c.ndims(), 0);
     /// ```
     fn ndims(&self) -> usize {
@@ -57,13 +57,13 @@ pub trait TensorMethods: Sized {
     ///
     /// ```
     /// # use chela::*;
-    /// let a = Tensor::from([3, 4, 5]);
+    /// let a = NdArray::from([3, 4, 5]);
     /// assert_eq!(a.len(), 3);
     ///
-    /// let b = Tensor::from([[3], [5]]);
+    /// let b = NdArray::from([[3], [5]]);
     /// assert_eq!(b.len(), 2);
     ///
-    /// let c = Tensor::scalar(0);
+    /// let c = NdArray::scalar(0);
     /// assert_eq!(c.len(), 0);
     /// ```
     #[inline]
@@ -79,13 +79,13 @@ pub trait TensorMethods: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([3, 4, 5]);
+    /// let a = NdArray::from([3, 4, 5]);
     /// assert_eq!(a.size(), 3);
     ///
-    /// let b = Tensor::from([[3], [5]]);
+    /// let b = NdArray::from([[3], [5]]);
     /// assert_eq!(b.size(), 2);
     ///
-    /// let c = Tensor::scalar(0);
+    /// let c = NdArray::scalar(0);
     /// assert_eq!(c.size(), 1);
     /// ```
     #[inline]
@@ -94,13 +94,13 @@ pub trait TensorMethods: Sized {
     }
 
     /// Returns flags containing information about various tensor metadata.
-    fn flags(&self) -> TensorFlags;
+    fn flags(&self) -> NdArrayFlags;
 
     /// Returns whether this tensor is stored contiguously in memory.
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([[3, 4], [5, 6]]);
+    /// let a = NdArray::from([[3, 4], [5, 6]]);
     /// assert!(a.is_contiguous());
     ///
     /// let b = a.slice_along(Axis(1), 0);
@@ -108,14 +108,14 @@ pub trait TensorMethods: Sized {
     /// ```
     #[inline]
     fn is_contiguous(&self) -> bool {
-        self.flags().contains(TensorFlags::Contiguous)
+        self.flags().contains(NdArrayFlags::Contiguous)
     }
 
     /// Returns whether this tensor is slice of another tensor.
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([[3, 4], [5, 6]]);
+    /// let a = NdArray::from([[3, 4], [5, 6]]);
     /// assert!(!a.is_view());
     ///
     /// let b = a.slice_along(Axis(1), 0);
@@ -123,7 +123,7 @@ pub trait TensorMethods: Sized {
     /// ```
     #[inline]
     fn is_view(&self) -> bool {
-        !self.flags().contains(TensorFlags::Owned)
+        !self.flags().contains(NdArrayFlags::Owned)
     }
 
     /// If the elements of this tensor are stored in memory with a uniform distance between them,
@@ -134,7 +134,7 @@ pub trait TensorMethods: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([[3, 4, 5], [6, 7, 8]]);
+    /// let a = NdArray::from([[3, 4, 5], [6, 7, 8]]);
     /// assert_eq!(a.has_uniform_stride(), Some(1));
     ///
     /// let b = a.slice_along(Axis(1), 0);
@@ -145,7 +145,7 @@ pub trait TensorMethods: Sized {
     /// ```
     #[inline]
     fn has_uniform_stride(&self) -> Option<usize> {
-        if !self.flags().contains(TensorFlags::UniformStride) {
+        if !self.flags().contains(NdArrayFlags::UniformStride) {
             return None;
         }
 
@@ -158,7 +158,7 @@ pub trait TensorMethods: Sized {
     }
 }
 
-impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
+impl<T: RawDataType> TensorMethods for NdArray<'_, T> {
     #[inline]
     fn shape(&self) -> &[usize] {
         &self.shape
@@ -170,12 +170,12 @@ impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
     }
 
     #[inline]
-    fn flags(&self) -> TensorFlags {
+    fn flags(&self) -> NdArrayFlags {
         self.flags
     }
 }
 
-impl<T: RawDataType> TensorMethods for &Tensor<'_, T> {
+impl<T: RawDataType> TensorMethods for &NdArray<'_, T> {
     #[inline]
     fn shape(&self) -> &[usize] {
         &self.shape
@@ -187,12 +187,12 @@ impl<T: RawDataType> TensorMethods for &Tensor<'_, T> {
     }
 
     #[inline]
-    fn flags(&self) -> TensorFlags {
+    fn flags(&self) -> NdArrayFlags {
         self.flags
     }
 }
 
-impl<'a, T: RawDataType> Tensor<'a, T> {
+impl<'a, T: RawDataType> NdArray<'a, T> {
     pub(crate) unsafe fn mut_ptr(&self) -> *mut T {
         self.ptr.as_ptr()
     }

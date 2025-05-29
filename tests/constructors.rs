@@ -3,7 +3,7 @@ use paste::paste;
 
 test_for_all_numeric_dtypes!(
     test_full, {
-        let a = Tensor::full(3 as T, [2, 3]);
+        let a = NdArray::full(3 as T, [2, 3]);
 
         assert_eq!(a.shape(), &[2, 3]);
         assert_eq!(a.stride(), &[3, 1]);
@@ -15,7 +15,7 @@ test_for_all_numeric_dtypes!(
 
 #[test]
 fn test_full_bool() {
-    let a: Tensor<bool> = Tensor::full(true, vec![3, 5, 3]);
+    let a: NdArray<bool> = NdArray::full(true, vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
     assert!(a.flatiter().all(|x| x == true));
@@ -25,7 +25,7 @@ fn test_full_bool() {
 
 test_for_all_numeric_dtypes!(
     test_ones, {
-        let a = Tensor::<T>::ones([3, 5, 3]);
+        let a = NdArray::<T>::ones([3, 5, 3]);
 
         assert_eq!(a.shape(), &[3, 5, 3]);
         assert_eq!(a.stride(), &[15, 3, 1]);
@@ -38,7 +38,7 @@ test_for_all_numeric_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_zeros, {
-        let a = Tensor::<T>::zeros([3, 5, 3]);
+        let a = NdArray::<T>::zeros([3, 5, 3]);
 
         assert_eq!(a.shape(), &[3, 5, 3]);
         assert_eq!(a.stride(), &[15, 3, 1]);
@@ -50,7 +50,7 @@ test_for_all_numeric_dtypes!(
 
 #[test]
 fn ones_bool() {
-    let a: Tensor<bool> = Tensor::ones(vec![3, 5, 3]);
+    let a: NdArray<bool> = NdArray::ones(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
     assert!(a.flatiter().all(|x| x == true));
@@ -60,7 +60,7 @@ fn ones_bool() {
 
 #[test]
 fn zeroes_bool() {
-    let a: Tensor<bool> = Tensor::zeros(vec![3, 5, 3]);
+    let a: NdArray<bool> = NdArray::zeros(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert_eq!(a.stride(), &[15, 3, 1]);
     assert!(a.flatiter().all(|x| x == false));
@@ -70,7 +70,7 @@ fn zeroes_bool() {
 
 #[test]
 fn random_normal_f32() {
-    let a: Tensor<f32> = Tensor::randn(vec![3, 5, 3]);
+    let a: NdArray<f32> = NdArray::randn(vec![3, 5, 3]);
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert!(!a.is_view());
     assert!(a.is_contiguous());
@@ -79,7 +79,7 @@ fn random_normal_f32() {
 
 #[test]
 fn random_normal_f64() {
-    let a: Tensor<f64> = Tensor::randn(vec![3, 5, 3]);
+    let a: NdArray<f64> = NdArray::randn(vec![3, 5, 3]);
     let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[3, 5, 3]);
     assert!(!a.is_view());
@@ -89,7 +89,7 @@ fn random_normal_f64() {
 
 #[test]
 fn random_uniform_f64() {
-    let a: Tensor<f64> = Tensor::rand(vec![2, 3]);
+    let a: NdArray<f64> = NdArray::rand(vec![2, 3]);
     let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3]);
     assert!(!a.is_view());
@@ -99,7 +99,7 @@ fn random_uniform_f64() {
 
 #[test]
 fn random_uniform_f32() {
-    let a: Tensor<f32> = Tensor::rand(vec![2, 3, 6]);
+    let a: NdArray<f32> = NdArray::rand(vec![2, 3, 6]);
     let _: Vec<_> = a.flatiter().collect();
     assert_eq!(a.shape(), &[2, 3, 6]);
     assert!(!a.is_view());
@@ -110,7 +110,7 @@ fn random_uniform_f32() {
 
 test_for_all_numeric_dtypes!(
     test_scalar, {
-        let a = Tensor::scalar(5 as T);
+        let a = NdArray::scalar(5 as T);
         let _: Vec<_> = a.flatiter().collect();
 
         assert_eq!(a.shape(), &[]);
@@ -122,8 +122,8 @@ test_for_all_numeric_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_arange, {
-        let a = Tensor::<T>::arange(0 as T, 1 as T);
-        let expected = Tensor::from([0]).astype::<T>();
+        let a = NdArray::<T>::arange(0 as T, 1 as T);
+        let expected = NdArray::from([0]).astype::<T>();
 
         assert_eq!(a, expected);
         assert_eq!(a.shape(), &[1]);
@@ -131,16 +131,16 @@ test_for_all_numeric_dtypes!(
         assert!(a.is_contiguous());
         assert_eq!(a.has_uniform_stride(), Some(1));
 
-        let b = Tensor::<T>::arange(8 as T, 15 as T);
-        let expected = Tensor::from([8, 9, 10, 11, 12, 13, 14]).astype::<T>();
+        let b = NdArray::<T>::arange(8 as T, 15 as T);
+        let expected = NdArray::from([8, 9, 10, 11, 12, 13, 14]).astype::<T>();
         assert_eq!(b, expected);
     }
 );
 
 test_for_all_numeric_dtypes!(
     test_arange_with_step, {
-        let a = Tensor::<T>::arange_with_step(0 as T, 1 as T, 2 as T);
-        let expected = Tensor::from([0]).astype::<T>();
+        let a = NdArray::<T>::arange_with_step(0 as T, 1 as T, 2 as T);
+        let expected = NdArray::from([0]).astype::<T>();
 
         assert_eq!(a, expected);
         assert_eq!(a.shape(), &[1]);
@@ -148,20 +148,20 @@ test_for_all_numeric_dtypes!(
         assert!(a.is_contiguous());
         assert_eq!(a.has_uniform_stride(), Some(1));
 
-        let b = Tensor::<T>::arange_with_step(8 as T, 15 as T, 2 as T);
-        let expected = Tensor::from([8, 10, 12, 14]).astype::<T>();
+        let b = NdArray::<T>::arange_with_step(8 as T, 15 as T, 2 as T);
+        let expected = NdArray::from([8, 10, 12, 14]).astype::<T>();
         assert_eq!(b, expected);
     }
 );
 
 test_for_signed_dtypes!(
     test_arange_with_negative_step, {
-        let a = Tensor::<T>::arange_with_step(15 as T, 8 as T, -3 as T);
-        let expected = Tensor::from([15, 12, 9]).astype::<T>();
+        let a = NdArray::<T>::arange_with_step(15 as T, 8 as T, -3 as T);
+        let expected = NdArray::from([15, 12, 9]).astype::<T>();
         assert_eq!(a, expected);
 
-        let a = Tensor::<T>::arange_with_step(21 as T, -48 as T, -7 as T);
-        let expected = Tensor::from([21, 14, 7, 0, -7, -14, -21, -28, -35, -42]).astype::<T>();
+        let a = NdArray::<T>::arange_with_step(21 as T, -48 as T, -7 as T);
+        let expected = NdArray::from([21, 14, 7, 0, -7, -14, -21, -28, -35, -42]).astype::<T>();
         assert_eq!(a, expected);
     }
 );

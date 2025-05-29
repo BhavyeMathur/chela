@@ -1,6 +1,6 @@
 use crate::dtype::RawDataType;
 use crate::flat_index_generator::FlatIndexGenerator;
-use crate::Tensor;
+use crate::NdArray;
 
 
 pub struct BufferIterator<T: RawDataType> {
@@ -9,14 +9,14 @@ pub struct BufferIterator<T: RawDataType> {
 }
 
 impl<T: RawDataType> BufferIterator<T> {
-    pub(crate) fn from(tensor: &Tensor<T>) -> Self {
+    pub(crate) fn from(tensor: &NdArray<T>) -> Self {
         Self {
             ptr: unsafe { tensor.mut_ptr() },
             indices: FlatIndexGenerator::from(&tensor.shape, &tensor.stride),
         }
     }
 
-    pub(crate) unsafe fn from_reshaped_view(tensor: &Tensor<T>, shape: &[usize], stride: &[usize]) -> Self {
+    pub(crate) unsafe fn from_reshaped_view(tensor: &NdArray<T>, shape: &[usize], stride: &[usize]) -> Self {
         Self {
             ptr: tensor.mut_ptr(),
             indices: FlatIndexGenerator::from(shape, stride),

@@ -1,12 +1,12 @@
 use crate::util::to_vec::ToVec;
-use crate::{FloatDataType, NumericDataType, Tensor};
+use crate::{FloatDataType, NumericDataType, NdArray};
 use num::NumCast;
 use rand::distributions::uniform::SampleUniform;
 use rand::distributions::{Distribution, Uniform};
 use rand::thread_rng;
 use rand_distr::Normal;
 
-impl<T: FloatDataType + SampleUniform> Tensor<'_, T> {
+impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
     pub fn randn(shape: impl ToVec<usize>) -> Self {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
@@ -18,7 +18,7 @@ impl<T: FloatDataType + SampleUniform> Tensor<'_, T> {
             .map(|_| <T as NumCast>::from(normal.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
     }
 
     pub fn rand(shape: impl ToVec<usize>) -> Self {
@@ -31,11 +31,11 @@ impl<T: FloatDataType + SampleUniform> Tensor<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
     }
 }
 
-impl<T: NumericDataType> Tensor<'_, T> {
+impl<T: NumericDataType> NdArray<'_, T> {
     pub fn randint(shape: impl ToVec<usize>, low: T, high: T) -> Self {
         assert!(low < high, "randint: low must be less than high");
 
@@ -48,6 +48,6 @@ impl<T: NumericDataType> Tensor<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
     }
 }

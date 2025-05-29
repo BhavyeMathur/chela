@@ -2,7 +2,7 @@ use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::util::to_vec::ToVec;
-use crate::{AxisType, FloatDataType, Tensor, TensorMethods};
+use crate::{AxisType, FloatDataType, NdArray, TensorMethods};
 use num::{NumCast};
 use std::collections::VecDeque;
 
@@ -44,7 +44,7 @@ fn reduced_shape_and_stride(axes: &[isize], shape: &[usize]) -> (Vec<usize>, Vec
     (Vec::from(new_shape), Vec::from(new_stride))
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
+impl<T: RawDataType> NdArray<'_, T> {
     /// Reduces the elements of a contiguous tensor into a scalar using the specified function.
     ///
     /// # Safety
@@ -55,7 +55,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     ///   and the value of the accumulator) and returns a reduction of both.
     ///   For example, when the reduction operation is addition, `|src, acc| src + acc`
     /// - `default`: The initial value used as the accumulator for the reduction.
-    unsafe fn reduce_contiguous<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> Tensor<'b, T> {
+    unsafe fn reduce_contiguous<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> NdArray<'b, T> {
         let mut output = default;
 
         let mut src = self.ptr();
@@ -64,12 +64,12 @@ impl<T: RawDataType> Tensor<'_, T> {
             src = src.add(1);  // TODO we can generalise this to other strides
         }
 
-        Tensor::scalar_requires_grad(output, self.requires_grad())
+        NdArray::scalar_requires_grad(output, self.requires_grad())
     }
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
-    pub fn reduce_along<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> Tensor<'b, T> {
+impl<T: RawDataType> NdArray<'_, T> {
+    pub fn reduce_along<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> NdArray<'b, T> {
         let (out_shape, map_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
         let (map_shape, map_stride) = collapse_to_uniform_stride(&self.shape, &map_stride);
 
@@ -86,10 +86,10 @@ impl<T: RawDataType> Tensor<'_, T> {
             }
         }
 
-        unsafe { Tensor::from_contiguous_owned_buffer(out_shape, output, self.requires_grad(), false) }
+        unsafe { NdArray::from_contiguous_owned_buffer(out_shape, output, self.requires_grad(), false) }
     }
 
-    pub fn reduce<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> Tensor<'b, T> {
+    pub fn reduce<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> NdArray<'b, T> {
         if self.is_contiguous() {
             return unsafe { self.reduce_contiguous(func, default) };
         }
@@ -100,56 +100,56 @@ impl<T: RawDataType> Tensor<'_, T> {
             output = func(el, output);
         }
 
-        Tensor::scalar_requires_grad(output, self.requires_grad())
+        NdArray::scalar_requires_grad(output, self.requires_grad())
     }
 }
 
-impl<T: NumericDataType> Tensor<'_, T> {
-    pub fn sum<'a, 'b>(&'a self) -> Tensor<'b, T> {
+impl<T: NumericDataType> NdArray<'_, T> {
+    pub fn sum<'a, 'b>(&'a self) -> NdArray<'b, T> {
         self.reduce(|val, acc| acc + val, T::zero())
     }
 
-    pub fn sum_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
+    pub fn sum_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
         self.reduce_along(|val, acc| acc + val, axes, T::zero())
     }
 
-    pub fn product<'a, 'b>(&'a self) -> Tensor<'b, T> {
+    pub fn product<'a, 'b>(&'a self) -> NdArray<'b, T> {
         self.reduce(|val, acc| acc * val, T::one())
     }
 
-    pub fn product_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
+    pub fn product_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
         self.reduce_along(|val, acc| acc * val, axes, T::one())
     }
 
-    pub fn max<'a, 'b>(&'a self) -> Tensor<'b, T> {
+    pub fn max<'a, 'b>(&'a self) -> NdArray<'b, T> {
         self.reduce(partial_max, T::min_value())
     }
 
-    pub fn min<'a, 'b>(&'a self) -> Tensor<'b, T> {
+    pub fn min<'a, 'b>(&'a self) -> NdArray<'b, T> {
         self.reduce(partial_min, T::max_value())
     }
 
-    pub fn max_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
+    pub fn max_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
         self.reduce_along(partial_max, axes, T::min_value())
     }
 
-    pub fn min_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
+    pub fn min_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
         self.reduce_along(partial_min, axes, T::max_value())
     }
 
-    pub fn max_magnitude<'a, 'b>(&'a self) -> Tensor<'b, T> {
+    pub fn max_magnitude<'a, 'b>(&'a self) -> NdArray<'b, T> {
         self.reduce(partial_max_magnitude, T::zero())
     }
 
-    pub fn min_magnitude<'a, 'b>(&'a self) -> Tensor<'b, T> {
+    pub fn min_magnitude<'a, 'b>(&'a self) -> NdArray<'b, T> {
         self.reduce(partial_min_magnitude, T::zero())
     }
 
-    pub fn max_magnitude_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
+    pub fn max_magnitude_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
         self.reduce_along(partial_max_magnitude, axes, T::zero())
     }
 
-    pub fn min_magnitude_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
+    pub fn min_magnitude_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
         self.reduce_along(partial_min_magnitude, axes, T::zero())
     }
 }
@@ -278,13 +278,13 @@ impl<T: NumericDataType> Tensor<'_, T> {
 // }
 
 
-impl<T: FloatDataType> Tensor<'_, T> {
-    pub fn mean<'a, 'b>(&'a self) -> Tensor<'b, T> {
+impl<T: FloatDataType> NdArray<'_, T> {
+    pub fn mean<'a, 'b>(&'a self) -> NdArray<'b, T> {
         let n: T = NumCast::from(self.size()).unwrap();
         self.sum() / n
     }
 
-    pub fn mean_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> Tensor<'b, T> {
+    pub fn mean_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
         let axes = axes.to_vec();
 
         let mut n = 1;

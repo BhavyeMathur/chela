@@ -1,8 +1,8 @@
 use crate::dtype::RawDataType;
-use crate::{Tensor, TensorMethods};
+use crate::{NdArray, TensorMethods};
 use std::ops::{Index, IndexMut};
 
-impl<T: RawDataType, const D: usize> Index<[usize; D]> for Tensor<'_, T> {
+impl<T: RawDataType, const D: usize> Index<[usize; D]> for NdArray<'_, T> {
     type Output = T;
 
     fn index(&self, index: [usize; D]) -> &Self::Output {
@@ -17,7 +17,7 @@ impl<T: RawDataType, const D: usize> Index<[usize; D]> for Tensor<'_, T> {
     }
 }
 
-impl<T: RawDataType, const D: usize> IndexMut<[usize; D]> for Tensor<'_, T> {
+impl<T: RawDataType, const D: usize> IndexMut<[usize; D]> for NdArray<'_, T> {
     fn index_mut(&mut self, index: [usize; D]) -> &mut Self::Output {
         assert_eq!(D, self.ndims(), "[] index must equal number of tensor dimensions!");
 
@@ -30,7 +30,7 @@ impl<T: RawDataType, const D: usize> IndexMut<[usize; D]> for Tensor<'_, T> {
     }
 }
 
-impl<T: RawDataType> Index<usize> for Tensor<'_, T> {
+impl<T: RawDataType> Index<usize> for NdArray<'_, T> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -38,7 +38,7 @@ impl<T: RawDataType> Index<usize> for Tensor<'_, T> {
     }
 }
 
-impl<T: RawDataType> IndexMut<usize> for Tensor<'_, T> {
+impl<T: RawDataType> IndexMut<usize> for NdArray<'_, T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self[[index]]
     }

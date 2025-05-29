@@ -1,9 +1,9 @@
 use crate::dtype::NumericDataType;
-use crate::{RawDataType, Tensor, TensorMethods};
+use crate::{NdArray, RawDataType, TensorMethods};
 use num::NumCast;
 
-impl<T: NumericDataType> Tensor<'_, T> {
-    pub fn astype<'b, F: NumericDataType>(&self) -> Tensor<'b, F>
+impl<T: NumericDataType> NdArray<'_, T> {
+    pub fn astype<'b, F: NumericDataType>(&self) -> NdArray<'b, F>
     {
         let mut data = vec![F::default(); self.size()];
 
@@ -12,12 +12,12 @@ impl<T: NumericDataType> Tensor<'_, T> {
         }
         
         // TODO need to figure out behaviour of requires_grad and user_created for this method
-        unsafe { Tensor::from_contiguous_owned_buffer(self.shape().to_vec(), data, self.requires_grad(), true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(self.shape().to_vec(), data, self.requires_grad(), true) }
     }
 }
 
-impl<'a, T: RawDataType> AsRef<Tensor<'a, T>> for Tensor<'a, T> {
-    fn as_ref(&self) -> &Tensor<'a, T> {
+impl<'a, T: RawDataType> AsRef<NdArray<'a, T>> for NdArray<'a, T> {
+    fn as_ref(&self) -> &NdArray<'a, T> {
         self
     }
 }

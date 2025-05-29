@@ -3,36 +3,36 @@ use paste::paste;
 
 #[test]
 fn test_constructor_requires_grad() {
-    let a = Tensor::from([1, 2, 3]);
+    let a = NdArray::from([1, 2, 3]);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let a = Tensor::full(5f32, [1, 2, 3]);
+    let a = NdArray::full(5f32, [1, 2, 3]);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let a = Tensor::linspace(0f32, 5.0, 2);
+    let a = NdArray::linspace(0f32, 5.0, 2);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let a = Tensor::linspace_exclusive(0f64, 5.0, 2);
+    let a = NdArray::linspace_exclusive(0f64, 5.0, 2);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let a = Tensor::arange(0, 12);
+    let a = NdArray::arange(0, 12);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let a = Tensor::arange_with_step(0, -12, -3);
+    let a = NdArray::arange_with_step(0, -12, -3);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let mut a = Tensor::full(5f32, [1, 2, 3]);
+    let mut a = NdArray::full(5f32, [1, 2, 3]);
     a.set_requires_grad(false);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let mut a = Tensor::full(5f32, [1, 2, 3]);
+    let mut a = NdArray::full(5f32, [1, 2, 3]);
     a.set_requires_grad(true);
     assert!(a.requires_grad());
     assert!(a.is_leaf());
@@ -41,7 +41,7 @@ fn test_constructor_requires_grad() {
 #[test]
 fn test_iter_requires_grad() {
     for requires_grad in [false, true] {
-        let mut a = Tensor::<f64>::ones([1, 2, 3]);
+        let mut a = NdArray::<f64>::ones([1, 2, 3]);
         a.set_requires_grad(requires_grad);
 
         for b in a.iter_along(Axis(-1)) {
@@ -62,7 +62,7 @@ fn test_iter_requires_grad() {
 #[test]
 fn test_reshape_requires_grad() {
     for requires_grad in [false, true] {
-        let mut a = Tensor::<f32>::ones([1, 2, 3]);
+        let mut a = NdArray::<f32>::ones([1, 2, 3]);
         a.set_requires_grad(requires_grad);
 
         let b = (&a).reshape([6, 1]);
@@ -98,7 +98,7 @@ fn test_reshape_requires_grad() {
 test_for_float_dtypes!(
  test_mean_requires_grad, {
         for requires_grad in [false, true] {
-            let mut a = Tensor::<T>::zeros([4, 4, 2]);
+            let mut a = NdArray::<T>::zeros([4, 4, 2]);
             a.set_requires_grad(requires_grad);
             
             let b = a.mean();
@@ -114,9 +114,9 @@ test_for_float_dtypes!(
 
 test_for_float_dtypes!(
  test_arithemtic_requires_grad, {
-        let mut a = Tensor::<T>::zeros([4, 4, 2]);
-        let b = Tensor::<T>::ones([4, 4, 2]);
-        let mut c = Tensor::<T>::zeros([4, 4, 2]);
+        let mut a = NdArray::<T>::zeros([4, 4, 2]);
+        let b = NdArray::<T>::ones([4, 4, 2]);
+        let mut c = NdArray::<T>::zeros([4, 4, 2]);
         
         a.set_requires_grad(true);
         c.set_requires_grad(true);
@@ -162,7 +162,7 @@ test_for_float_dtypes!(
 test_for_float_dtypes!(
  test_reduce_requires_grad, {
         for requires_grad in [false, true] {
-            let mut a = Tensor::<f32>::zeros([4, 4, 2]).astype::<T>();
+            let mut a = NdArray::<f32>::zeros([4, 4, 2]).astype::<T>();
             a.set_requires_grad(requires_grad);
 
             let b = a.sum();
@@ -219,10 +219,10 @@ test_for_float_dtypes!(
 test_for_float_dtypes!(
  test_einsum_requires_grad, {
         for requires_grad in [false, true] {
-            let mut a = Tensor::<f32>::zeros([4, 4, 2]).astype::<T>();
+            let mut a = NdArray::<f32>::zeros([4, 4, 2]).astype::<T>();
             a.set_requires_grad(requires_grad);
 
-            let mut b = Tensor::<f32>::zeros([4, 4]).astype::<T>();
+            let mut b = NdArray::<f32>::zeros([4, 4]).astype::<T>();
 
             let c = einsum([&a, &b], (["iij", "ii"], "ij"));
             assert_eq!(c.requires_grad(), requires_grad);
@@ -236,9 +236,9 @@ test_for_float_dtypes!(
             assert!(!c.is_leaf());
         }
 
-        let mut a = Tensor::<f32>::ones([4, 4]).astype::<T>();
-        let mut b = Tensor::<f32>::ones([4, 4]).astype::<T>();
-        let mut v = Tensor::<f32>::ones([4]).astype::<T>();
+        let mut a = NdArray::<f32>::ones([4, 4]).astype::<T>();
+        let mut b = NdArray::<f32>::ones([4, 4]).astype::<T>();
+        let mut v = NdArray::<f32>::ones([4]).astype::<T>();
 
         let c = v.dot(&v);
         assert_eq!(c.requires_grad(), false);

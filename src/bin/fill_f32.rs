@@ -5,7 +5,7 @@ use cpu_time::ProcessTime;
 
 
 fn profile(size: usize) -> u128 {
-    let mut tensor = Tensor::zeros(size);
+    let mut tensor = NdArray::zeros(size);
 
     let start = ProcessTime::now();
     tensor.fill(5_f32);

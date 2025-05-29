@@ -1,13 +1,13 @@
 use crate::buffer_iterator::BufferIterator;
 use crate::dtype::RawDataType;
-use crate::Tensor;
+use crate::NdArray;
 
 pub struct FlatIterator<T: RawDataType> {
     buffer_iterator: BufferIterator<T>,
 }
 
 impl<T: RawDataType> FlatIterator<T> {
-    pub(super) fn from(tensor: &Tensor<T>) -> Self {
+    pub(super) fn from(tensor: &NdArray<T>) -> Self {
         Self {
             buffer_iterator: BufferIterator::from(tensor),
         }

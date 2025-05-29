@@ -1,13 +1,13 @@
 use crate::gradient_function::{AccumulateGrad, GradientFunction};
-use crate::tensor::flags::TensorFlags;
-use crate::{FloatDataType, RawDataType, Tensor, TensorMethods};
+use crate::ndarray::flags::NdArrayFlags;
+use crate::{FloatDataType, RawDataType, NdArray, TensorMethods};
 use crate::into_gradient::IntoTensor;
 
-impl<T: RawDataType> Tensor<'_, T> {
+impl<T: RawDataType> NdArray<'_, T> {
     #[inline]
     pub fn is_leaf(&self) -> bool {
         if self.requires_grad() {
-            self.flags().contains(TensorFlags::UserCreated)
+            self.flags().contains(NdArrayFlags::UserCreated)
         } else {
             true
         }
@@ -15,18 +15,18 @@ impl<T: RawDataType> Tensor<'_, T> {
 
     #[inline]
     pub fn requires_grad(&self) -> bool {
-        self.flags().contains(TensorFlags::RequiresGrad)
+        self.flags().contains(NdArrayFlags::RequiresGrad)
     }
 }
 
-impl<'a, T: FloatDataType> Tensor<'a, T> {
+impl<'a, T: FloatDataType> NdArray<'a, T> {
     pub fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self {
         let required_grad = self.requires_grad();
 
         if requires_grad {
-            self.flags |= TensorFlags::RequiresGrad;
+            self.flags |= NdArrayFlags::RequiresGrad;
         } else {
-            self.flags -= TensorFlags::RequiresGrad;
+            self.flags -= NdArrayFlags::RequiresGrad;
         }
 
         if !required_grad && requires_grad {
@@ -53,8 +53,8 @@ impl<'a, T: FloatDataType> Tensor<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let mut a = Tensor::scalar(2.0f32);
-    /// let b = Tensor::scalar(3.0);
+    /// let mut a = NdArray::scalar(2.0f32);
+    /// let b = NdArray::scalar(3.0);
     ///
     /// a.set_requires_grad(true);
     ///
@@ -64,7 +64,7 @@ impl<'a, T: FloatDataType> Tensor<'a, T> {
     /// // dc/da = b
     /// assert_eq!(a.gradient().unwrap(), b);
     /// ```
-    pub fn gradient(&'a self) -> Option<Tensor<'a, T>> {
+    pub fn gradient(&'a self) -> Option<NdArray<'a, T>> {
         unsafe { (*self.grad_fn.as_ptr()).gradient() }
     }
 
@@ -75,8 +75,8 @@ impl<'a, T: FloatDataType> Tensor<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let mut a = Tensor::scalar(2.0f32);
-    /// let b = Tensor::scalar(3.0);
+    /// let mut a = NdArray::scalar(2.0f32);
+    /// let b = NdArray::scalar(3.0);
     ///
     /// a.set_requires_grad(true);
     ///
@@ -84,7 +84,7 @@ impl<'a, T: FloatDataType> Tensor<'a, T> {
     /// c.backward();
     ///
     /// a.zero_gradient();
-    /// assert_eq!(a.gradient().unwrap(), Tensor::scalar(0.0));
+    /// assert_eq!(a.gradient().unwrap(), NdArray::scalar(0.0));
     /// ```
     pub fn zero_gradient(&self) {
         if let Some(mut grad ) = self.gradient() {
@@ -103,16 +103,16 @@ impl<'a, T: FloatDataType> Tensor<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let mut a = Tensor::full(2f32, [3]);  // [2, 2, 2]
-    /// let b = Tensor::from([3.0, 1.0, -1.0]);
+    /// let mut a = NdArray::full(2f32, [3]);  // [2, 2, 2]
+    /// let b = NdArray::from([3.0, 1.0, -1.0]);
     ///
     /// a.set_requires_grad(true);
     ///
     /// let c = &a * &b;
-    /// c.backward_with(Tensor::from([2.0, 1.0, 1.0]));
+    /// c.backward_with(NdArray::from([2.0, 1.0, 1.0]));
     ///
     /// // dc/da = b
-    /// assert_eq!(a.gradient().unwrap(), Tensor::from([6f32, 1.0, -1.0]));
+    /// assert_eq!(a.gradient().unwrap(), NdArray::from([6f32, 1.0, -1.0]));
     /// ```
     pub fn backward_with(&self, gradient: impl IntoTensor<'a, T>) {
         let gradient = gradient.as_tensor();
@@ -128,8 +128,8 @@ impl<'a, T: FloatDataType> Tensor<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let mut a = Tensor::full(2f32, [3]);  // [2, 2, 2]
-    /// let b = Tensor::from([3.0, 1.0, -1.0]);
+    /// let mut a = NdArray::full(2f32, [3]);  // [2, 2, 2]
+    /// let b = NdArray::from([3.0, 1.0, -1.0]);
     ///
     /// a.set_requires_grad(true);
     ///
@@ -137,9 +137,9 @@ impl<'a, T: FloatDataType> Tensor<'a, T> {
     /// c.backward();
     ///
     /// // dc/da = b
-    /// assert_eq!(a.gradient().unwrap(), Tensor::from([3f32, 1.0, -1.0]));
+    /// assert_eq!(a.gradient().unwrap(), NdArray::from([3f32, 1.0, -1.0]));
     /// ```
     pub fn backward(&self) {
-        self.backward_with(Tensor::ones(self.shape()))
+        self.backward_with(NdArray::ones(self.shape()))
     }
 }

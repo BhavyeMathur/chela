@@ -1,13 +1,12 @@
 use crate::dtype::NumericDataType;
 use crate::gradient_function::NoneBackwards;
-use crate::tensor::dtype::RawDataType;
-use crate::tensor::flags::TensorFlags;
-use crate::tensor::Tensor;
+use crate::ndarray::flags::NdArrayFlags;
+use crate::ndarray::NdArray;
 use crate::util::flatten::Flatten;
 use crate::util::nested::Nested;
 use crate::util::shape::Shape;
 use crate::util::to_vec::ToVec;
-use crate::{FloatDataType, TensorMethods};
+use crate::{FloatDataType, RawDataType, TensorMethods};
 use num::NumCast;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
@@ -53,7 +52,7 @@ pub(crate) fn stride_from_shape(shape: &[usize]) -> Vec<usize> {
     stride
 }
 
-impl<'a, T: RawDataType> Tensor<'a, T> {
+impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Constructs a new tensor from the given data buffer and shape assuming a contiguous layout
     ///
     /// # Parameters
@@ -68,14 +67,14 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
                                                       data: Vec<T>,
                                                       requires_grad: bool,
                                                       user_created: bool) -> Self {
-        let mut flags = TensorFlags::Owned | TensorFlags::Contiguous | TensorFlags::UniformStride | TensorFlags::Writeable;
+        let mut flags = NdArrayFlags::Owned | NdArrayFlags::Contiguous | NdArrayFlags::UniformStride | NdArrayFlags::Writeable;
 
         if requires_grad {
-            flags |= TensorFlags::RequiresGrad;
+            flags |= NdArrayFlags::RequiresGrad;
         }
 
         if user_created {
-            flags |= TensorFlags::UserCreated;
+            flags |= NdArrayFlags::UserCreated;
         }
 
         // take control of the data so that Rust doesn't drop it once the vector goes out of scope
@@ -110,10 +109,10 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor: Tensor<i32> = Tensor::from([[1, 2], [3, 4]]);
+    /// let tensor: NdArray<i32> = NdArray::from([[1, 2], [3, 4]]);
     /// assert_eq!(tensor.shape(), &[2, 2]);
     ///
-    /// let tensor = Tensor::from(vec![1f32, 2.0, 3.0, 4.0, 5.0]);
+    /// let tensor = NdArray::from(vec![1f32, 2.0, 3.0, 4.0, 5.0]);
     /// assert_eq!(tensor.ndims(), 1);
     /// ```
     pub fn from<const D: usize>(data: impl Flatten<T> + Shape + Nested<{ D }>) -> Self {
@@ -124,7 +123,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
 
         assert!(!data.is_empty(), "Tensor::from() failed, cannot create data buffer from empty data");
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, data, false, true) }
     }
 
     /// Creates a tensor filled with a specified value and given shape.
@@ -142,8 +141,8 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::full(5i32, [2, 3]); // creates a 2x3 tensor filled with the value 5.
-    /// let tensor = Tensor::full(true, [2, 3, 5]); // creates a 2x3x5 tensor filled with 'true'
+    /// let tensor = NdArray::full(5i32, [2, 3]); // creates a 2x3 tensor filled with the value 5.
+    /// let tensor = NdArray::full(true, [2, 3, 5]); // creates a 2x3x5 tensor filled with 'true'
     /// ```
     pub fn full(n: T, shape: impl ToVec<usize>) -> Self {
         let shape = shape.to_vec();
@@ -151,7 +150,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         let data = vec![n; shape.iter().product()];
         assert!(!data.is_empty(), "Cannot create an empty tensor!");
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, data, false, true) }
     }
 
     /// Creates a tensor filled with a specified value and given shape.
@@ -179,7 +178,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
         let data = vec![n; shape.iter().product()];
         assert!(!data.is_empty(), "Cannot create an empty tensor!");
 
-        unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad, false) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, data, requires_grad, false) }
     }
 
     /// Creates a new tensor filled with zeros with the given shape.
@@ -194,8 +193,8 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::<i32>::zeros([2, 3]);
-    /// let tensor = Tensor::<bool>::zeros([2, 3]);  // creates a tensor filled with 'false'
+    /// let tensor = NdArray::<i32>::zeros([2, 3]);
+    /// let tensor = NdArray::<bool>::zeros([2, 3]);  // creates a tensor filled with 'false'
     /// ```
     pub fn zeros(shape: impl ToVec<usize>) -> Self
     where
@@ -239,8 +238,8 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::<i32>::ones([2, 3]);
-    /// let tensor = Tensor::<bool>::ones([2, 3]);  // creates a tensor filled with 'true'
+    /// let tensor = NdArray::<i32>::ones([2, 3]);
+    /// let tensor = NdArray::<bool>::ones([2, 3]);  // creates a tensor filled with 'true'
     /// ```
     pub fn ones(shape: impl ToVec<usize>) -> Self
     where
@@ -281,12 +280,12 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let scalar_tensor = Tensor::scalar(42);
+    /// let scalar_tensor = NdArray::scalar(42);
     /// assert_eq!(scalar_tensor.shape(), []);
     /// assert_eq!(scalar_tensor.value(), 42);
     /// ```
     pub fn scalar(n: T) -> Self {
-        Tensor::full(n, [])
+        NdArray::full(n, [])
     }
 
     /// Creates a 0-dimensional (shapeless) tensor containing a single value.
@@ -304,7 +303,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// assert_eq!(scalar_tensor.value(), 42);
     /// ```
     pub(crate) fn scalar_requires_grad(n: T, requires_grad: bool) -> Self {
-        Tensor::full_requires_grad(n, [], requires_grad)
+        NdArray::full_requires_grad(n, [], requires_grad)
     }
 
     // Maybe we should support empty tensors one day.
@@ -322,7 +321,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::scalar(50f32);
+    /// let tensor = NdArray::scalar(50f32);
     /// let value = tensor.value();
     /// assert_eq!(value, 50.0);
     /// ```
@@ -337,7 +336,7 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     }
 }
 
-impl<T: NumericDataType> Tensor<'_, T> {
+impl<T: NumericDataType> NdArray<'_, T> {
     /// Generates a 1D tensor with evenly spaced values within a specified range.
     ///
     /// # Arguments
@@ -354,9 +353,9 @@ impl<T: NumericDataType> Tensor<'_, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let tensor = Tensor::arange(0i32, 5); // [0, 1, 2, 3, 4].
+    /// let tensor = NdArray::arange(0i32, 5); // [0, 1, 2, 3, 4].
     /// ```
-    pub fn arange(start: T, stop: T) -> Tensor<'static, T> {
+    pub fn arange(start: T, stop: T) -> NdArray<'static, T> {
         Self::arange_with_step(start, stop, T::one())
     }
 
@@ -372,9 +371,9 @@ impl<T: NumericDataType> Tensor<'_, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let tensor = Tensor::arange_with_step(0i32, 5, 2); // [0, 2, 4].
+    /// let tensor = NdArray::arange_with_step(0i32, 5, 2); // [0, 2, 4].
     /// ```
-    pub fn arange_with_step(start: T, stop: T, step: T) -> Tensor<'static, T> {
+    pub fn arange_with_step(start: T, stop: T, step: T) -> NdArray<'static, T> {
         let n = ((stop - start).to_float() / step.to_float()).ceil();
         let n = NumCast::from(n).unwrap();
 
@@ -383,11 +382,11 @@ impl<T: NumericDataType> Tensor<'_, T> {
             *item = <T as NumCast>::from(i).unwrap() * step + start;
         }
 
-        unsafe { Tensor::from_contiguous_owned_buffer(vec![data.len()], data, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(vec![data.len()], data, false, true) }
     }
 }
 
-impl<T: FloatDataType> Tensor<'_, T> {
+impl<T: FloatDataType> NdArray<'_, T> {
     /// Generates a 1-dimensional tensor with `num `evenly spaced values between `start` and `stop`
     /// (inclusive).
     ///
@@ -405,20 +404,20 @@ impl<T: FloatDataType> Tensor<'_, T> {
     ///
     /// ```
     /// # use chela::*;
-    /// let result = Tensor::linspace(0f32, 1.0, 5);  // [0.0, 0.25, 0.5, 0.75, 1.0]
-    /// assert_eq!(result, Tensor::from([0f32, 0.25, 0.5, 0.75, 1.0]));
+    /// let result = NdArray::linspace(0f32, 1.0, 5);  // [0.0, 0.25, 0.5, 0.75, 1.0]
+    /// assert_eq!(result, NdArray::from([0f32, 0.25, 0.5, 0.75, 1.0]));
     /// ```
-    pub fn linspace(start: T, stop: T, num: usize) -> Tensor<'static, T> {
+    pub fn linspace(start: T, stop: T, num: usize) -> NdArray<'static, T> {
         assert!(num > 0);
 
         if num == 1 {
-            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
+            return unsafe { NdArray::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
         }
 
         let step = (stop - start) / (<T as NumCast>::from(num).unwrap() - T::one());
 
         // from start to (stop + step) to make the range inclusive
-        Tensor::arange_with_step(start, stop + step, step)
+        NdArray::arange_with_step(start, stop + step, step)
     }
 
     /// Generates a 1-dimensional tensor with `num `evenly spaced values between `start` and `stop`
@@ -438,28 +437,28 @@ impl<T: FloatDataType> Tensor<'_, T> {
     ///
     /// ```
     /// # use chela::*;
-    /// let result = Tensor::linspace_exclusive(0.0f32, 1.0, 5);
-    /// assert_eq!(result, Tensor::from([0f32, 0.2, 0.4, 0.6, 0.8]));
+    /// let result = NdArray::linspace_exclusive(0.0f32, 1.0, 5);
+    /// assert_eq!(result, NdArray::from([0f32, 0.2, 0.4, 0.6, 0.8]));
     /// ```
-    pub fn linspace_exclusive(start: T, stop: T, num: usize) -> Tensor<'static, T> {
+    pub fn linspace_exclusive(start: T, stop: T, num: usize) -> NdArray<'static, T> {
         assert!(num > 0);
 
         if num == 1 {
-            return unsafe { Tensor::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
+            return unsafe { NdArray::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
         }
 
         let step = (stop - start) / <T as NumCast>::from(num).unwrap();
-        Tensor::arange_with_step(start, stop, step)
+        NdArray::arange_with_step(start, stop, step)
     }
 }
 
-impl<T: RawDataType> Drop for Tensor<'_, T> {
+impl<T: RawDataType> Drop for NdArray<'_, T> {
     /// This method is implicitly invoked when the tensor is deleted to clean up its memory if
     /// the tensor owns its data (i.e. it is not a view into another tensor).
     ///
     /// Resets `self.len` and `self.capacity` to 0.
     fn drop(&mut self) {
-        if self.flags.contains(TensorFlags::Owned) {
+        if self.flags.contains(NdArrayFlags::Owned) {
             // drops the data
             unsafe { Vec::from_raw_parts(self.mut_ptr(), self.len, self.capacity) };
         }

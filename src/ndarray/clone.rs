@@ -1,13 +1,13 @@
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::iterator::flat_index_generator::FlatIndexGenerator;
-use crate::{Tensor, TensorMethods};
+use crate::{NdArray, TensorMethods};
 use std::ptr::copy_nonoverlapping;
 
-impl<'a, T: RawDataType> Tensor<'a, T> {
+impl<'a, T: RawDataType> NdArray<'a, T> {
     #[allow(clippy::should_implement_trait)]
-    pub fn clone<'r>(&self) -> Tensor<'r, T> {
-        unsafe { Tensor::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data(), self.requires_grad(), false) }
+    pub fn clone<'r>(&self) -> NdArray<'r, T> {
+        unsafe { NdArray::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data(), self.requires_grad(), false) }
     }
 
     pub(super) fn clone_data(&self) -> Vec<T> {

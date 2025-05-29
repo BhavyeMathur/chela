@@ -1,13 +1,13 @@
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{FloatDataType, Tensor, TensorMethods};
+use crate::{FloatDataType, NdArray, TensorMethods};
 use std::cell::RefCell;
 use std::rc::Rc;
 use crate::broadcast::get_broadcasted_axes;
 use crate::reshape::Reshape;
 use crate::util::to_vec::ToVec;
 
-fn reduce_broadcasted_gradient<'a, T: FloatDataType>(grad: &'a Tensor<'a, T>,
-                                                     original_shape: &[usize]) -> Tensor<'a, T> {
+fn reduce_broadcasted_gradient<'a, T: FloatDataType>(grad: &'a NdArray<'a, T>,
+                                                     original_shape: &[usize]) -> NdArray<'a, T> {
     if grad.shape() == original_shape {
         return grad.view()
     }
@@ -34,15 +34,15 @@ pub(crate) struct SubBackwards<T: FloatDataType> {
 pub(crate) struct MulBackwards<'a, T: FloatDataType> {
     next_functions: [GradientFunction<T>; 2],
 
-    lhs: Tensor<'a, T>,
-    rhs: Tensor<'a, T>
+    lhs: NdArray<'a, T>,
+    rhs: NdArray<'a, T>
 }
 
 pub(crate) struct DivBackwards<'a, T: FloatDataType> {
     next_functions: [GradientFunction<T>; 2],
 
-    lhs_grad: Tensor<'a, T>,
-    rhs_grad: Tensor<'a, T>,
+    lhs_grad: NdArray<'a, T>,
+    rhs_grad: NdArray<'a, T>,
 
     lhs_shape: Vec<usize>,
     rhs_shape: Vec<usize>
@@ -61,7 +61,7 @@ pub(crate) struct ReshapeBackwards<T: FloatDataType> {
 }
 
 impl<T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
-    fn backward(&mut self, grad: &Tensor<T>) {
+    fn backward(&mut self, grad: &NdArray<T>) {
         let lhs_grad = reduce_broadcasted_gradient(grad, &self.lhs_shape);
         let rhs_grad = reduce_broadcasted_gradient(grad, &self.rhs_shape);
 
@@ -71,7 +71,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
 }
 
 impl<T: FloatDataType> GradientFuncTrait<T> for SubBackwards<T> {
-    fn backward(&mut self, grad: &Tensor<T>) {
+    fn backward(&mut self, grad: &NdArray<T>) {
         let lhs_grad = grad;
         let rhs_grad = -grad;
 
@@ -84,7 +84,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for SubBackwards<T> {
 }
 
 impl<T: FloatDataType> GradientFuncTrait<T> for MulBackwards<'_, T> {
-    fn backward(&mut self, grad: &Tensor<T>) {
+    fn backward(&mut self, grad: &NdArray<T>) {
         let lhs_grad = &self.rhs * grad;
         let rhs_grad = &self.lhs * grad;
 
@@ -97,7 +97,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for MulBackwards<'_, T> {
 }
 
 impl<T: FloatDataType> GradientFuncTrait<T> for DivBackwards<'_, T> {
-    fn backward(&mut self, grad: &Tensor<T>) {
+    fn backward(&mut self, grad: &NdArray<T>) {
         let lhs_grad = &self.lhs_grad * grad;
         let rhs_grad = &self.rhs_grad * grad;
 
@@ -110,7 +110,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for DivBackwards<'_, T> {
 }
 
 impl<T: FloatDataType> GradientFuncTrait<T> for NegBackwards<T> {
-    fn backward(&mut self, grad: &Tensor<T>) {
+    fn backward(&mut self, grad: &NdArray<T>) {
         let grad = -grad;
         let grad = reduce_broadcasted_gradient(&grad, &self.shape);
 
@@ -119,14 +119,14 @@ impl<T: FloatDataType> GradientFuncTrait<T> for NegBackwards<T> {
 }
 
 impl<T: FloatDataType> GradientFuncTrait<T> for ReshapeBackwards<T> {
-    fn backward(&mut self, grad: &Tensor<T>) {
+    fn backward(&mut self, grad: &NdArray<T>) {
         let grad = grad.reshape(&self.shape);
         self.next_function.borrow_mut().backward(&grad);
     }
 }
 
 impl<T: FloatDataType> AddBackwards<T> {
-    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
+    pub(crate) fn new(lhs: &NdArray<T>, rhs: &NdArray<T>) -> GradientFunction<T> {
         let grad_fn = Self {
             next_functions: [lhs.get_grad_fn(), rhs.get_grad_fn()],
 
@@ -139,7 +139,7 @@ impl<T: FloatDataType> AddBackwards<T> {
 }
 
 impl<T: FloatDataType> SubBackwards<T> {
-    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
+    pub(crate) fn new(lhs: &NdArray<T>, rhs: &NdArray<T>) -> GradientFunction<T> {
         let grad_fn = Self {
             next_functions: [lhs.get_grad_fn(), rhs.get_grad_fn()],
 
@@ -152,7 +152,7 @@ impl<T: FloatDataType> SubBackwards<T> {
 }
 
 impl<T: FloatDataType> MulBackwards<'static, T> {
-    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
+    pub(crate) fn new(lhs: &NdArray<T>, rhs: &NdArray<T>) -> GradientFunction<T> {
         let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
 
         let mut lhs = lhs.clone();
@@ -171,7 +171,7 @@ impl<T: FloatDataType> MulBackwards<'static, T> {
 }
 
 impl<T: FloatDataType> DivBackwards<'static, T> {
-    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
+    pub(crate) fn new(lhs: &NdArray<T>, rhs: &NdArray<T>) -> GradientFunction<T> {
         let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
 
         let mut lhs = lhs.view();
@@ -179,7 +179,7 @@ impl<T: FloatDataType> DivBackwards<'static, T> {
         lhs.set_requires_grad(false);
         rhs.set_requires_grad(false);
 
-        let one = Tensor::scalar_requires_grad(T::one(), false);
+        let one = NdArray::scalar_requires_grad(T::one(), false);
 
         let grad_fn = Self {
             next_functions,
@@ -196,7 +196,7 @@ impl<T: FloatDataType> DivBackwards<'static, T> {
 }
 
 impl<T: FloatDataType> NegBackwards<T> {
-    pub(crate) fn new(rhs: &Tensor<T>) -> GradientFunction<T> {
+    pub(crate) fn new(rhs: &NdArray<T>) -> GradientFunction<T> {
         let grad_fn = Self {
             next_function: rhs.get_grad_fn(),
             shape: rhs.shape().to_vec(),
@@ -207,7 +207,7 @@ impl<T: FloatDataType> NegBackwards<T> {
 }
 
 impl<T: FloatDataType> ReshapeBackwards<T> {
-    pub(crate) fn new(tensor: &Tensor<T>, new_shape: impl ToVec<usize>) -> GradientFunction<T> {
+    pub(crate) fn new(tensor: &NdArray<T>, new_shape: impl ToVec<usize>) -> GradientFunction<T> {
         let grad_fn = Self {
             next_function: tensor.get_grad_fn(),
             shape: new_shape.to_vec(),

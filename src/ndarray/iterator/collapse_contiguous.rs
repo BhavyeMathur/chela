@@ -1,6 +1,6 @@
 // interprets all contiguously stored dimensions as 1 big dimension
 // if the entire array is stored contiguously, this results in just 1 long dimension
-pub(in crate::tensor) fn collapse_contiguous(shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
+pub(in crate::ndarray) fn collapse_contiguous(shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
     if stride.last() != Some(&1) {
         return (shape.to_vec(), stride.to_vec());
     }
@@ -42,7 +42,7 @@ pub(in crate::tensor) fn collapse_contiguous(shape: &[usize], stride: &[usize]) 
 //
 // shape (2, 2, 2), stride (6, 3, 2) -> shape (4, 2), stride (3, 2)
 // [[[0, 2], [3, 5]], [[6, 8], [9, 11]]] -> [[0, 2], [3, 5], [6, 8], [9, 11]]
-pub(in crate::tensor) fn collapse_to_uniform_stride(shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
+pub(in crate::ndarray) fn collapse_to_uniform_stride(shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
     let ndims = shape.len();
     if ndims == 0 {
         return (vec![], vec![]);
@@ -90,11 +90,11 @@ pub(crate) fn has_uniform_stride(shape: &[usize], stride: &[usize]) -> Option<us
 mod tests {
     use super::collapse_contiguous;
     use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride, has_uniform_stride};
-    use crate::{s, Tensor};
+    use crate::{s, NdArray};
 
     #[test]
     fn test_collapse_contiguous() {
-        let a = Tensor::from([
+        let a = NdArray::from([
             [[0, 1, 2], [3, 4, 5]],
             [[6, 7, 8], [9, 10, 11]],
             [[12, 13, 14], [15, 16, 17]],

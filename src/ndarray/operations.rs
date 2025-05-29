@@ -1,6 +1,6 @@
-use crate::tensor::TensorFlags;
+use crate::ndarray::NdArrayFlags;
 use crate::broadcast::broadcast_shapes;
-use crate::{IntegerDataType, RawDataType, Tensor};
+use crate::{IntegerDataType, RawDataType, NdArray};
 use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign};
 
 use paste::paste;
@@ -9,8 +9,8 @@ use crate::backwards::{AddBackwards, DivBackwards, MulBackwards, NegBackwards, S
 macro_rules! define_binary_ops {
     ($($trait_: ident, $operator: tt, $method: ident;)* ) => {
         $(
-            fn $method<'a, 'b>(lhs: impl AsRef<Tensor<'a, T>>,
-                               rhs: impl AsRef<Tensor<'b, T>>) -> Tensor<'static, T>
+            fn $method<'a, 'b>(lhs: impl AsRef<NdArray<'a, T>>,
+                               rhs: impl AsRef<NdArray<'b, T>>) -> NdArray<'static, T>
             where
                 T: $trait_<Output=T>,
             {
@@ -22,18 +22,18 @@ macro_rules! define_binary_ops {
                 let rhs = rhs.broadcast_to(&shape);
 
                 let data = lhs.flatiter().zip(rhs.flatiter()).map(|(lhs, rhs)| lhs $operator rhs).collect();
-                unsafe { Tensor::from_contiguous_owned_buffer(shape, data, false, false) }
+                unsafe { NdArray::from_contiguous_owned_buffer(shape, data, false, false) }
             }
 
-            paste! { fn [<$method _scalar>] <'a, 'b>(lhs: impl AsRef<Tensor<'a, T>>,
-                                                     rhs: T) -> Tensor<'static, T>
+            paste! { fn [<$method _scalar>] <'a, 'b>(lhs: impl AsRef<NdArray<'a, T>>,
+                                                     rhs: T) -> NdArray<'static, T>
                 where
                     T: $trait_<Output=T>,
                 {
                     let lhs = lhs.as_ref();
 
                     let data = lhs.flatiter().map(|lhs| lhs $operator rhs).collect();
-                    unsafe { Tensor::from_contiguous_owned_buffer(lhs.shape.clone(), data, false, false) }
+                    unsafe { NdArray::from_contiguous_owned_buffer(lhs.shape.clone(), data, false, false) }
                 }
             }
         )*
@@ -43,8 +43,8 @@ macro_rules! define_binary_ops {
 macro_rules! define_binary_ops_with_grad {
     ($dtype:ty, $($trait_: ident, $operator: tt, $method: ident, $backwards: ident;)* ) => {
         $(
-            fn $method<'a, 'b>(lhs: impl AsRef<Tensor<'a, $dtype>>,
-                               rhs: impl AsRef<Tensor<'b, $dtype>>) -> Tensor<'static, $dtype>
+            fn $method<'a, 'b>(lhs: impl AsRef<NdArray<'a, $dtype>>,
+                               rhs: impl AsRef<NdArray<'b, $dtype>>) -> NdArray<'static, $dtype>
             {
                 let lhs = lhs.as_ref();
                 let rhs = rhs.as_ref();
@@ -60,7 +60,7 @@ macro_rules! define_binary_ops_with_grad {
                                         .map(|(a, b)| a $operator b)
                                         .collect();
 
-                let mut result = unsafe { Tensor::from_contiguous_owned_buffer(shape, data, requires_grad, false) };
+                let mut result = unsafe { NdArray::from_contiguous_owned_buffer(shape, data, requires_grad, false) };
 
                 if requires_grad {
                     result.grad_fn = $backwards::new(lhs, rhs);
@@ -69,26 +69,26 @@ macro_rules! define_binary_ops_with_grad {
                 result
             }
 
-            paste! { fn [<$method _scalar>] <'a, 'b>(lhs: impl AsRef<Tensor<'a, $dtype>>,
-                                                     rhs: $dtype) -> Tensor<'static, $dtype>
+            paste! { fn [<$method _scalar>] <'a, 'b>(lhs: impl AsRef<NdArray<'a, $dtype>>,
+                                                     rhs: $dtype) -> NdArray<'static, $dtype>
                 {
                     let lhs = lhs.as_ref();
 
                     let requires_grad = lhs.requires_grad();
 
                     let data = lhs.flatiter().map(|lhs| lhs $operator rhs).collect();
-                    unsafe { Tensor::from_contiguous_owned_buffer(lhs.shape.clone(), data, requires_grad, false) }
+                    unsafe { NdArray::from_contiguous_owned_buffer(lhs.shape.clone(), data, requires_grad, false) }
                 }
             }
         )*
 
-        fn neg<'a, 'b>(rhs: impl AsRef<Tensor<'a, $dtype>>) -> Tensor<'static, $dtype> {
+        fn neg<'a, 'b>(rhs: impl AsRef<NdArray<'a, $dtype>>) -> NdArray<'static, $dtype> {
             let rhs = rhs.as_ref();
 
             let requires_grad = rhs.requires_grad();
 
             let data = rhs.flatiter().map(|rhs| -rhs).collect();
-            let mut result = unsafe { Tensor::from_contiguous_owned_buffer(rhs.shape.clone(), data, requires_grad, false) };
+            let mut result = unsafe { NdArray::from_contiguous_owned_buffer(rhs.shape.clone(), data, requires_grad, false) };
 
             if requires_grad {
                 result.grad_fn = NegBackwards::new(rhs);
@@ -101,47 +101,47 @@ macro_rules! define_binary_ops_with_grad {
 
 macro_rules! implement_binary_ops {
     ($($trait_: ident, $method: ident;)* ) => {
-        impl<T: RawDataType + Neg<Output=T>> Neg for Tensor<'_, T> {
-            type Output = Tensor<'static, T>;
+        impl<T: RawDataType + Neg<Output=T>> Neg for NdArray<'_, T> {
+            type Output = NdArray<'static, T>;
         
             fn neg(self) -> Self::Output { <T as TensorBinaryOps<T>>::neg(self) }
         }
         
-        impl<T: RawDataType + Neg<Output=T>> Neg for &Tensor<'_, T> {
-            type Output = Tensor<'static, T>;
+        impl<T: RawDataType + Neg<Output=T>> Neg for &NdArray<'_, T> {
+            type Output = NdArray<'static, T>;
         
             fn neg(self) -> Self::Output { <T as TensorBinaryOps<T>>::neg(self) }
         }
                 
         $(
-            impl<T: RawDataType + $trait_<Output=T>> $trait_ for Tensor<'_, T> {
-                type Output = Tensor<'static, T>;
+            impl<T: RawDataType + $trait_<Output=T>> $trait_ for NdArray<'_, T> {
+                type Output = NdArray<'static, T>;
 
-                fn $method(self, rhs: Tensor<T>) -> Self::Output { <T as TensorBinaryOps<T>>::$method(self, rhs) }
+                fn $method(self, rhs: NdArray<T>) -> Self::Output { <T as TensorBinaryOps<T>>::$method(self, rhs) }
             }
-            impl<T: RawDataType + $trait_<Output=T>> $trait_<&Tensor<'_, T>> for Tensor<'_, T> {
-                type Output = Tensor<'static, T>;
+            impl<T: RawDataType + $trait_<Output=T>> $trait_<&NdArray<'_, T>> for NdArray<'_, T> {
+                type Output = NdArray<'static, T>;
 
-                fn $method(self, rhs: &Tensor<T>) -> Self::Output { <T as TensorBinaryOps<T>>::$method(self, rhs) }
+                fn $method(self, rhs: &NdArray<T>) -> Self::Output { <T as TensorBinaryOps<T>>::$method(self, rhs) }
             }
-            impl<T: RawDataType + $trait_<Output=T>> $trait_<Tensor<'_, T>> for &Tensor<'_, T> {
-                type Output = Tensor<'static, T>;
+            impl<T: RawDataType + $trait_<Output=T>> $trait_<NdArray<'_, T>> for &NdArray<'_, T> {
+                type Output = NdArray<'static, T>;
 
-                fn $method(self, rhs: Tensor<T>) -> Self::Output { <T as TensorBinaryOps<T>>::$method(self, rhs) }
+                fn $method(self, rhs: NdArray<T>) -> Self::Output { <T as TensorBinaryOps<T>>::$method(self, rhs) }
             }
-            impl<T: RawDataType + $trait_<Output=T>> $trait_<&Tensor<'_, T>> for &Tensor<'_, T> {
-                type Output = Tensor<'static, T>;
+            impl<T: RawDataType + $trait_<Output=T>> $trait_<&NdArray<'_, T>> for &NdArray<'_, T> {
+                type Output = NdArray<'static, T>;
 
-                fn $method(self, rhs: &Tensor<T>) -> Self::Output { <T as TensorBinaryOps<T>>::$method(self, rhs) }
+                fn $method(self, rhs: &NdArray<T>) -> Self::Output { <T as TensorBinaryOps<T>>::$method(self, rhs) }
             }
 
-            impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for Tensor<'_, T> {
-                type Output = Tensor<'static, T>;
+            impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for NdArray<'_, T> {
+                type Output = NdArray<'static, T>;
 
                 fn $method(self, rhs: T) -> Self::Output { paste! { <T as TensorBinaryOps<T>>::[<$method _scalar>](self, rhs) } }
             }
-            impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for &Tensor<'_, T> {
-                type Output = Tensor<'static, T>;
+            impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for &NdArray<'_, T> {
+                type Output = NdArray<'static, T>;
 
                 fn $method(self, rhs: T) -> Self::Output { paste! { <T as TensorBinaryOps<T>>::[<$method _scalar>](self, rhs) } }
             }
@@ -173,14 +173,14 @@ pub trait TensorBinaryOps<T: RawDataType> {
         Shr, >>, shr;
     );
 
-    fn neg<'a, 'b>(rhs: impl AsRef<Tensor<'a, T>>) -> Tensor<'static, T>
+    fn neg<'a, 'b>(rhs: impl AsRef<NdArray<'a, T>>) -> NdArray<'static, T>
     where
         T: Neg<Output=T>,
     {
         let rhs = rhs.as_ref();
 
         let data = rhs.flatiter().map(|rhs| -rhs).collect();
-        unsafe { Tensor::from_contiguous_owned_buffer(rhs.shape.clone(), data, false, false) }
+        unsafe { NdArray::from_contiguous_owned_buffer(rhs.shape.clone(), data, false, false) }
     }
 }
 
@@ -221,15 +221,15 @@ impl TensorBinaryOps<f64> for f64 {
 
 macro_rules! define_binary_iop {
     ( $trait_: ident, $operator: tt, $method: ident ) => {
-    impl<T: RawDataType + $trait_> $trait_<Tensor<'_, T>> for Tensor<'_, T> {
-        fn $method(&mut self, rhs: Tensor<'_, T>) {
+    impl<T: RawDataType + $trait_> $trait_<NdArray<'_, T>> for NdArray<'_, T> {
+        fn $method(&mut self, rhs: NdArray<'_, T>) {
             *self $operator &rhs
         }
     }
 
-    impl<T: RawDataType + $trait_> $trait_<&Tensor<'_, T>> for Tensor<'_, T> {
-        fn $method(&mut self, rhs: &Tensor<'_, T>) {
-            if !self.flags.contains(TensorFlags::Writeable) {
+    impl<T: RawDataType + $trait_> $trait_<&NdArray<'_, T>> for NdArray<'_, T> {
+        fn $method(&mut self, rhs: &NdArray<'_, T>) {
+            if !self.flags.contains(NdArrayFlags::Writeable) {
                 panic!("tensor is readonly.");
             }
 

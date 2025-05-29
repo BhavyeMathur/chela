@@ -2,28 +2,28 @@ use chela::*;
 
 #[test]
 fn from_vector() {
-    let arr = Tensor::from(vec![0, 50, 100]);
+    let arr = NdArray::from(vec![0, 50, 100]);
     assert_eq!(arr.len(), 3);
     assert_eq!(arr.shape(), &[3]);
     assert_eq!(arr.stride(), &[1]);
     assert_eq!(arr.ndims(), 1);
     assert_eq!(arr.size(), 3);
 
-    let arr = Tensor::from(vec![vec![50], vec![50], vec![50]]);
+    let arr = NdArray::from(vec![vec![50], vec![50], vec![50]]);
     assert_eq!(arr.len(), 3);
     assert_eq!(arr.shape(), &[3, 1]);
     assert_eq!(arr.stride(), &[1, 1]);
     assert_eq!(arr.ndims(), 2);
     assert_eq!(arr.size(), 3);
 
-    let arr = Tensor::from(vec![vec![vec![50]], vec![vec![50]]]);
+    let arr = NdArray::from(vec![vec![vec![50]], vec![vec![50]]]);
     assert_eq!(arr.len(), 2);
     assert_eq!(arr.shape(), &[2, 1, 1]);
     assert_eq!(arr.stride(), &[1, 1, 1]);
     assert_eq!(arr.ndims(), 3);
     assert_eq!(arr.size(), 2);
 
-    let arr = Tensor::from(vec![vec![vec![50, 50, 50]], vec![vec![50, 50, 50]]]);
+    let arr = NdArray::from(vec![vec![vec![50, 50, 50]], vec![vec![50, 50, 50]]]);
     assert_eq!(arr.len(), 2);
     assert_eq!(arr.shape(), &[2, 1, 3]);
     assert_eq!(arr.stride(), &[3, 3, 1]);
@@ -33,25 +33,25 @@ fn from_vector() {
 
 #[test]
 fn from_array() {
-    let arr = Tensor::from([500, 50, 100]);
+    let arr = NdArray::from([500, 50, 100]);
     assert_eq!(arr.len(), 3);
     assert_eq!(arr.shape(), &[3]);
     assert_eq!(arr.stride(), &[1]);
     assert_eq!(arr.ndims(), 1);
 
-    let arr = Tensor::from([[500], [50], [100]]);
+    let arr = NdArray::from([[500], [50], [100]]);
     assert_eq!(arr.len(), 3);
     assert_eq!(arr.shape(), &[3, 1]);
     assert_eq!(arr.stride(), &[1, 1]);
     assert_eq!(arr.ndims(), 2);
 
-    let arr = Tensor::from([[[500], [50], [30]], [[50], [0], [0]]]);
+    let arr = NdArray::from([[[500], [50], [30]], [[50], [0], [0]]]);
     assert_eq!(arr.len(), 2);
     assert_eq!(arr.shape(), &[2, 3, 1]);
     assert_eq!(arr.stride(), &[3, 1, 1]);
     assert_eq!(arr.ndims(), 3);
 
-    let arr = Tensor::from([[[50, 50, 50]], [[50, 50, 50]]]);
+    let arr = NdArray::from([[[50, 50, 50]], [[50, 50, 50]]]);
     assert_eq!(arr.len(), 2);
     assert_eq!(arr.shape(), &[2, 1, 3]);
     assert_eq!(arr.stride(), &[3, 3, 1]);
@@ -61,35 +61,35 @@ fn from_array() {
 #[test]
 #[should_panic]
 fn from_inhomogeneous_vector1() {
-    Tensor::from(vec![vec![50, 50], vec![50]]);
+    NdArray::from(vec![vec![50, 50], vec![50]]);
 }
 
 #[test]
 #[should_panic]
 fn from_inhomogeneous_vector2() {
-    Tensor::from(vec![vec![vec![50, 50]], vec![vec![50]], vec![vec![50]]]);
+    NdArray::from(vec![vec![vec![50, 50]], vec![vec![50]], vec![vec![50]]]);
 }
 
 #[test]
 fn println() {
-    println!("{:?}", Tensor::from([[[10, 20], [30, 40]]]));
-    println!("{:?}", Tensor::from([vec![vec![5, 10], vec![500, 100]]]));
+    println!("{:?}", NdArray::from([[[10, 20], [30, 40]]]));
+    println!("{:?}", NdArray::from([vec![vec![5, 10], vec![500, 100]]]));
 }
 
 #[test]
 fn index() {
-    let a = Tensor::from([10, 20, 30, 40]);
+    let a = NdArray::from([10, 20, 30, 40]);
     assert_eq!(a[0], 10);
     assert_eq!(a[3], 40);
 
-    let a = Tensor::from([[10, 20], [30, 40]]);
+    let a = NdArray::from([[10, 20], [30, 40]]);
     assert_eq!(a[[0, 1]], 20);
     assert_eq!(a[[1, 1]], 40);
 }
 
 #[test]
 fn slice_along_1d() {
-    let a = Tensor::from([10, 20, 30, 40]);
+    let a = NdArray::from([10, 20, 30, 40]);
 
     let slice = a.slice_along(Axis(0), 1);
     assert_eq!(slice.len(), 0);
@@ -141,7 +141,7 @@ fn slice_along_1d() {
 
 #[test]
 fn slice_along_nd() {
-    let a = Tensor::from([[10], [20], [30], [40]]);
+    let a = NdArray::from([[10], [20], [30], [40]]);
 
     let slice = a.slice_along(Axis(0), 1);
     assert_eq!(slice.len(), 1);
@@ -155,7 +155,7 @@ fn slice_along_nd() {
     assert_eq!(slice.ndims(), 1);
     assert_eq!(slice[0], 10);
 
-    let a = Tensor::from([
+    let a = NdArray::from([
         [[10, 20, 30], [40, 50, 60]],
         [[70, 80, 90], [100, 110, 120]],
     ]);
@@ -200,7 +200,7 @@ fn slice_along_nd() {
 
 #[test]
 fn slice_homogenous() {
-    let a = Tensor::from([
+    let a = NdArray::from([
         [[1, 2, 3], [4, 5, 6]],
         [[7, 8, 9], [10, 11, 12]],
     ]);
@@ -239,7 +239,7 @@ fn slice_homogenous() {
 
 #[test]
 fn slice_heterogeneous() {
-    let a = Tensor::from([
+    let a = NdArray::from([
         [[1, 2, 3], [4, 5, 6]],
         [[7, 8, 9], [10, 11, 12]],
         [[13, 14, 15], [16, 17, 18]],
@@ -256,7 +256,7 @@ fn slice_heterogeneous() {
 fn clone() {
     let arr;
     {
-        let temp = Tensor::from([[[10, 20, 30]], [[40, 50, 60]]]);
+        let temp = NdArray::from([[[10, 20, 30]], [[40, 50, 60]]]);
         arr = temp.clone();
     }
 
@@ -283,7 +283,7 @@ fn clone() {
 
 #[test]
 fn clone_contiguous() {
-    let a = Tensor::from([
+    let a = NdArray::from([
         [[10, 11, 12], [13, 14, 15]],
         [[16, 17, 18], [19, 20, 21]],
         [[22, 23, 24], [25, 26, 27]],
@@ -295,7 +295,7 @@ fn clone_contiguous() {
     assert_eq!(view[[0, 0, 0]], 10);
     assert_eq!(view[[2, 1, 2]], 27);
 
-    let a = Tensor::from(vec![5; 10]);
+    let a = NdArray::from(vec![5; 10]);
     let view = a.slice([..]);
     let _ = view.clone();
 
@@ -305,7 +305,7 @@ fn clone_contiguous() {
 
 #[test]
 fn flat_iter() {
-    let a = Tensor::from([
+    let a = NdArray::from([
         [[10, 11, 12], [13, 14, 15]],
         [[16, 17, 18], [19, 20, 21]],
         [[22, 23, 24], [25, 26, 27]],
@@ -329,7 +329,7 @@ fn flat_iter() {
 
 #[test]
 fn flatten() {
-    let a = Tensor::from([
+    let a = NdArray::from([
         [[10, 11, 12], [13, 14, 15]],
         [[16, 17, 18], [19, 20, 21]],
         [[22, 23, 24], [25, 26, 27]],
@@ -341,7 +341,7 @@ fn flatten() {
     assert_eq!(b.len(), 18);
     assert_eq!(b.ndims(), 1);
 
-    let correct = Tensor::from([10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    let correct = NdArray::from([10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
         20, 21, 22, 23, 24, 25, 26, 27]);
     assert_eq!(b, correct);
 
@@ -361,13 +361,13 @@ fn flatten() {
     assert_eq!(b.len(), 4);
     assert_eq!(b.ndims(), 1);
 
-    let correct = Tensor::from([14, 15, 20, 21]);
+    let correct = NdArray::from([14, 15, 20, 21]);
     assert_eq!(b, correct);
 }
 
 #[test]
 fn squeeze_first_dimension() {
-    let a = Tensor::from([
+    let a = NdArray::from([
         [[[1, 2, 3], [4, 5, 6]]],
     ]);
     let b = a.squeeze();
@@ -377,7 +377,7 @@ fn squeeze_first_dimension() {
 
 #[test]
 fn squeeze_multiple_dimensions() {
-    let a = Tensor::from([
+    let a = NdArray::from([
         [[[[1, 2, 3]], [[4, 5, 6]]]],
     ]);
     let b = a.squeeze();
@@ -387,7 +387,7 @@ fn squeeze_multiple_dimensions() {
 
 #[test]
 fn squeeze_one_dimension() {
-    let a: Tensor<i32> = Tensor::from([0]);
+    let a: NdArray<i32> = NdArray::from([0]);
     let b = a.squeeze();
     assert_eq!(b.shape(), &[]);
     assert_eq!(b.stride(), &[]);
@@ -395,7 +395,7 @@ fn squeeze_one_dimension() {
 
 #[test]
 fn squeeze_no_extra_dimensions() {
-    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let a: NdArray<i32> = NdArray::from([[1, 2, 3], [4, 5, 6]]);
     let b = a.squeeze();
     assert_eq!(b.shape(), &[2, 3]);
     assert_eq!(b.stride(), &[3, 1]);
@@ -403,7 +403,7 @@ fn squeeze_no_extra_dimensions() {
 
 #[test]
 fn unsqueeze_single_element() {
-    let a: Tensor<i32> = Tensor::from([0]);
+    let a: NdArray<i32> = NdArray::from([0]);
     let b = a.unsqueeze(Axis(0));
     assert_eq!(b.shape(), &[1, 1]);
     assert_eq!(b.stride(), &[1, 1]);
@@ -411,7 +411,7 @@ fn unsqueeze_single_element() {
 
 #[test]
 fn unsqueeze_random_dimension_first_axis() {
-    let a: Tensor<i32> = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let a: NdArray<i32> = NdArray::from([[1, 2, 3], [4, 5, 6]]);
     let b = a.unsqueeze(Axis(0));
     assert_eq!(b.shape(), &[1, 2, 3]);
     assert_eq!(b.stride(), &[6, 3, 1]);
@@ -419,7 +419,7 @@ fn unsqueeze_random_dimension_first_axis() {
 
 #[test]
 fn unsqueeze_random_dimension_axis_1() {
-    let a = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let a = NdArray::from([[1, 2, 3], [4, 5, 6]]);
     let b = a.unsqueeze(Axis(1));
     assert_eq!(b.shape(), &[2, 1, 3]);
     assert_eq!(b.stride(), &[3, 3, 1]);
@@ -427,7 +427,7 @@ fn unsqueeze_random_dimension_axis_1() {
 
 #[test]
 fn unsqueeze_random_dimension_last_axis() {
-    let a = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    let a = NdArray::from([[1, 2, 3], [4, 5, 6]]);
     let b = a.unsqueeze(Axis(2));
     assert_eq!(b.shape(), &[2, 3, 1]);
     assert_eq!(b.stride(), &[3, 1, 1]);
@@ -435,40 +435,40 @@ fn unsqueeze_random_dimension_last_axis() {
 
 #[test]
 fn iterate() {
-    let a = Tensor::from([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]);
+    let a = NdArray::from([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]);
 
     assert_eq!(a.iter().count(), 2);
-    assert_eq!(a.iter().next().unwrap(), Tensor::from([[1, 2, 3], [4, 5, 6]]));
-    assert_eq!(a.iter().last().unwrap(), Tensor::from([[7, 8, 9], [10, 11, 12]]));
+    assert_eq!(a.iter().next().unwrap(), NdArray::from([[1, 2, 3], [4, 5, 6]]));
+    assert_eq!(a.iter().last().unwrap(), NdArray::from([[7, 8, 9], [10, 11, 12]]));
 
     assert_eq!(a.iter_along(1).count(), 2);
-    assert_eq!(a.iter_along(Axis(1)).next().unwrap(), Tensor::from([[1, 2, 3], [7, 8, 9]]));
-    assert_eq!(a.iter_along(Axis(1)).last().unwrap(), Tensor::from([[4, 5, 6], [10, 11, 12]]));
+    assert_eq!(a.iter_along(Axis(1)).next().unwrap(), NdArray::from([[1, 2, 3], [7, 8, 9]]));
+    assert_eq!(a.iter_along(Axis(1)).last().unwrap(), NdArray::from([[4, 5, 6], [10, 11, 12]]));
 
     assert_eq!(a.iter_along(2).count(), 3);
-    assert_eq!(a.iter_along(Axis(2)).next().unwrap(), Tensor::from([[1, 4], [7, 10]]));
-    assert_eq!(a.iter_along(Axis(2)).last().unwrap(), Tensor::from([[3, 6], [9, 12]]));
+    assert_eq!(a.iter_along(Axis(2)).next().unwrap(), NdArray::from([[1, 4], [7, 10]]));
+    assert_eq!(a.iter_along(Axis(2)).last().unwrap(), NdArray::from([[3, 6], [9, 12]]));
 
     assert_eq!(a.nditer([0, 1]).count(), 4);
-    assert_eq!(a.nditer([0, 1]).next().unwrap(), Tensor::from([1, 2, 3]));
-    assert_eq!(a.nditer(vec![0, 1]).last().unwrap(), Tensor::from([10, 11, 12]));
+    assert_eq!(a.nditer([0, 1]).next().unwrap(), NdArray::from([1, 2, 3]));
+    assert_eq!(a.nditer(vec![0, 1]).last().unwrap(), NdArray::from([10, 11, 12]));
 
     assert_eq!(a.nditer([0, 2]).count(), 6);
-    assert_eq!(a.nditer([0, 2]).next().unwrap(), Tensor::from([1, 4]));
-    assert_eq!(a.nditer(vec![0, 2]).last().unwrap(), Tensor::from([9, 12]));
+    assert_eq!(a.nditer([0, 2]).next().unwrap(), NdArray::from([1, 4]));
+    assert_eq!(a.nditer(vec![0, 2]).last().unwrap(), NdArray::from([9, 12]));
 
     assert_eq!(a.nditer([1, 2]).count(), 6);
-    assert_eq!(a.nditer([1, 2]).next().unwrap(), Tensor::from([1, 7]));
-    assert_eq!(a.nditer(vec![1, 2]).last().unwrap(), Tensor::from([6, 12]));
+    assert_eq!(a.nditer([1, 2]).next().unwrap(), NdArray::from([1, 7]));
+    assert_eq!(a.nditer(vec![1, 2]).last().unwrap(), NdArray::from([6, 12]));
 
     assert_eq!(a.nditer([0, 1, 2]).count(), 12);
-    assert_eq!(a.nditer([0, 1, 2]).next().unwrap(), Tensor::scalar(1));
-    assert_eq!(a.nditer(vec![0, 1, 2]).last().unwrap(), Tensor::scalar(12));
+    assert_eq!(a.nditer([0, 1, 2]).next().unwrap(), NdArray::scalar(1));
+    assert_eq!(a.nditer(vec![0, 1, 2]).last().unwrap(), NdArray::scalar(12));
 }
 
 #[test]
 fn test_fill_f32() {
-    let mut a: Tensor<f32> = Tensor::zeros([3, 5, 3]);
+    let mut a: NdArray<f32> = NdArray::zeros([3, 5, 3]);
 
     assert!(a.flatiter().all(|x| x == 0.0));
     a.fill(25.0);
@@ -477,7 +477,7 @@ fn test_fill_f32() {
 
 #[test]
 fn test_fill_f64() {
-    let mut a: Tensor<f64> = Tensor::zeros([15]);
+    let mut a: NdArray<f64> = NdArray::zeros([15]);
 
     assert!(a.flatiter().all(|x| x == 0.0));
     a.fill(20.0);
@@ -486,18 +486,18 @@ fn test_fill_f64() {
 
 #[test]
 fn test_fill_slice() {
-    let a: Tensor<i32> = Tensor::zeros([3, 5]);
-    let correct = Tensor::from([[0, 5, 0, 0, 0], [0, 5, 0, 0, 0], [0, 5, 0, 0, 0]]);
+    let a: NdArray<i32> = NdArray::zeros([3, 5]);
+    let correct = NdArray::from([[0, 5, 0, 0, 0], [0, 5, 0, 0, 0], [0, 5, 0, 0, 0]]);
     a.slice(s![.., 1]).fill(5);
     assert_eq!(a, correct);
 
-    let a: Tensor<u32> = Tensor::zeros([3, 5]);
-    let correct: Tensor<u32> = Tensor::from([[0, 5, 5, 5, 0], [0, 5, 5, 5, 0], [0, 5, 5, 5, 0]]);
+    let a: NdArray<u32> = NdArray::zeros([3, 5]);
+    let correct: NdArray<u32> = NdArray::from([[0, 5, 5, 5, 0], [0, 5, 5, 5, 0], [0, 5, 5, 5, 0]]);
     a.slice(s![.., 1..4]).fill(5);
     assert_eq!(a, correct);
 
-    let a: Tensor<bool> = Tensor::zeros([3, 5]);
-    let correct: Tensor<bool> = Tensor::from(
+    let a: NdArray<bool> = NdArray::zeros([3, 5]);
+    let correct: NdArray<bool> = NdArray::from(
         [[false, false, false, false, false],
             [true, true, true, true, true],
             [false, false, false, false, false]]);

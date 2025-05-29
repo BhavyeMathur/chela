@@ -1,4 +1,4 @@
-use crate::tensor::{MAX_ARGS, MAX_DIMS};
+use crate::ndarray::{MAX_ARGS, MAX_DIMS};
 use crate::NumericDataType;
 
 #[non_exhaustive]

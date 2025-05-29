@@ -1,11 +1,11 @@
 use crate::dtype::RawDataType;
 use crate::iterator::flat_iterator::FlatIterator;
 use crate::tensor_iterator::NdIterator;
-use crate::Tensor;
+use crate::NdArray;
 use crate::axis::{AxesType, AxisType};
 use crate::buffer_iterator::BufferIterator;
 
-impl<T: RawDataType> Tensor<'_, T> {
+impl<T: RawDataType> NdArray<'_, T> {
     pub fn flatiter(&self) -> FlatIterator<T> {
         FlatIterator::from(self)
     }
@@ -15,7 +15,7 @@ impl<T: RawDataType> Tensor<'_, T> {
     }
 }
 
-impl<'a, T: RawDataType> Tensor<'a, T> {
+impl<'a, T: RawDataType> NdArray<'a, T> {
     pub fn iter(&'a self) -> NdIterator<'a, T> {
         NdIterator::from(self, [0])
     }

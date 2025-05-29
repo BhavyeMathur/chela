@@ -1,11 +1,11 @@
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::sum_of_products::*;
-use crate::tensor::{MAX_ARGS, MAX_DIMS};
-use crate::{first_n_elements, Tensor};
+use crate::ndarray::{MAX_ARGS, MAX_DIMS};
+use crate::{first_n_elements, NdArray};
 use std::hint::assert_unchecked;
 use std::ptr::null_mut;
 
-pub(super) unsafe fn unspecialized_einsum_loop<T: SumOfProductsType>(operands: &[&Tensor<T>],
+pub(super) unsafe fn unspecialized_einsum_loop<T: SumOfProductsType>(operands: &[&NdArray<T>],
                                                                      strides: &[[usize; MAX_ARGS]; MAX_DIMS],
                                                                      iter_ndims: usize,
                                                                      iter_shape: &[usize],
@@ -42,7 +42,7 @@ pub(super) unsafe fn unspecialized_einsum_loop<T: SumOfProductsType>(operands: &
     }
 }
 
-pub(super) unsafe fn try_specialized_einsum_loop<T: SumOfProductsType>(operands: &[&Tensor<T>],
+pub(super) unsafe fn try_specialized_einsum_loop<T: SumOfProductsType>(operands: &[&NdArray<T>],
                                                                        strides: &[[usize; MAX_ARGS]; MAX_DIMS],
                                                                        iter_ndims: usize,
                                                                        iter_shape: &[usize],
@@ -85,7 +85,7 @@ pub(super) unsafe fn try_specialized_einsum_loop<T: SumOfProductsType>(operands:
 }
 
 
-pub(super) unsafe fn einsum_1operand_2labels<T: SumOfProductsType>(operand: &Tensor<T>,
+pub(super) unsafe fn einsum_1operand_2labels<T: SumOfProductsType>(operand: &NdArray<T>,
                                                                    strides_dim0: &[usize; 2],
                                                                    strides_dim1: &[usize; 2],
                                                                    iter_shape: &[usize; 2],
@@ -108,7 +108,7 @@ pub(super) unsafe fn einsum_1operand_2labels<T: SumOfProductsType>(operand: &Ten
     }
 }
 
-pub(super) unsafe fn einsum_1operand_3labels<T: SumOfProductsType>(operand: &Tensor<T>,
+pub(super) unsafe fn einsum_1operand_3labels<T: SumOfProductsType>(operand: &NdArray<T>,
                                                                    strides_dim0: &[usize; 2],
                                                                    strides_dim1: &[usize; 2],
                                                                    strides_dim2: &[usize; 2],
@@ -135,8 +135,8 @@ pub(super) unsafe fn einsum_1operand_3labels<T: SumOfProductsType>(operand: &Ten
     }
 }
 
-pub(super) unsafe fn einsum_2operands_2labels<T: SumOfProductsType>(operand1: &Tensor<T>,
-                                                                    operand2: &Tensor<T>,
+pub(super) unsafe fn einsum_2operands_2labels<T: SumOfProductsType>(operand1: &NdArray<T>,
+                                                                    operand2: &NdArray<T>,
                                                                     strides_dim0: &[usize; 3],
                                                                     strides_dim1: &[usize; 3],
                                                                     iter_shape: &[usize; 2],
@@ -161,8 +161,8 @@ pub(super) unsafe fn einsum_2operands_2labels<T: SumOfProductsType>(operand1: &T
     }
 }
 
-pub(super) unsafe fn einsum_2operands_3labels<T: SumOfProductsType>(operand1: &Tensor<T>,
-                                                                    operand2: &Tensor<T>,
+pub(super) unsafe fn einsum_2operands_3labels<T: SumOfProductsType>(operand1: &NdArray<T>,
+                                                                    operand2: &NdArray<T>,
                                                                     strides_dim0: &[usize; 3],
                                                                     strides_dim1: &[usize; 3],
                                                                     strides_dim2: &[usize; 3],

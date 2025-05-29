@@ -1,10 +1,10 @@
 use crate::dtype::RawDataType;
 use crate::reshape::{ReshapeImpl};
-use crate::tensor::flags::TensorFlags;
+use crate::ndarray::flags::NdArrayFlags;
 use crate::util::functions::pad;
-use crate::Tensor;
+use crate::NdArray;
 
-impl<'a, T: RawDataType> Tensor<'a, T> {
+impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Broadcasts the tensor to the specified shape.
     ///
     /// This method returns a *readonly* view of the tensor with the desired shape.
@@ -26,17 +26,17 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let tensor = Tensor::from([1, 2, 3]);  // shape is [3]
+    /// let tensor = NdArray::from([1, 2, 3]);  // shape is [3]
     /// let broadcasted_tensor = tensor.broadcast_to(&[2, 3]);
     ///
     /// assert_eq!(broadcasted_tensor.shape(), &[2, 3]);
     /// ```
-    pub fn broadcast_to(&'a self, shape: &[usize]) -> Tensor<'a, T> {
+    pub fn broadcast_to(&'a self, shape: &[usize]) -> NdArray<'a, T> {
         let broadcast_shape = broadcast_shape(&self.shape, shape);
         let broadcast_stride = broadcast_stride(&self.stride, &broadcast_shape, &self.shape);
 
         let mut result = unsafe { self.reshaped_view(broadcast_shape, broadcast_stride) };
-        result.flags -= TensorFlags::Writeable;
+        result.flags -= NdArrayFlags::Writeable;
         result
     }
 }

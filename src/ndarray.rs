@@ -1,9 +1,6 @@
 use std::marker::PhantomData;
 use std::ptr::NonNull;
 
-pub mod dtype;
-pub use dtype::*;
-
 pub mod methods;
 pub use methods::*;
 
@@ -14,7 +11,7 @@ pub mod reshape;
 pub use reshape::*;
 
 pub(crate) mod flags;
-use flags::TensorFlags;
+use flags::NdArrayFlags;
 
 pub mod reduce;
 
@@ -34,16 +31,17 @@ mod print;
 pub(crate) const MAX_DIMS: usize = 32;
 pub(crate) const MAX_ARGS: usize = 16;
 
-use crate::gradient_function::{GradientFunction};
+use crate::dtype::RawDataType;
+use crate::gradient_function::GradientFunction;
 
-pub struct Tensor<'a, T: RawDataType> {
+pub struct NdArray<'a, T: RawDataType> {
     pub(crate) ptr: NonNull<T>,
     len: usize,
     capacity: usize,
 
     shape: Vec<usize>,
     stride: Vec<usize>,
-    pub(crate) flags: TensorFlags,
+    pub(crate) flags: NdArrayFlags,
 
     pub(crate) grad_fn: GradientFunction<T>,
 

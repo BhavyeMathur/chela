@@ -1,5 +1,5 @@
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
-use crate::tensor::MAX_DIMS;
+use crate::ndarray::MAX_DIMS;
 
 #[non_exhaustive]
 pub struct FlatIndexGenerator
@@ -16,7 +16,7 @@ pub struct FlatIndexGenerator
 }
 
 impl FlatIndexGenerator {
-    pub(in crate::tensor) fn from(shape: &[usize], stride: &[usize]) -> Self {
+    pub(in crate::ndarray) fn from(shape: &[usize], stride: &[usize]) -> Self {
         let (shape, stride) = collapse_to_uniform_stride(shape, stride);
         let ndims = shape.len();
         let size = shape.iter().product();

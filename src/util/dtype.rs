@@ -195,3 +195,7 @@ pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform + N
 
 impl FloatDataType for f32 {}
 impl FloatDataType for f64 {}
+
+
+pub trait TensorDataType: NumericDataType {}
+impl<T: FloatDataType> TensorDataType for T {}

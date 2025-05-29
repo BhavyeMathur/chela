@@ -1,6 +1,6 @@
-use std::ops::Range;
 use crate::axis::AxisType;
 use crate::{Axis, RawDataType};
+use std::ops::Range;
 
 pub(crate) trait ToVec<T> {
     fn to_vec(self) -> Vec<T>;

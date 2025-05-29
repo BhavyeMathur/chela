@@ -1,10 +1,10 @@
 use crate::dtype::RawDataType;
-use crate::{Tensor, TensorMethods};
+use crate::{NdArray, TensorMethods};
 use std::fmt;
 
 
 // TODO this is a temporary implementation
-impl<T: RawDataType> fmt::Debug for Tensor<'_, T> {
+impl<T: RawDataType> fmt::Debug for NdArray<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fn fmt_inner<T: fmt::Debug>(f: &mut fmt::Formatter<'_>,
                                     shape: &[usize],

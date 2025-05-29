@@ -3,8 +3,8 @@
 #![allow(clippy::manual_map)]
 #![allow(clippy::new_ret_no_self)]
 
-pub mod tensor;
-pub use tensor::*;
+pub mod ndarray;
+pub use ndarray::*;
 
 pub mod linalg;
 pub use linalg::*;

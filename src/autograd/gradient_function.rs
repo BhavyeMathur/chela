@@ -1,4 +1,4 @@
-use crate::{NumericDataType, RawDataType, Tensor};
+use crate::{NumericDataType, RawDataType, NdArray};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -10,11 +10,11 @@ pub(crate) trait GradientFuncTrait<T: RawDataType> {
     /// # Parameters
     ///
     /// - `grad`: the gradient of the function being differentiated with respect to `self`.
-    fn backward(&mut self, grad: &Tensor<T>);
+    fn backward(&mut self, grad: &NdArray<T>);
 
     /// Returns the gradient of the function being differentiated with respect to `self`
     /// if this function is a leaf. Otherwise, returns `None`.
-    fn gradient<'a>(&'a self) -> Option<Tensor<'a, T>> {
+    fn gradient<'a>(&'a self) -> Option<NdArray<'a, T>> {
         None
     }
 }
@@ -27,12 +27,12 @@ pub(crate) struct NoneBackwards {}
 /// Accumulates the gradient of the function being differentiated with respect to `self`
 /// into the `tensor_grad` attribute of this struct.
 pub(crate) struct AccumulateGrad<T: NumericDataType> {
-    tensor_grad: Tensor<'static, T>,
+    tensor_grad: NdArray<'static, T>,
 }
 
 impl<T: RawDataType> GradientFuncTrait<T> for NoneBackwards {
     /// Backwards method for tensor with `requires_grad = false`, does nothing.
-    fn backward(&mut self, _: &Tensor<T>) {}
+    fn backward(&mut self, _: &NdArray<T>) {}
 }
 
 impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
@@ -42,11 +42,11 @@ impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
     /// # Parameters
     ///
     /// - `grad`: the gradient of the function being differentiated with respect to `self`.
-    fn backward(&mut self, grad: &Tensor<T>) {
+    fn backward(&mut self, grad: &NdArray<T>) {
         self.tensor_grad += grad;
     }
 
-    fn gradient<'a>(&'a self) -> Option<Tensor<'a, T>> {
+    fn gradient<'a>(&'a self) -> Option<NdArray<'a, T>> {
         Some((&self.tensor_grad).view())
     }
 }
@@ -54,7 +54,7 @@ impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
 impl<T: NumericDataType> AccumulateGrad<T> {
     pub(crate) fn new(shape: Vec<usize>) -> GradientFunction<T> {
         Rc::new(RefCell::new(Self {
-            tensor_grad: Tensor::zeros(shape),
+            tensor_grad: NdArray::zeros(shape),
         }))
     }
 }

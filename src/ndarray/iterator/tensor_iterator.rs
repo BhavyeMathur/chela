@@ -2,11 +2,11 @@ use crate::dtype::RawDataType;
 use crate::iterator::util::split_by_indices;
 use crate::reshape::{ReshapeImpl};
 use crate::util::haslength::HasLength;
-use crate::Tensor;
+use crate::NdArray;
 
 #[non_exhaustive]
 pub struct NdIterator<'a, T: RawDataType> {
-    result: Tensor<'a, T>,
+    result: NdArray<'a, T>,
 
     shape: Vec<usize>,
     stride: Vec<usize>,
@@ -16,14 +16,14 @@ pub struct NdIterator<'a, T: RawDataType> {
     size: usize,
 }
 
-impl<T: RawDataType> Tensor<'_, T> {
+impl<T: RawDataType> NdArray<'_, T> {
     pub(crate) unsafe fn offset_ptr(&mut self, offset: isize) {
         self.ptr = self.ptr.offset(offset);
     }
 }
 
 impl<'a, T: RawDataType> NdIterator<'a, T> {
-    pub(super) fn from<I>(tensor: &'a Tensor<'a, T>, axes: I) -> Self
+    pub(super) fn from<I>(tensor: &'a NdArray<'a, T>, axes: I) -> Self
     where
         I: IntoIterator<Item=usize> + HasLength + Clone,
     {
@@ -44,7 +44,7 @@ impl<'a, T: RawDataType> NdIterator<'a, T> {
 }
 
 impl<'a, T: RawDataType> Iterator for NdIterator<'a, T> {
-    type Item = Tensor<'a, T>;
+    type Item = NdArray<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.iterator_index == self.size {

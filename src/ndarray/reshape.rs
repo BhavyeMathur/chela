@@ -1,10 +1,10 @@
 use crate::dtype::RawDataType;
 use crate::slice::update_flags_with_contiguity;
-use crate::tensor::flags::TensorFlags;
+use crate::ndarray::flags::NdArrayFlags;
 use crate::util::to_vec::ToVec;
-use crate::{AxisType, Tensor, TensorMethods};
+use crate::{AxisType, NdArray, TensorMethods};
 
-impl<'a, T: RawDataType> Tensor<'a, T> {
+impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Returns a 1D copy of a flattened multidimensional tensor.
     ///
     /// If copying the data is not desirable, it may be possible to return a view.
@@ -14,16 +14,16 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::from([[1, 2, 3], [4, 5, 6]]);
+    /// let tensor = NdArray::from([[1, 2, 3], [4, 5, 6]]);
     /// let flat_tensor = tensor.flatten();
-    /// assert_eq!(flat_tensor, Tensor::from([1, 2, 3, 4, 5, 6]));
+    /// assert_eq!(flat_tensor, NdArray::from([1, 2, 3, 4, 5, 6]));
     /// ```
-    pub fn flatten(&self) -> Tensor<'static, T> {
+    pub fn flatten(&self) -> NdArray<'static, T> {
         unsafe {
-            Tensor::from_contiguous_owned_buffer(vec![self.size()],
-                                                 self.clone_data(),
-                                                 self.requires_grad(),
-                                                 false)
+            NdArray::from_contiguous_owned_buffer(vec![self.size()],
+                                                  self.clone_data(),
+                                                  self.requires_grad(),
+                                                  false)
         }
     }
 
@@ -33,11 +33,11 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::from(vec![1, 2, 3, 4]);
+    /// let tensor = NdArray::from(vec![1, 2, 3, 4]);
     /// let view = tensor.view();
     /// assert!(view.is_view())
     /// ```
-    pub fn view(&'a self) -> Tensor<'a, T> {
+    pub fn view(&'a self) -> NdArray<'a, T> {
         unsafe { self.reshaped_view(self.shape.clone(), self.stride.clone()) }
     }
 
@@ -51,12 +51,12 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
     pub(crate) unsafe fn reshaped_view_with_offset(&'a self,
                                                    offset: usize,
                                                    shape: Vec<usize>,
-                                                   stride: Vec<usize>) -> Tensor<'a, T> {
+                                                   stride: Vec<usize>) -> NdArray<'a, T> {
         let mut flags = update_flags_with_contiguity(self.flags, &shape, &stride);
-        flags -= TensorFlags::UserCreated;
-        flags -= TensorFlags::Owned;
+        flags -= NdArrayFlags::UserCreated;
+        flags -= NdArrayFlags::Owned;
 
-        Tensor {
+        NdArray {
             ptr: self.ptr.add(offset),
             len: shape.iter().product(),
             capacity: 0,
@@ -79,7 +79,7 @@ pub(crate) trait ReshapeImpl<'a, T: RawDataType>: TensorMethods {
     /// # Safety
     /// - Ensure the memory layout referenced by `shape`, and `stride` is valid and owned
     ///   by the original tensor.
-    unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<'a, T>;
+    unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> NdArray<'a, T>;
 }
 
 pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
@@ -97,16 +97,16 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::from([[4, 5], [6, 7], [8, 9]]);  // shape is [3, 2]
+    /// let tensor = NdArray::from([[4, 5], [6, 7], [8, 9]]);  // shape is [3, 2]
     /// let reshaped_tensor = tensor.reshape([1, 2, 3]);
-    /// assert_eq!(reshaped_tensor, Tensor::from([[[4, 5, 6], [7, 8, 9]]]));
+    /// assert_eq!(reshaped_tensor, NdArray::from([[[4, 5, 6], [7, 8, 9]]]));
     ///
-    /// let tensor = Tensor::from([0, 1, 2, 3]);
+    /// let tensor = NdArray::from([0, 1, 2, 3]);
     /// let reshaped_tensor = (&tensor).reshape([2, 2]);  // reshape without consuming tensor
     /// assert_eq!(tensor.shape(), &[4]);
-    /// assert_eq!(reshaped_tensor, Tensor::from([[0, 1], [2, 3]]));
+    /// assert_eq!(reshaped_tensor, NdArray::from([[0, 1], [2, 3]]));
     /// ```
-    fn reshape(self, new_shape: impl ToVec<usize>) -> Tensor<'a, T> {
+    fn reshape(self, new_shape: impl ToVec<usize>) -> NdArray<'a, T> {
         let new_shape = new_shape.to_vec();
 
         if self.size() != new_shape.iter().product() {
@@ -131,16 +131,16 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::from([[[[1], [3]], [[1], [4]]]]);  // shape [1, 2, 2, 1]
+    /// let tensor = NdArray::from([[[[1], [3]], [[1], [4]]]]);  // shape [1, 2, 2, 1]
     /// let squeezed = tensor.squeeze();
-    /// assert_eq!(squeezed, Tensor::from([[1, 3], [1, 4]]));  // shape [2, 2]
+    /// assert_eq!(squeezed, NdArray::from([[1, 3], [1, 4]]));  // shape [2, 2]
     ///
-    /// let tensor = Tensor::from([[3], [5], [7], [9]]);
+    /// let tensor = NdArray::from([[3], [5], [7], [9]]);
     /// let squeezed = (&tensor).squeeze();  // squeeze without consuming tensor
     /// assert_eq!(tensor.shape(), &[4, 1]);
-    /// assert_eq!(squeezed, Tensor::from([3, 5, 7, 9]));
+    /// assert_eq!(squeezed, NdArray::from([3, 5, 7, 9]));
     /// ```
-    fn squeeze(self) -> Tensor<'a, T> {
+    fn squeeze(self) -> NdArray<'a, T> {
         let mut shape = self.shape().to_vec();
         let mut stride = self.stride().to_vec();
 
@@ -161,16 +161,16 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::from([2, 3]);  // shape is [2]
+    /// let tensor = NdArray::from([2, 3]);  // shape is [2]
     /// let unsqueezed = tensor.unsqueeze(-1);  // add dimension after the last axis
     /// assert_eq!(unsqueezed.shape(), &[2, 1]);
     ///
-    /// let tensor = Tensor::from([[1, 2, 3], [9, 8, 7]]);  // shape is [2, 3]
+    /// let tensor = NdArray::from([[1, 2, 3], [9, 8, 7]]);  // shape is [2, 3]
     /// let unsqueezed = (&tensor).unsqueeze(1);  // unsqueeze without consuming tensor
     /// assert_eq!(tensor.shape(), &[2, 3]);
     /// assert_eq!(unsqueezed.shape(), &[2, 1, 3]);
     /// ```
-    fn unsqueeze(self, axis: impl AxisType) -> Tensor<'a, T> {
+    fn unsqueeze(self, axis: impl AxisType) -> NdArray<'a, T> {
         let axis = axis.get_absolute(self.ndims() + 1);
 
         let mut shape = self.shape().to_vec();
@@ -188,14 +188,14 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     }
 }
 
-impl<'a, T: RawDataType> ReshapeImpl<'static, T> for Tensor<'a, T> {
-    unsafe fn reshaped_view(mut self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<'static, T> {
+impl<'a, T: RawDataType> ReshapeImpl<'static, T> for NdArray<'a, T> {
+    unsafe fn reshaped_view(mut self, shape: Vec<usize>, stride: Vec<usize>) -> NdArray<'static, T> {
         let flags = update_flags_with_contiguity(self.flags, &shape, &stride);
 
         // prevent tensor's data from being deallocated once this method ends
-        self.flags -= TensorFlags::Owned;
+        self.flags -= NdArrayFlags::Owned;
 
-        Tensor {
+        NdArray {
             ptr: self.ptr,
             len: shape.iter().product(),
             capacity: self.capacity,
@@ -211,13 +211,13 @@ impl<'a, T: RawDataType> ReshapeImpl<'static, T> for Tensor<'a, T> {
     }
 }
 
-impl<'a, T: RawDataType> ReshapeImpl<'a, T> for &'a Tensor<'a, T> {
-    unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Tensor<'a, T> {
+impl<'a, T: RawDataType> ReshapeImpl<'a, T> for &'a NdArray<'a, T> {
+    unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> NdArray<'a, T> {
         let mut flags = update_flags_with_contiguity(self.flags, &shape, &stride);
-        flags -= TensorFlags::UserCreated;
-        flags -= TensorFlags::Owned;
+        flags -= NdArrayFlags::UserCreated;
+        flags -= NdArrayFlags::Owned;
 
-        Tensor {
+        NdArray {
             ptr: self.ptr,
             len: shape.iter().product(),
             capacity: self.capacity,
@@ -233,5 +233,5 @@ impl<'a, T: RawDataType> ReshapeImpl<'a, T> for &'a Tensor<'a, T> {
     }
 }
 
-impl<'a, T: RawDataType> Reshape<'a, T> for &'a Tensor<'a, T> {}
-impl<T: RawDataType> Reshape<'static, T> for Tensor<'static, T> {}
+impl<'a, T: RawDataType> Reshape<'a, T> for &'a NdArray<'a, T> {}
+impl<T: RawDataType> Reshape<'static, T> for NdArray<'static, T> {}
