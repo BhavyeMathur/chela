@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use crate::broadcast::get_broadcasted_axes;
 use crate::reshape::Reshape;
+use crate::util::to_vec::ToVec;
 
 fn reduce_broadcasted_gradient<'a, T: FloatDataType>(grad: &'a Tensor<'a, T>,
                                                      original_shape: &[usize]) -> Tensor<'a, T> {
@@ -48,6 +49,12 @@ pub(crate) struct DivBackwards<'a, T: FloatDataType> {
 }
 
 pub(crate) struct NegBackwards<T: FloatDataType> {
+    next_function: GradientFunction<T>,
+
+    shape: Vec<usize>,
+}
+
+pub(crate) struct ReshapeBackwards<T: FloatDataType> {
     next_function: GradientFunction<T>,
 
     shape: Vec<usize>,
@@ -107,6 +114,13 @@ impl<T: FloatDataType> GradientFuncTrait<T> for NegBackwards<T> {
         let grad = -grad;
         let grad = reduce_broadcasted_gradient(&grad, &self.shape);
 
+        self.next_function.borrow_mut().backward(&grad);
+    }
+}
+
+impl<T: FloatDataType> GradientFuncTrait<T> for ReshapeBackwards<T> {
+    fn backward(&mut self, grad: &Tensor<T>) {
+        let grad = grad.reshape(&self.shape);
         self.next_function.borrow_mut().backward(&grad);
     }
 }
@@ -186,6 +200,17 @@ impl<T: FloatDataType> NegBackwards<T> {
         let grad_fn = Self {
             next_function: rhs.get_grad_fn(),
             shape: rhs.shape().to_vec(),
+        };
+
+        Rc::new(RefCell::new(grad_fn))
+    }
+}
+
+impl<T: FloatDataType> ReshapeBackwards<T> {
+    pub(crate) fn new(tensor: &Tensor<T>, new_shape: impl ToVec<usize>) -> GradientFunction<T> {
+        let grad_fn = Self {
+            next_function: tensor.get_grad_fn(),
+            shape: new_shape.to_vec(),
         };
 
         Rc::new(RefCell::new(grad_fn))

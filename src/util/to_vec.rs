@@ -22,6 +22,10 @@ impl<T> ToVec<T> for Vec<T> {
     fn to_vec(self) -> Vec<T> { self }
 }
 
+impl<T: Clone> ToVec<T> for &Vec<T> {
+    fn to_vec(self) -> Vec<T> { self.clone() }
+}
+
 impl<T: Clone> ToVec<T> for &[T] {
     fn to_vec(self) -> Vec<T> { Vec::from(self) }
 }

@@ -4,7 +4,7 @@ use crate::{IntegerDataType, RawDataType, Tensor};
 use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign};
 
 use paste::paste;
-use crate::arithmetic_backwards::{AddBackwards, DivBackwards, MulBackwards, NegBackwards, SubBackwards};
+use crate::backwards::{AddBackwards, DivBackwards, MulBackwards, NegBackwards, SubBackwards};
 
 macro_rules! define_binary_ops {
     ($($trait_: ident, $operator: tt, $method: ident;)* ) => {

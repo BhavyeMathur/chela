@@ -200,8 +200,8 @@ fn test_autograd_mul_div() {
     // dd/db = a / c
     // dd/dc = -ab / c^2
 
-    // assert_eq!(a.gradient().unwrap(), &b / &c);
-    // assert_eq!(b.gradient().unwrap(), &a / &c);
+    assert_eq!(a.gradient().unwrap(), &b / &c);
+    assert_eq!(b.gradient().unwrap(), &a / &c);
     assert_almost_eq!(c.gradient().unwrap(), Tensor::scalar(-1.0) / (&c * &c));
 }
 
