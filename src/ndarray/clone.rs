@@ -1,7 +1,7 @@
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::iterator::flat_index_generator::FlatIndexGenerator;
-use crate::{NdArray, TensorMethods};
+use crate::{NdArray, NdArrayMethods};
 use std::ptr::copy_nonoverlapping;
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
@@ -34,7 +34,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         let (mut shape, mut stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
 
         // safe to unwrap because if stride has no elements, this would be a scalar ndarray
-        // however, scalar tensors are contiguously stored so this method wouldn't be called
+        // however, scalar arrays are contiguously stored so this method wouldn't be called
         let &mut mut contiguous_stride = stride.last_mut().unwrap();
 
         // if elements along the last axis are located contiguously,

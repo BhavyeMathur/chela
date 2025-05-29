@@ -1,6 +1,6 @@
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
-use crate::{NdArray, TensorMethods};
+use crate::{NdArray, NdArrayMethods};
 
 unsafe fn fill_strided<T: Copy>(mut start: *mut T, value: T, stride: usize, n: usize) {
     for _ in 0..n {

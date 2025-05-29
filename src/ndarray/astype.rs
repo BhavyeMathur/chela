@@ -1,5 +1,5 @@
 use crate::dtype::NumericDataType;
-use crate::{NdArray, RawDataType, TensorMethods};
+use crate::{NdArray, RawDataType, NdArrayMethods};
 use num::NumCast;
 
 impl<T: NumericDataType> NdArray<'_, T> {

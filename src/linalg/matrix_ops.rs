@@ -1,7 +1,7 @@
 use crate::axis::AxisType;
 use crate::einsum::einsum_into_ptr;
 use crate::linalg::sum_of_products::SumOfProductsType;
-use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, NdArray, TensorMethods};
+use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, NdArray, NdArrayMethods};
 use std::cmp::min;
 
 impl<'a, T: MatrixOps> NdArray<'a, T> {

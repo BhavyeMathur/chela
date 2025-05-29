@@ -2,21 +2,21 @@ use crate::dtype::RawDataType;
 use crate::slice::update_flags_with_contiguity;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::util::to_vec::ToVec;
-use crate::{AxisType, NdArray, TensorMethods};
+use crate::{AxisType, NdArray, NdArrayMethods};
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Returns a 1D copy of a flattened multidimensional ndarray .
     ///
     /// If copying the data is not desirable, it may be possible to return a view.
-    /// See `Tensor::ravel()`.
+    /// See `NdArray::ravel()`.
     ///
     /// # Examples
     /// ```
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::from([[1, 2, 3], [4, 5, 6]]);
-    /// let flat_tensor = ndarray .flatten();
-    /// assert_eq!(flat_tensor, NdArray::from([1, 2, 3, 4, 5, 6]));
+    /// let flat_array = ndarray .flatten();
+    /// assert_eq!(flat_array, NdArray::from([1, 2, 3, 4, 5, 6]));
     /// ```
     pub fn flatten(&self) -> NdArray<'static, T> {
         unsafe {
@@ -72,7 +72,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     }
 }
 
-pub(crate) trait ReshapeImpl<'a, T: RawDataType>: TensorMethods {
+pub(crate) trait ReshapeImpl<'a, T: RawDataType>: NdArrayMethods {
     /// Provides a non-owning view of the ndarray with the specified shape and stride.
     /// The data pointed to by the view is shared with the original ndarray .
     ///
@@ -98,13 +98,13 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::from([[4, 5], [6, 7], [8, 9]]);  // shape is [3, 2]
-    /// let reshaped_tensor = ndarray .reshape([1, 2, 3]);
-    /// assert_eq!(reshaped_tensor, NdArray::from([[[4, 5, 6], [7, 8, 9]]]));
+    /// let reshaped_array = ndarray .reshape([1, 2, 3]);
+    /// assert_eq!(reshaped_array, NdArray::from([[[4, 5, 6], [7, 8, 9]]]));
     ///
     /// let ndarray = NdArray::from([0, 1, 2, 3]);
-    /// let reshaped_tensor = (&ndarray ).reshape([2, 2]);  // reshape without consuming ndarray
+    /// let reshaped_array = (&ndarray ).reshape([2, 2]);  // reshape without consuming ndarray
     /// assert_eq!(ndarray .shape(), &[4]);
-    /// assert_eq!(reshaped_tensor, NdArray::from([[0, 1], [2, 3]]));
+    /// assert_eq!(reshaped_array, NdArray::from([[0, 1], [2, 3]]));
     /// ```
     fn reshape(self, new_shape: impl ToVec<usize>) -> NdArray<'a, T> {
         let new_shape = new_shape.to_vec();

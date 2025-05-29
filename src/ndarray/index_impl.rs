@@ -1,5 +1,5 @@
 use crate::dtype::RawDataType;
-use crate::{NdArray, TensorMethods};
+use crate::{NdArray, NdArrayMethods};
 use std::ops::{Index, IndexMut};
 
 impl<T: RawDataType, const D: usize> Index<[usize; D]> for NdArray<'_, T> {

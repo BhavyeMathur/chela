@@ -4,7 +4,7 @@ use crate::ndarray::flags::NdArrayFlags;
 use crate::{NdArray};
 
 #[allow(clippy::len_without_is_empty)]
-pub trait TensorMethods: Sized {
+pub trait NdArrayMethods: Sized {
     /// Returns the dimensions of the ndarray along each axis.
     ///
     /// ```rust
@@ -129,7 +129,7 @@ pub trait TensorMethods: Sized {
     /// If the elements of this ndarray are stored in memory with a uniform distance between them,
     /// returns this distance.
     ///
-    /// Contiguous tensors always have a uniform stride of 1.
+    /// Contiguous arrays always have a uniform stride of 1.
     /// NdArray views may sometimes be uniformly strided.
     ///
     /// ```rust
@@ -158,7 +158,7 @@ pub trait TensorMethods: Sized {
     }
 }
 
-impl<T: RawDataType> TensorMethods for NdArray<'_, T> {
+impl<T: RawDataType> NdArrayMethods for NdArray<'_, T> {
     #[inline]
     fn shape(&self) -> &[usize] {
         &self.shape
@@ -175,7 +175,7 @@ impl<T: RawDataType> TensorMethods for NdArray<'_, T> {
     }
 }
 
-impl<T: RawDataType> TensorMethods for &NdArray<'_, T> {
+impl<T: RawDataType> NdArrayMethods for &NdArray<'_, T> {
     #[inline]
     fn shape(&self) -> &[usize] {
         &self.shape

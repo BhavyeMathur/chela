@@ -7,7 +7,7 @@ use crate::linalg::specialized_einsum::*;
 use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::ndarray::{MAX_ARGS, MAX_DIMS};
 use crate::util::functions::{permute_array, transpose_2d_array};
-use crate::{NdArray, TensorMethods};
+use crate::{NdArray, NdArrayMethods};
 use crate::reshape::ReshapeImpl;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
@@ -24,12 +24,12 @@ Examples:
     subscripts="abbcbc",  ndim=6 -> result = [97, 98, -1, 99, -3, -2]
     subscripts="ab..bc", ndim=6 -> result = [97, 98, 0, 0, -3, 99]
  */
-fn parse_operand_subscripts<A: TensorMethods>(subscripts: &str,
-                                              operand: &A,
-                                              result: &mut [i8; MAX_DIMS],
-                                              label_counts: &mut [u32; 128],
-                                              label_dims: &mut [usize; 128],
-                                              broadcast_dims: &mut usize) {
+fn parse_operand_subscripts<A: NdArrayMethods>(subscripts: &str,
+                                               operand: &A,
+                                               result: &mut [i8; MAX_DIMS],
+                                               label_counts: &mut [u32; 128],
+                                               label_dims: &mut [usize; 128],
+                                               broadcast_dims: &mut usize) {
     if !subscripts.is_ascii() {
         panic!("einsum subscripts must be ascii");
     }
@@ -162,10 +162,10 @@ fn parse_output_subscripts(subscripts: &str,
 }
 
 
-fn reshape_shape_and_stride_for_einsum<A: TensorMethods>(operand: &A,
-                                                         labels: &[i8; MAX_DIMS],
-                                                         output_dims: usize,
-                                                         output_labels: &[i8]) -> Option<(Vec<usize>, Vec<usize>)> {
+fn reshape_shape_and_stride_for_einsum<A: NdArrayMethods>(operand: &A,
+                                                          labels: &[i8; MAX_DIMS],
+                                                          output_dims: usize,
+                                                          output_labels: &[i8]) -> Option<(Vec<usize>, Vec<usize>)> {
     let mut new_stride = vec![0; output_dims];
     let mut new_shape = vec![0; output_dims];
 

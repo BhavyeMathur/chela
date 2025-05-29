@@ -27,9 +27,9 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```rust
     /// # use chela::*;
     /// let ndarray = NdArray::from([1, 2, 3]);  // shape is [3]
-    /// let broadcasted_tensor = ndarray .broadcast_to(&[2, 3]);
+    /// let broadcasted_array = ndarray .broadcast_to(&[2, 3]);
     ///
-    /// assert_eq!(broadcasted_tensor.shape(), &[2, 3]);
+    /// assert_eq!(broadcasted_array.shape(), &[2, 3]);
     /// ```
     pub fn broadcast_to(&'a self, shape: &[usize]) -> NdArray<'a, T> {
         let broadcast_shape = broadcast_shape(&self.shape, shape);

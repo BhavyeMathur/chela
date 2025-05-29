@@ -6,14 +6,14 @@ use crate::util::flatten::Flatten;
 use crate::util::nested::Nested;
 use crate::util::shape::Shape;
 use crate::util::to_vec::ToVec;
-use crate::{FloatDataType, RawDataType, TensorMethods};
+use crate::{FloatDataType, RawDataType, NdArrayMethods};
 use num::NumCast;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
 
 /// Computes the stride of an ndarray from its given shape assuming a contiguous layout.
 ///
-/// In the context of multidimensional tensors, the stride refers to the number of elements
+/// In the context of multidimensional arrays, the stride refers to the number of elements
 /// that need to be skipped in memory to move to the next element along each dimension.
 /// Strides are calculated by determining how many elements are spanned by the dimensions
 /// following a particular axis.
@@ -96,7 +96,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         }
     }
 
-    /// Constructs an n-dimensional `Tensor` from input data such as a vector or array.
+    /// Constructs an n-dimensional `NdArray` from input data such as a vector or array.
     ///
     /// # Parameters
     /// - `data`: a nested array or vector of valid data types (floats, integers, bools)
@@ -169,8 +169,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```ignore
     /// # use chela::*;
     ///
-    /// let ndarray = Tensor::full_requires_grad(5i32, [2, 3], true); // 2x3 ndarray filled with 5.
-    /// let ndarray = Tensor::full_requires_grad(true, [2, 3, 5], true); // 2x3x5 ndarray filled with 'true'
+    /// let ndarray = NdArray::full_requires_grad(5i32, [2, 3], true); // 2x3 ndarray filled with 5.
+    /// let ndarray = NdArray::full_requires_grad(true, [2, 3, 5], true); // 2x3x5 ndarray filled with 'true'
     /// ```
     pub(crate) fn full_requires_grad(n: T, shape: impl ToVec<usize>, requires_grad: bool) -> Self {
         let shape = shape.to_vec();
@@ -216,8 +216,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```ignore
     /// # use chela::*;
     ///
-    /// let ndarray = Tensor::<i32>::zeros_requires_grad([2, 3], true);
-    /// let ndarray = Tensor::<bool>::zeros_requires_grad([2, 3], true);  // filled with 'false'
+    /// let ndarray = NdArray::<i32>::zeros_requires_grad([2, 3], true);
+    /// let ndarray = NdArray::<bool>::zeros_requires_grad([2, 3], true);  // filled with 'false'
     /// ```
     pub(crate) fn zeros_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
     where
@@ -261,8 +261,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```ignore
     /// # use chela::*;
     ///
-    /// let ndarray = Tensor::<i32>::ones_requires_grad([2, 3], true);
-    /// let ndarray = Tensor::<bool>::ones_requires_grad([2, 3], true);  // filled with 'true'
+    /// let ndarray = NdArray::<i32>::ones_requires_grad([2, 3], true);
+    /// let ndarray = NdArray::<bool>::ones_requires_grad([2, 3], true);  // filled with 'true'
     /// ```
     pub(crate) fn ones_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
     where
@@ -280,9 +280,9 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let scalar_tensor = NdArray::scalar(42);
-    /// assert_eq!(scalar_tensor.shape(), []);
-    /// assert_eq!(scalar_tensor.value(), 42);
+    /// let scalar_array = NdArray::scalar(42);
+    /// assert_eq!(scalar_array.shape(), []);
+    /// assert_eq!(scalar_array.value(), 42);
     /// ```
     pub fn scalar(n: T) -> Self {
         NdArray::full(n, [])
@@ -298,17 +298,17 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```ignore
     /// # use chela::*;
     ///
-    /// let scalar_tensor = Tensor::scalar_requires_grad(42, true);
-    /// assert_eq!(scalar_tensor.shape(), []);
-    /// assert_eq!(scalar_tensor.value(), 42);
+    /// let scalar_array = NdArray::scalar_requires_grad(42, true);
+    /// assert_eq!(scalar_array.shape(), []);
+    /// assert_eq!(scalar_array.value(), 42);
     /// ```
     pub(crate) fn scalar_requires_grad(n: T, requires_grad: bool) -> Self {
         NdArray::full_requires_grad(n, [], requires_grad)
     }
 
-    // Maybe we should support empty tensors one day.
+    // Maybe we should support empty arrays one day.
     // pub fn empty() -> Self {
-    //     unsafe { Tensor::from_contiguous_owned_buffer(vec![0], vec![]) }
+    //     unsafe { NdArray::from_contiguous_owned_buffer(vec![0], vec![]) }
     // }
 
     /// Retrieves the single value contained within an ndarray with a singular element.
@@ -327,8 +327,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```
     ///
     /// # Notes
-    /// This function is only meant for tensors that are guaranteed to have
-    /// exactly one element. For tensors with multiple elements, consider using
+    /// This function is only meant for arrays that are guaranteed to have
+    /// exactly one element. For arrays with multiple elements, consider using
     /// appropriate methods to access individual elements or slices safely.
     pub fn value(&self) -> T {
         assert_eq!(self.size(), 1, "cannot get value of a tensor with more than one element");
@@ -346,7 +346,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
     ///
     /// # Returns
     ///
-    /// A `Tensor` containing values starting from `start` and ending before `stop`,
+    /// An `NdArray` containing values starting from `start` and ending before `stop`,
     /// with a step-size of 1.
     ///
     /// # Examples

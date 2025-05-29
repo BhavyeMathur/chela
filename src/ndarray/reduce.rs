@@ -2,7 +2,7 @@ use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::util::to_vec::ToVec;
-use crate::{AxisType, FloatDataType, NdArray, TensorMethods};
+use crate::{AxisType, FloatDataType, NdArray, NdArrayMethods};
 use num::{NumCast};
 use std::collections::VecDeque;
 
@@ -155,123 +155,123 @@ impl<T: NumericDataType> NdArray<'_, T> {
 }
 
 // #[cfg(not(use_apple_vdsp))]
-// impl TensorNumericReduce<f32> for Tensor<'_, f32> {}
+// impl NdArrayNumericReduce<f32> for NdArray<'_, f32> {}
 //
 // #[cfg(not(use_apple_vdsp))]
-// impl TensorNumericReduce<f64> for Tensor<'_, f64> {}
+// impl NdArrayNumericReduce<f64> for NdArray<'_, f64> {}
 // TODO
 // 
 // #[cfg(use_apple_vdsp)]
-// impl TensorNumericReduce<f32> for Tensor<'_, f32> {
-//     fn sum<'a, 'b>(&'a self) -> Tensor<'b, f32> {
+// impl NdArrayNumericReduce<f32> for NdArray<'_, f32> {
+//     fn sum<'a, 'b>(&'a self) -> NdArray<'b, f32> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(|val, acc| acc + val, 0.0) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_sve(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 //
-//     fn max<'a, 'b>(&'a self) -> Tensor<'b, f32> {
+//     fn max<'a, 'b>(&'a self) -> NdArray<'b, f32> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(partial_max, f32::min_value()) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_maxv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 //
-//     fn min<'a, 'b>(&'a self) -> Tensor<'b, f32> {
+//     fn min<'a, 'b>(&'a self) -> NdArray<'b, f32> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(partial_min, f32::max_value()) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_minv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 //
-//     fn max_magnitude<'a, 'b>(&'a self) -> Tensor<'b, f32> {
+//     fn max_magnitude<'a, 'b>(&'a self) -> NdArray<'b, f32> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(partial_max_magnitude, 0.0) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_maxmgv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 //
-//     fn min_magnitude<'a, 'b>(&'a self) -> Tensor<'b, f32> {
+//     fn min_magnitude<'a, 'b>(&'a self) -> NdArray<'b, f32> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(partial_min_magnitude, 0.0) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_minmgv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 // }
 //
 // #[cfg(use_apple_vdsp)]
-// impl TensorNumericReduce<f64> for Tensor<'_, f64> {
-//     fn sum<'a, 'b>(&'a self) -> Tensor<'b, f64> {
+// impl NdArrayNumericReduce<f64> for NdArray<'_, f64> {
+//     fn sum<'a, 'b>(&'a self) -> NdArray<'b, f64> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(|val, acc| acc + val, 0.0) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_sveD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 //
-//     fn max<'a, 'b>(&'a self) -> Tensor<'b, f64> {
+//     fn max<'a, 'b>(&'a self) -> NdArray<'b, f64> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(partial_max, f64::min_value()) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_maxvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 //
-//     fn min<'a, 'b>(&'a self) -> Tensor<'b, f64> {
+//     fn min<'a, 'b>(&'a self) -> NdArray<'b, f64> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(partial_min, f64::max_value()) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_minvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 //
-//     fn max_magnitude<'a, 'b>(&'a self) -> Tensor<'b, f64> {
+//     fn max_magnitude<'a, 'b>(&'a self) -> NdArray<'b, f64> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(partial_max_magnitude, 0.0) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_maxmgvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
 //
-//     fn min_magnitude<'a, 'b>(&'a self) -> Tensor<'b, f64> {
+//     fn min_magnitude<'a, 'b>(&'a self) -> NdArray<'b, f64> {
 //         match self.has_uniform_stride() {
 //             None => { self.reduce(partial_min_magnitude, 0.0) }
 //             Some(stride) => {
 //                 let mut output = 0.0;
 //                 unsafe { vDSP_minmgvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 Tensor::scalar_requires_grad(output, self.requires_grad())
+//                 NdArray::scalar_requires_grad(output, self.requires_grad())
 //             }
 //         }
 //     }
