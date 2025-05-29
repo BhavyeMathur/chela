@@ -21,11 +21,13 @@ pub mod fill;
 pub mod clone;
 pub mod equals;
 pub mod broadcast;
-pub mod operations;
+pub mod binary_ops;
 pub mod random;
 pub mod astype;
 
 mod print;
+mod unary_ops;
+mod assign_ops;
 
 pub(crate) const MAX_DIMS: usize = 32;
 pub(crate) const MAX_ARGS: usize = 16;
