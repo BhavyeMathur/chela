@@ -5,7 +5,7 @@ use crate::{NdArray};
 
 #[allow(clippy::len_without_is_empty)]
 pub trait TensorMethods: Sized {
-    /// Returns the dimensions of the tensor along each axis.
+    /// Returns the dimensions of the ndarray along each axis.
     ///
     /// ```rust
     /// # use chela::*;
@@ -21,9 +21,9 @@ pub trait TensorMethods: Sized {
     /// ```
     fn shape(&self) -> &[usize];
 
-    /// Returns the stride of the tensor.
+    /// Returns the stride of the ndarray .
     ///
-    /// The stride represents the distance in memory between elements in a tensor along each axis.
+    /// The stride represents the distance in memory between elements in an ndarray along each axis.
     ///
     /// ```rust
     /// # use chela::*;
@@ -33,7 +33,7 @@ pub trait TensorMethods: Sized {
     /// ```
     fn stride(&self) -> &[usize];
 
-    /// Returns the number of dimensions in the tensor.
+    /// Returns the number of dimensions in the ndarray .
     ///
     /// ```rust
     /// # use chela::*;
@@ -50,8 +50,8 @@ pub trait TensorMethods: Sized {
         self.shape().len()
     }
 
-    /// Returns the length along the first dimension of the tensor.
-    /// If the tensor is a scalar, this returns 0.
+    /// Returns the length along the first dimension of the ndarray .
+    /// If the ndarray is a scalar, this returns 0.
     ///
     /// # Examples
     ///
@@ -75,7 +75,7 @@ pub trait TensorMethods: Sized {
         self.shape()[0]
     }
 
-    /// Returns the total number of elements in the tensor.
+    /// Returns the total number of elements in the ndarray .
     ///
     /// ```rust
     /// # use chela::*;
@@ -93,10 +93,10 @@ pub trait TensorMethods: Sized {
         self.shape().iter().product()
     }
 
-    /// Returns flags containing information about various tensor metadata.
+    /// Returns flags containing information about various ndarray metadata.
     fn flags(&self) -> NdArrayFlags;
 
-    /// Returns whether this tensor is stored contiguously in memory.
+    /// Returns whether this ndarray is stored contiguously in memory.
     ///
     /// ```rust
     /// # use chela::*;
@@ -111,7 +111,7 @@ pub trait TensorMethods: Sized {
         self.flags().contains(NdArrayFlags::Contiguous)
     }
 
-    /// Returns whether this tensor is slice of another tensor.
+    /// Returns whether this ndarray is slice of another ndarray .
     ///
     /// ```rust
     /// # use chela::*;
@@ -126,11 +126,11 @@ pub trait TensorMethods: Sized {
         !self.flags().contains(NdArrayFlags::Owned)
     }
 
-    /// If the elements of this tensor are stored in memory with a uniform distance between them,
+    /// If the elements of this ndarray are stored in memory with a uniform distance between them,
     /// returns this distance.
     ///
     /// Contiguous tensors always have a uniform stride of 1.
-    /// Tensor views may sometimes be uniformly strided.
+    /// NdArray views may sometimes be uniformly strided.
     ///
     /// ```rust
     /// # use chela::*;

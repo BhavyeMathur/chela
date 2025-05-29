@@ -5,20 +5,18 @@ pub struct Axis(pub isize);
 pub trait AxisType {
     fn isize(&self) -> isize;
 
-    /// Computes the absolute axis index for a given tensor dimension.
+    /// Computes the absolute axis index for a given `NdArray` dimension.
     /// 
     /// Negative axis values are normalized to represent their positive counterparts.
     /// For example, `-1` represents the last axis, `-2` the second-to-last axis, and so on.
     ///
     /// # Arguments
     ///
-    /// * `ndims` - The total number of dimensions in the tensor.
+    /// * `ndims` - The total number of dimensions in the ndarray .
     ///
     /// # Panics
-    ///
-    /// This function will panic if:
-    /// * The provided axis is less than `-ndims` (lower bound).
-    /// * The provided axis is greater than or equal to `ndims` (upper bound).
+    /// * If the provided axis is less than `-ndims` (lower bound).
+    /// * If the provided axis is greater than or equal to `ndims` (upper bound).
     ///
     /// # Examples
     ///

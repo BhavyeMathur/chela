@@ -19,10 +19,10 @@ pub(crate) trait GradientFuncTrait<T: RawDataType> {
     }
 }
 
-/// The default backwards node for non-leaf Tensors.
+/// The default backwards node for non-leaf NdArrays.
 pub(crate) struct NoneBackwards {}
 
-/// The default backwards node for leaf Tensors.
+/// The default backwards node for leaf NdArrays.
 /// 
 /// Accumulates the gradient of the function being differentiated with respect to `self`
 /// into the `tensor_grad` attribute of this struct.
@@ -31,12 +31,12 @@ pub(crate) struct AccumulateGrad<T: NumericDataType> {
 }
 
 impl<T: RawDataType> GradientFuncTrait<T> for NoneBackwards {
-    /// Backwards method for tensor with `requires_grad = false`, does nothing.
+    /// Backwards method for ndarray with `requires_grad = false`, does nothing.
     fn backward(&mut self, _: &NdArray<T>) {}
 }
 
 impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
-    /// Accumulates the gradient of the tensor being differentiated with respect to a leaf tensor
+    /// Accumulates the gradient of the ndarray being differentiated with respect to a leaf ndarray
     /// into `tensor_grad`
     ///
     /// # Parameters

@@ -38,13 +38,13 @@ impl<'a, T: FloatDataType> NdArray<'a, T> {
     
     /// Retrieves the gradient function associated with the current object.
     ///
-    /// This is `NoneBackwards` if the tensor has `requires_grad = false` 
-    /// or `AccumulateBackwards` if the tensor is a leaf node.
+    /// This is `NoneBackwards` if the ndarray has `requires_grad = false`
+    /// or `AccumulateBackwards` if the ndarray is a leaf node.
     pub(crate) fn get_grad_fn(&'a self) -> GradientFunction<T> {
         self.grad_fn.clone()
     }
 
-    /// Returns the gradient of the differentiated tensor with respect to `self`.
+    /// Returns the gradient of the differentiated ndarray with respect to `self`.
     ///
     /// This method returns a view into the gradient.
     ///
@@ -68,7 +68,7 @@ impl<'a, T: FloatDataType> NdArray<'a, T> {
         unsafe { (*self.grad_fn.as_ptr()).gradient() }
     }
 
-    /// Sets the gradient of this tensor to zero.
+    /// Sets the gradient of this ndarray to zero.
     ///
     /// # Examples
     ///
@@ -96,7 +96,7 @@ impl<'a, T: FloatDataType> NdArray<'a, T> {
     ///
     /// # Parameters
     ///
-    /// - `gradient`: the gradient of the tensor being differentiated with respect to `self`.
+    /// - `gradient`: the gradient of the ndarray being differentiated with respect to `self`.
     ///
     /// # Examples
     ///

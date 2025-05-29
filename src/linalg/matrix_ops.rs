@@ -9,7 +9,7 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
     ///
     /// - If both tensors are 1D, then their dot product is returned.
     /// - If both tensors are 2D, then their matrix product is returned.
-    /// - If the first tensor is 2D and the second tensor is 1D, then the matrix-vector product is returned.
+    /// - If the first ndarray is 2D and the second ndarray is 1D, then the matrix-vector product is returned.
     ///
     /// # Panics
     /// - If the dimensions/shape of the tensors is incompatible
@@ -63,11 +63,11 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
 
     /// Performs batch matrix multiplication on 3D tensors.
     ///
-    /// The shape of the resulting tensor will be `[batch_size, self.shape()[1], other.shape()[2]]`,
+    /// The shape of the resulting ndarray will be `[batch_size, self.shape()[1], other.shape()[2]]`,
     /// where `batch_size` is the shared first dimension of both input tensors.
     ///
     /// # Panics
-    /// - If either tensor is not 3D
+    /// - If either ndarray is not 3D
     /// - If the tensors do not have dimensions compatible for batch matrix multiplication.
     ///
     /// # Example
@@ -97,7 +97,7 @@ impl<'a, T: SumOfProductsType> NdArray<'a, T> {
     /// Calculates the dot product of two 1D tensors.
     ///
     /// # Panics
-    /// - Panics if either tensor is not 1D
+    /// - Panics if either ndarray is not 1D
     /// - Panics if the lengths of the two tensors are not equal
     ///
     /// # Examples
@@ -128,80 +128,80 @@ impl<'a, T: SumOfProductsType> NdArray<'a, T> {
 }
 
 impl<'a, T: NumericDataType> NdArray<'a, T> {
-    /// Returns the trace of the tensor along its first 2 axes.
+    /// Returns the trace of the ndarray along its first 2 axes.
     ///
     /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
+    /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([
+    /// let ndarray = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(tensor.trace(), NdArray::scalar(1 + 5 + 9));
+    /// assert_eq!(ndarray .trace(), NdArray::scalar(1 + 5 + 9));
     pub fn trace<'r>(&self) -> NdArray<'r, T> {
         self.offset_trace(0)
     }
 
-    /// Returns the sum of an offset tensor diagonal along its first 2 axes.
+    /// Returns the sum of an offset ndarray diagonal along its first 2 axes.
     ///
     /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
+    /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([
+    /// let ndarray = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(tensor.offset_trace(-1), NdArray::scalar(4 + 8));
+    /// assert_eq!(ndarray .offset_trace(-1), NdArray::scalar(4 + 8));
     pub fn offset_trace<'r>(&self, offset: isize) -> NdArray<'r, T> {
         self.offset_trace_along(offset, 0, 1)
     }
 
-    /// Returns the trace of a tensor along the specified axes.
+    /// Returns the trace of an ndarray along the specified axes.
     ///
     /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
+    /// - if the ndarray has fewer than 2 dimensions.
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([
+    /// let ndarray = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(tensor.trace_along(0, 1), NdArray::scalar(1 + 5 + 9));
+    /// assert_eq!(ndarray .trace_along(0, 1), NdArray::scalar(1 + 5 + 9));
     pub fn trace_along<'r>(&self, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'r, T> {
         self.offset_trace_along(0, axis1, axis2)
     }
 
-    /// Returns the sum of an offset tensor diagonal along the specified axes.
+    /// Returns the sum of an offset ndarray diagonal along the specified axes.
     ///
     /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
+    /// - if the ndarray has fewer than 2 dimensions.
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([
+    /// let ndarray = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(tensor.offset_trace_along(1, 0, 1), NdArray::scalar(2 + 6));
+    /// assert_eq!(ndarray .offset_trace_along(1, 0, 1), NdArray::scalar(2 + 6));
     pub fn offset_trace_along<'r>(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'r, T> {
         let diagonal = self.offset_diagonal_along(offset, axis1, axis2);
         diagonal.sum_along(-1)
@@ -209,83 +209,83 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
 }
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
-    /// Returns a diagonal view of the tensor along its first 2 axes.
+    /// Returns a diagonal view of the ndarray along its first 2 axes.
     ///
     /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
+    /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([
+    /// let ndarray = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = tensor.diagonal();
+    /// let diagonal = ndarray .diagonal();
     /// assert_eq!(diagonal, NdArray::from([1, 5, 9]));
     pub fn diagonal(&'a self) -> NdArray<'a, T> {
         self.diagonal_along(0, 1)
     }
 
-    /// Returns an offset diagonal view of the tensor along its first 2 axes.
+    /// Returns an offset diagonal view of the ndarray along its first 2 axes.
     ///
     /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
+    /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([
+    /// let ndarray = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = tensor.offset_diagonal(1);
+    /// let diagonal = ndarray .offset_diagonal(1);
     /// assert_eq!(diagonal, NdArray::from([2, 6]));
     pub fn offset_diagonal(&'a self, offset: isize) -> NdArray<'a, T> {
         self.offset_diagonal_along(offset, 0, 1)
     }
 
-    /// Returns a diagonal view of the tensor along the specified axes.
+    /// Returns a diagonal view of the ndarray along the specified axes.
     ///
     /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
+    /// - if the ndarray has fewer than 2 dimensions.
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([
+    /// let ndarray = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = tensor.diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
+    /// let diagonal = ndarray .diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
     /// assert_eq!(diagonal, NdArray::from([1, 5, 9]));
     pub fn diagonal_along(&'a self, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
         self.offset_diagonal_along(0, axis1, axis2)
     }
 
-    /// Returns an offset diagonal view of the tensor along the specified axes.
+    /// Returns an offset diagonal view of the ndarray along the specified axes.
     ///
     /// # Panics
-    /// - if the tensor has fewer than 2 dimensions.
+    /// - if the ndarray has fewer than 2 dimensions.
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([
+    /// let ndarray = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = tensor.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
+    /// let diagonal = ndarray .offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
     /// assert_eq!(diagonal, NdArray::from([4, 8]));
     pub fn offset_diagonal_along(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
         assert!(self.ndims() >= 2, "diagonals require a tensor with at least 2 dimensions");

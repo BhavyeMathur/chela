@@ -8,11 +8,11 @@ use std::collections::VecDeque;
 
 /// Returns a tuple `(output_shape, map_stride)`
 ///
-/// - `output_shape` is the shape of the output tensor after the reduction operation
+/// - `output_shape` is the shape of the output ndarray after the reduction operation
 ///
-/// - `map_stride` maps a flat iteration over the input tensor to iteration over the output tensor.
-///   For example, if the reduce operation is addition, `reduce` iterates through the input tensor
-///   element-by-element and `map_stride` describes iteration over the output tensor
+/// - `map_stride` maps a flat iteration over the input ndarray to iteration over the output ndarray .
+///   For example, if the reduce operation is addition, `reduce` iterates through the input ndarray
+///   element-by-element and `map_stride` describes iteration over the output ndarray
 ///   to add each element to the correct location.
 ///   It should now make sense why map_stride contains zeros on every reduced axis
 fn reduced_shape_and_stride(axes: &[isize], shape: &[usize]) -> (Vec<usize>, Vec<usize>) {
@@ -45,10 +45,10 @@ fn reduced_shape_and_stride(axes: &[isize], shape: &[usize]) -> (Vec<usize>, Vec
 }
 
 impl<T: RawDataType> NdArray<'_, T> {
-    /// Reduces the elements of a contiguous tensor into a scalar using the specified function.
+    /// Reduces the elements of a contiguous ndarray into a scalar using the specified function.
     ///
     /// # Safety
-    /// - Ensure that the underlying tensor is contiguous in memory with a stride of 1.
+    /// - Ensure that the underlying ndarray is contiguous in memory with a stride of 1.
     ///
     /// # Parameters
     /// - `func`: A closure or function that takes two arguments (the next value to be reduced

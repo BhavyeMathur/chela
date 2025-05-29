@@ -17,7 +17,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         unsafe { self.clone_data_non_contiguous() }
     }
 
-    /// Safety: expects tensor buffer is contiguously stored
+    /// Safety: expects ndarray buffer is contiguously stored
     unsafe fn clone_data_contiguous(&self) -> Vec<T> {
         let mut data = Vec::with_capacity(self.len);
 
@@ -26,14 +26,14 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         data
     }
 
-    /// Safety: expects tensor buffer is not contiguously stored
+    /// Safety: expects ndarray buffer is not contiguously stored
     unsafe fn clone_data_non_contiguous(&self) -> Vec<T> {
         let size = self.size();
         let mut data = Vec::with_capacity(size);
 
         let (mut shape, mut stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
 
-        // safe to unwrap because if stride has no elements, this would be a scalar tensor
+        // safe to unwrap because if stride has no elements, this would be a scalar ndarray
         // however, scalar tensors are contiguously stored so this method wouldn't be called
         let &mut mut contiguous_stride = stride.last_mut().unwrap();
 
@@ -45,7 +45,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         }
 
         // if elements along the last axis aren't located contiguously,
-        // they must correspond to a Tensor view with a step-size along the last axis of > 1
+        // they must correspond to an NdArray view with a step-size along the last axis of > 1
         // this is equivalent to 1 contiguous element along the last axis
         else {
             contiguous_stride = 1;

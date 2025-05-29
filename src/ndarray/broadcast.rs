@@ -5,29 +5,29 @@ use crate::util::functions::pad;
 use crate::NdArray;
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
-    /// Broadcasts the tensor to the specified shape.
+    /// Broadcasts the `NdArray` to the specified shape.
     ///
-    /// This method returns a *readonly* view of the tensor with the desired shape.
-    /// Broadcasting is done by left-padding the tensor's shape with ones until they reach the
+    /// This method returns a *readonly* view of the ndarray with the desired shape.
+    /// Broadcasting is done by left-padding the ndarray's shape with ones until they reach the
     /// desired dimension. Then, any axes with length 1 are repeated to match the target shape.
     ///
-    /// For example, suppose the tensor's shape is `[2, 3]` and the broadcast shape is `[3, 2, 3]`.
-    /// Then the tensor's shape becomes `[1, 2, 3]` after padding and `[3, 2, 3]` after repeating
+    /// For example, suppose the ndarray's shape is `[2, 3]` and the broadcast shape is `[3, 2, 3]`.
+    /// Then the ndarray's shape becomes `[1, 2, 3]` after padding and `[3, 2, 3]` after repeating
     /// the first axis.
     ///
     /// # Panics
-    /// This method panics if the target shape is incompatible with the tensor.
+    /// This method panics if the target shape is incompatible with the ndarray .
     ///
-    /// - If `shape.len()` is less than the dimensionality of the tensor.
-    /// - If a dimension in `shape` does not equal the corresponding dimension in the tensor's `shape`
+    /// - If `shape.len()` is less than the dimensionality of the ndarray .
+    /// - If a dimension in `shape` does not equal the corresponding dimension in the ndarray's `shape`
     ///   and cannot be broadcasted (i.e., it is not 1 or does not match).
     ///
     /// # Example
     ///
     /// ```rust
     /// # use chela::*;
-    /// let tensor = NdArray::from([1, 2, 3]);  // shape is [3]
-    /// let broadcasted_tensor = tensor.broadcast_to(&[2, 3]);
+    /// let ndarray = NdArray::from([1, 2, 3]);  // shape is [3]
+    /// let broadcasted_tensor = ndarray .broadcast_to(&[2, 3]);
     ///
     /// assert_eq!(broadcasted_tensor.shape(), &[2, 3]);
     /// ```
@@ -41,7 +41,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     }
 }
 
-/// Adjusts `shape` and `stride` to match an `ndims`-dimensional view of the tensor
+/// Adjusts `shape` and `stride` to match an `ndims`-dimensional view of the ndarray
 ///
 /// This is done by left-padding `shape` with ones and `stride` with zeros until they reach
 /// the desired dimension.
@@ -70,7 +70,7 @@ fn pad_dimensions(shape: &[usize], stride: &[usize], ndims: usize) -> (Vec<usize
 
 /// Checks if broadcasting a shape to another is possible. Panics otherwise.
 ///
-/// Broadcasting is done by left-padding the tensor's shape with ones until they reach the
+/// Broadcasting is done by left-padding the ndarray's shape with ones until they reach the
 /// desired dimension. Then, any axes with length 1 are repeated to match the target shape.
 ///
 /// For example, suppose `shape` is `[2, 3]` and `to` is `[3, 2, 3]`.
@@ -98,7 +98,7 @@ fn broadcast_shape(shape: &[usize], to: &[usize]) -> Vec<usize> {
     to
 }
 
-/// Calculates the broadcasted strides for a tensor to match the specified broadcast shape.
+/// Calculates the broadcasted strides for an ndarray to match the specified broadcast shape.
 ///
 /// This is done be left-padding the original stride with zeros until it matches the desired dimension.
 /// The stride is set to 0 for any axes that have been repeated and kept the same otherwise.
