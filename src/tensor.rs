@@ -13,6 +13,9 @@ pub use iterator::*;
 pub mod reshape;
 pub use reshape::*;
 
+pub(crate) mod flags;
+use flags::TensorFlags;
+
 pub mod reduce;
 
 pub mod constructors;
@@ -26,11 +29,7 @@ pub mod operations;
 pub mod random;
 pub mod astype;
 
-mod flags;
-use flags::TensorFlags;
-
 mod print;
-mod backward;
 
 pub(crate) const MAX_DIMS: usize = 32;
 pub(crate) const MAX_ARGS: usize = 16;
@@ -44,9 +43,9 @@ pub struct Tensor<'a, T: RawDataType> {
 
     shape: Vec<usize>,
     stride: Vec<usize>,
-    flags: TensorFlags,
-    
-    grad_fn: GradientFunction<T>,
+    pub(crate) flags: TensorFlags,
+
+    pub(crate) grad_fn: GradientFunction<T>,
 
     _marker: PhantomData<&'a T>,
 }

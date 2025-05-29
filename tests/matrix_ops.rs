@@ -269,7 +269,7 @@ test_for_common_numeric_dtypes!(
     test_dot_mem_overlap, {
         for n in (1..31).step_by(5) {
             let a = Tensor::arange(0, n).astype::<T>();
-            let b = a.view();
+            let b = (&a).view();
 
             let expected = Tensor::scalar((n - 1) * n * (2 * n - 1)).astype::<T>();
             assert_eq!(a.dot(&b) * Tensor::scalar(6).astype::<T>(), expected);

@@ -7,7 +7,7 @@ fn test_constructor_requires_grad() {
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let a = Tensor::full(5i32, [1, 2, 3]);
+    let a = Tensor::full(5f32, [1, 2, 3]);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
@@ -27,12 +27,12 @@ fn test_constructor_requires_grad() {
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let mut a = Tensor::full(5i32, [1, 2, 3]);
+    let mut a = Tensor::full(5f32, [1, 2, 3]);
     a.set_requires_grad(false);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 
-    let mut a = Tensor::full(5i32, [1, 2, 3]);
+    let mut a = Tensor::full(5f32, [1, 2, 3]);
     a.set_requires_grad(true);
     assert!(a.requires_grad());
     assert!(a.is_leaf());
@@ -62,7 +62,7 @@ fn test_iter_requires_grad() {
 #[test]
 fn test_reshape_requires_grad() {
     for requires_grad in [false, true] {
-        let mut a = Tensor::<u32>::ones([1, 2, 3]);
+        let mut a = Tensor::<f32>::ones([1, 2, 3]);
         a.set_requires_grad(requires_grad);
 
         let b = (&a).reshape([6, 1]);
@@ -81,7 +81,7 @@ fn test_reshape_requires_grad() {
         assert_eq!(b.requires_grad(), requires_grad);
         assert!(!requires_grad || !b.is_leaf());
 
-        let b = a.view();
+        let b = (&a).view();
         assert_eq!(b.requires_grad(), requires_grad);
         assert!(!requires_grad || !b.is_leaf());
 
@@ -159,7 +159,7 @@ test_for_float_dtypes!(
     }
 );
 
-test_for_common_numeric_dtypes!(
+test_for_float_dtypes!(
  test_reduce_requires_grad, {
         for requires_grad in [false, true] {
             let mut a = Tensor::<f32>::zeros([4, 4, 2]).astype::<T>();
@@ -216,7 +216,7 @@ test_for_common_numeric_dtypes!(
     }
 );
 
-test_for_common_numeric_dtypes!(
+test_for_float_dtypes!(
  test_einsum_requires_grad, {
         for requires_grad in [false, true] {
             let mut a = Tensor::<f32>::zeros([4, 4, 2]).astype::<T>();

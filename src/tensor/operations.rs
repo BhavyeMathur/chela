@@ -1,6 +1,6 @@
 use crate::tensor::TensorFlags;
 use crate::broadcast::broadcast_shapes;
-use crate::{IntegerDataType, RawDataType, Tensor, TensorMethods};
+use crate::{IntegerDataType, RawDataType, Tensor};
 use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign};
 
 use paste::paste;
@@ -140,7 +140,6 @@ macro_rules! implement_binary_ops {
 
                 fn $method(self, rhs: T) -> Self::Output { paste! { <T as TensorBinaryOps<T>>::[<$method _scalar>](self, rhs) } }
             }
-
             impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for &Tensor<'_, T> {
                 type Output = Tensor<'static, T>;
 

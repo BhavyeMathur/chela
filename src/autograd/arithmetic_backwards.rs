@@ -166,14 +166,12 @@ impl<T: FloatDataType> DivBackwards<'static, T> {
         rhs.set_requires_grad(false);
 
         let one = Tensor::scalar_requires_grad(T::one(), false);
-        let lhs_grad = &one / &rhs;
-        let rhs_grad = -&lhs * (&lhs_grad * &lhs_grad);
 
         let grad_fn = Self {
             next_functions,
 
-            lhs_grad,
-            rhs_grad,
+            lhs_grad: &one / &rhs,
+            rhs_grad: -&lhs / (&rhs * &rhs),
 
             lhs_shape: lhs.shape().to_vec(),
             rhs_shape: rhs.shape().to_vec(),

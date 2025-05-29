@@ -1,10 +1,43 @@
-use crate::gradient_function::GradientFunction;
+use crate::gradient_function::{AccumulateGrad, GradientFunction};
+use crate::tensor::flags::TensorFlags;
+use crate::{FloatDataType, RawDataType, Tensor, TensorMethods};
 use crate::into_gradient::IntoTensor;
-use crate::{FloatDataType, Tensor, TensorMethods};
+
+impl<T: RawDataType> Tensor<'_, T> {
+    #[inline]
+    pub fn is_leaf(&self) -> bool {
+        if self.requires_grad() {
+            self.flags().contains(TensorFlags::UserCreated)
+        } else {
+            true
+        }
+    }
+
+    #[inline]
+    pub fn requires_grad(&self) -> bool {
+        self.flags().contains(TensorFlags::RequiresGrad)
+    }
+}
 
 impl<'a, T: FloatDataType> Tensor<'a, T> {
+    pub fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self {
+        let required_grad = self.requires_grad();
+
+        if requires_grad {
+            self.flags |= TensorFlags::RequiresGrad;
+        } else {
+            self.flags -= TensorFlags::RequiresGrad;
+        }
+
+        if !required_grad && requires_grad {
+            self.grad_fn = AccumulateGrad::new(self.shape().to_vec());
+        }
+
+        self
+    }
+    
     /// Retrieves the gradient function associated with the current object.
-    /// 
+    ///
     /// This is `NoneBackwards` if the tensor has `requires_grad = false` 
     /// or `AccumulateBackwards` if the tensor is a leaf node.
     pub(crate) fn get_grad_fn(&'a self) -> GradientFunction<T> {

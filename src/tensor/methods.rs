@@ -1,8 +1,7 @@
 use crate::dtype::RawDataType;
-use crate::gradient_function::AccumulateGrad;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::tensor::flags::TensorFlags;
-use crate::{NumericDataType, Tensor};
+use crate::{Tensor};
 
 #[allow(clippy::len_without_is_empty)]
 pub trait TensorMethods: Sized {
@@ -157,21 +156,6 @@ pub trait TensorMethods: Sized {
         let (_, new_stride) = collapse_to_uniform_stride(self.shape(), self.stride());
         Some(new_stride[0])
     }
-
-    #[inline]
-    fn is_leaf(&self) -> bool {
-        if self.requires_grad() {
-            self.flags().contains(TensorFlags::UserCreated)
-        }
-        else {
-            true
-        }
-    }
-
-    #[inline]
-    fn requires_grad(&self) -> bool {
-        self.flags().contains(TensorFlags::RequiresGrad)
-    }
 }
 
 impl<T: RawDataType> TensorMethods for Tensor<'_, T> {
@@ -215,27 +199,5 @@ impl<'a, T: RawDataType> Tensor<'a, T> {
 
     pub(crate) unsafe fn ptr(&self) -> *const T {
         self.ptr.as_ptr()
-    }
-}
-
-impl<T: NumericDataType> Tensor<'_, T> {
-    #[inline]
-    pub fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self {
-        // TODO disallow non-floating types for grad
-        
-        let required_grad = self.requires_grad();
-
-        if requires_grad {
-            self.flags |= TensorFlags::RequiresGrad;
-        }
-        else {
-            self.flags -= TensorFlags::RequiresGrad;
-        }
-
-        if !required_grad && requires_grad {
-            self.grad_fn = AccumulateGrad::new(self.shape.clone());
-        }
-
-        self
     }
 }

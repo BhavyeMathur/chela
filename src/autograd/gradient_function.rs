@@ -8,7 +8,7 @@ pub(crate) trait GradientFuncTrait<T: RawDataType> {
     /// Computes the gradient of this function with respect to its sources using the chain rule.
     ///
     /// # Parameters
-    /// 
+    ///
     /// - `grad`: the gradient of the function being differentiated with respect to `self`.
     fn backward(&mut self, grad: &Tensor<T>);
 
@@ -31,16 +31,23 @@ pub(crate) struct AccumulateGrad<T: NumericDataType> {
 }
 
 impl<T: RawDataType> GradientFuncTrait<T> for NoneBackwards {
+    /// Backwards method for tensor with `requires_grad = false`, does nothing.
     fn backward(&mut self, _: &Tensor<T>) {}
 }
 
 impl<T: NumericDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
+    /// Accumulates the gradient of the tensor being differentiated with respect to a leaf tensor
+    /// into `tensor_grad`
+    ///
+    /// # Parameters
+    ///
+    /// - `grad`: the gradient of the function being differentiated with respect to `self`.
     fn backward(&mut self, grad: &Tensor<T>) {
         self.tensor_grad += grad;
     }
 
     fn gradient<'a>(&'a self) -> Option<Tensor<'a, T>> {
-        Some(self.tensor_grad.view())
+        Some((&self.tensor_grad).view())
     }
 }
 
