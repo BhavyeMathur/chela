@@ -20,11 +20,11 @@ use std::ptr::NonNull;
 ///
 /// # Arguments
 ///
-/// * `shape` - A slice representing the shape of the ndarray .
+/// * `shape` - A slice representing the shape of the ndarray.
 ///
 /// # Returns
 ///
-/// A `Vec<usize>` containing the stride for each dimension of the ndarray , with the same
+/// A `Vec<usize>` containing the stride for each dimension of the ndarray, with the same
 /// length as the input `shape`. The result indicates how many elements need to be skipped
 /// in memory to traverse the ndarray along each dimension.
 ///
@@ -56,9 +56,9 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Constructs a new ndarray from the given data buffer and shape assuming a contiguous layout
     ///
     /// # Parameters
-    /// - `shape`: A vector that defines the dimensions of the ndarray .
+    /// - `shape`: A vector that defines the dimensions of the ndarray.
     /// - `data`: The underlying buffer that holds the ndarray's elements.
-    /// - `requires_grad`: If gradients need to be computed for this ndarray .
+    /// - `requires_grad`: If gradients need to be computed for this ndarray.
     ///
     /// # Safety
     /// - `data` must remain valid and not be used elsewhere after being passed to this function.
@@ -110,10 +110,10 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// # use chela::*;
     ///
     /// let ndarray : NdArray<i32> = NdArray::from([[1, 2], [3, 4]]);
-    /// assert_eq!(ndarray .shape(), &[2, 2]);
+    /// assert_eq!(ndarray.shape(), &[2, 2]);
     ///
     /// let ndarray = NdArray::from(vec![1f32, 2.0, 3.0, 4.0, 5.0]);
-    /// assert_eq!(ndarray .ndims(), 1);
+    /// assert_eq!(ndarray.ndims(), 1);
     /// ```
     pub fn from<const D: usize>(data: impl Flatten<T> + Shape + Nested<{ D }>) -> Self {
         assert!(data.check_homogenous(), "Tensor::from() failed, found inhomogeneous dimensions");
@@ -159,7 +159,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// * `n` - The value to fill the ndarray with (can be any valid data type like float, integer, or bool).
     /// * `shape` - An array or vector representing the shape of the ndarray (e.g. `[2, 3, 5]`).
-    /// * `requires_grad` - If gradients need to be computed for this ndarray .
+    /// * `requires_grad` - If gradients need to be computed for this ndarray.
     ///
     /// # Panics
     /// This function panics if the provided shape is empty.
@@ -207,7 +207,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// # Parameters
     /// - `shape`: An array or vector representing the shape of the ndarray (e.g. `[2, 3, 5]`).
-    /// - `requires_grad` - If gradients need to be computed for this ndarray .
+    /// - `requires_grad` - If gradients need to be computed for this ndarray.
     ///
     /// # Panics
     /// This function panics if the provided shape is empty.
@@ -252,7 +252,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// # Parameters
     /// - `shape`: An array or vector representing the shape of the ndarray (e.g. `[2, 3, 5]`).
-    /// - `requires_grad` - If gradients need to be computed for this ndarray .
+    /// - `requires_grad` - If gradients need to be computed for this ndarray.
     ///
     /// # Panics
     /// This function panics if the provided shape is empty.
@@ -274,7 +274,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Creates a 0-dimensional (shapeless) ndarray containing a single value.
     ///
     /// # Parameters
-    /// - `n`: The value to be stored in the scalar ndarray .
+    /// - `n`: The value to be stored in the scalar ndarray.
     ///
     /// # Example
     /// ```rust
@@ -291,8 +291,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Creates a 0-dimensional (shapeless) ndarray containing a single value.
     ///
     /// # Parameters
-    /// - `n`: The value to be stored in the scalar ndarray .
-    /// - `requires_grad` - If gradients need to be computed for this ndarray .
+    /// - `n`: The value to be stored in the scalar ndarray.
+    /// - `requires_grad` - If gradients need to be computed for this ndarray.
     ///
     /// # Example
     /// ```ignore
@@ -322,7 +322,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::scalar(50f32);
-    /// let value = ndarray .value();
+    /// let value = ndarray.value();
     /// assert_eq!(value, 50.0);
     /// ```
     ///

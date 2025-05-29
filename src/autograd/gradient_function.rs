@@ -1,6 +1,7 @@
 use crate::{NumericDataType, RawDataType, NdArray};
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::traits::Reshape;
 
 pub(crate) type GradientFunction<T> = Rc<RefCell<dyn GradientFuncTrait<T>>>;
 

@@ -142,7 +142,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(ndarray .trace(), NdArray::scalar(1 + 5 + 9));
+    /// assert_eq!(ndarray.trace(), NdArray::scalar(1 + 5 + 9));
     pub fn trace<'r>(&self) -> NdArray<'r, T> {
         self.offset_trace(0)
     }
@@ -161,7 +161,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(ndarray .offset_trace(-1), NdArray::scalar(4 + 8));
+    /// assert_eq!(ndarray.offset_trace(-1), NdArray::scalar(4 + 8));
     pub fn offset_trace<'r>(&self, offset: isize) -> NdArray<'r, T> {
         self.offset_trace_along(offset, 0, 1)
     }
@@ -181,7 +181,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(ndarray .trace_along(0, 1), NdArray::scalar(1 + 5 + 9));
+    /// assert_eq!(ndarray.trace_along(0, 1), NdArray::scalar(1 + 5 + 9));
     pub fn trace_along<'r>(&self, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'r, T> {
         self.offset_trace_along(0, axis1, axis2)
     }
@@ -201,7 +201,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(ndarray .offset_trace_along(1, 0, 1), NdArray::scalar(2 + 6));
+    /// assert_eq!(ndarray.offset_trace_along(1, 0, 1), NdArray::scalar(2 + 6));
     pub fn offset_trace_along<'r>(&self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'r, T> {
         let diagonal = self.offset_diagonal_along(offset, axis1, axis2);
         diagonal.sum_along(-1)
@@ -223,7 +223,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = ndarray .diagonal();
+    /// let diagonal = ndarray.diagonal();
     /// assert_eq!(diagonal, NdArray::from([1, 5, 9]));
     pub fn diagonal(&'a self) -> NdArray<'a, T> {
         self.diagonal_along(0, 1)
@@ -243,7 +243,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = ndarray .offset_diagonal(1);
+    /// let diagonal = ndarray.offset_diagonal(1);
     /// assert_eq!(diagonal, NdArray::from([2, 6]));
     pub fn offset_diagonal(&'a self, offset: isize) -> NdArray<'a, T> {
         self.offset_diagonal_along(offset, 0, 1)
@@ -264,7 +264,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = ndarray .diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
+    /// let diagonal = ndarray.diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
     /// assert_eq!(diagonal, NdArray::from([1, 5, 9]));
     pub fn diagonal_along(&'a self, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
         self.offset_diagonal_along(0, axis1, axis2)
@@ -285,7 +285,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = ndarray .offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
+    /// let diagonal = ndarray.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
     /// assert_eq!(diagonal, NdArray::from([4, 8]));
     pub fn offset_diagonal_along(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
         assert!(self.ndims() >= 2, "diagonals require a tensor with at least 2 dimensions");

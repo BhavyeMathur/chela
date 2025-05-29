@@ -10,7 +10,7 @@ use std::collections::VecDeque;
 ///
 /// - `output_shape` is the shape of the output ndarray after the reduction operation
 ///
-/// - `map_stride` maps a flat iteration over the input ndarray to iteration over the output ndarray .
+/// - `map_stride` maps a flat iteration over the input ndarray to iteration over the output ndarray.
 ///   For example, if the reduce operation is addition, `reduce` iterates through the input ndarray
 ///   element-by-element and `map_stride` describes iteration over the output ndarray
 ///   to add each element to the correct location.

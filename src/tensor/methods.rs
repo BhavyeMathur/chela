@@ -1,10 +1,8 @@
-use crate::dtype::RawDataType;
-use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::ndarray::flags::NdArrayFlags;
-use crate::{NdArray};
+use crate::{NdArrayMethods, Tensor, TensorDataType};
 
 #[allow(clippy::len_without_is_empty)]
-pub trait NdArrayMethods: Sized {
+impl<T: TensorDataType> Tensor<'_, T> {
     /// Returns the dimensions of the ndarray along each axis.
     ///
     /// ```rust
@@ -19,7 +17,10 @@ pub trait NdArrayMethods: Sized {
     /// let c = NdArray::scalar(0);
     /// assert_eq!(c.shape(), &[]);
     /// ```
-    fn shape(&self) -> &[usize];
+    #[inline]
+    fn shape(&self) -> &[usize] {
+        self.array.shape()
+    }
 
     /// Returns the stride of the ndarray.
     ///
@@ -31,7 +32,10 @@ pub trait NdArrayMethods: Sized {
     /// let a = NdArray::from([[3, 4], [5, 6]]);
     /// assert_eq!(a.stride(), &[2, 1]);
     /// ```
-    fn stride(&self) -> &[usize];
+    #[inline]
+    fn stride(&self) -> &[usize] {
+        self.array.stride()
+    }
 
     /// Returns the number of dimensions in the ndarray.
     ///
@@ -47,7 +51,7 @@ pub trait NdArrayMethods: Sized {
     /// assert_eq!(c.ndims(), 0);
     /// ```
     fn ndims(&self) -> usize {
-        self.shape().len()
+        self.array.ndims()
     }
 
     /// Returns the length along the first dimension of the ndarray.
@@ -68,11 +72,7 @@ pub trait NdArrayMethods: Sized {
     /// ```
     #[inline]
     fn len(&self) -> usize {
-        if self.shape().is_empty() {
-            return 0;
-        }
-
-        self.shape()[0]
+        self.array.len()
     }
 
     /// Returns the total number of elements in the ndarray.
@@ -90,11 +90,14 @@ pub trait NdArrayMethods: Sized {
     /// ```
     #[inline]
     fn size(&self) -> usize {
-        self.shape().iter().product()
+        self.array.size()
     }
 
     /// Returns flags containing information about various ndarray metadata.
-    fn flags(&self) -> NdArrayFlags;
+    #[inline]
+    fn flags(&self) -> NdArrayFlags {
+        self.flags
+    }
 
     /// Returns whether this ndarray is stored contiguously in memory.
     ///
@@ -108,7 +111,7 @@ pub trait NdArrayMethods: Sized {
     /// ```
     #[inline]
     fn is_contiguous(&self) -> bool {
-        self.flags().contains(NdArrayFlags::Contiguous)
+        self.array.is_contiguous()
     }
 
     /// Returns whether this ndarray is slice of another ndarray.
@@ -123,13 +126,13 @@ pub trait NdArrayMethods: Sized {
     /// ```
     #[inline]
     fn is_view(&self) -> bool {
-        !self.flags().contains(NdArrayFlags::Owned)
+        self.array.is_view()
     }
 
     /// If the elements of this ndarray are stored in memory with a uniform distance between them,
     /// returns this distance.
     ///
-    /// Contiguous arrays always have a uniform stride of 1.
+    /// Contiguous tensors always have a uniform stride of 1.
     /// NdArray views may sometimes be uniformly strided.
     ///
     /// ```rust
@@ -145,59 +148,6 @@ pub trait NdArrayMethods: Sized {
     /// ```
     #[inline]
     fn has_uniform_stride(&self) -> Option<usize> {
-        if !self.flags().contains(NdArrayFlags::UniformStride) {
-            return None;
-        }
-
-        if self.ndims() == 0 {
-            return Some(0);
-        }
-
-        let (_, new_stride) = collapse_to_uniform_stride(self.shape(), self.stride());
-        Some(new_stride[0])
-    }
-}
-
-impl<T: RawDataType> NdArrayMethods for NdArray<'_, T> {
-    #[inline]
-    fn shape(&self) -> &[usize] {
-        &self.shape
-    }
-
-    #[inline]
-    fn stride(&self) -> &[usize] {
-        &self.stride
-    }
-
-    #[inline]
-    fn flags(&self) -> NdArrayFlags {
-        self.flags
-    }
-}
-
-impl<T: RawDataType> NdArrayMethods for &NdArray<'_, T> {
-    #[inline]
-    fn shape(&self) -> &[usize] {
-        &self.shape
-    }
-
-    #[inline]
-    fn stride(&self) -> &[usize] {
-        &self.stride
-    }
-
-    #[inline]
-    fn flags(&self) -> NdArrayFlags {
-        self.flags
-    }
-}
-
-impl<'a, T: RawDataType> NdArray<'a, T> {
-    pub(crate) unsafe fn mut_ptr(&self) -> *mut T {
-        self.ptr.as_ptr()
-    }
-
-    pub(crate) unsafe fn ptr(&self) -> *const T {
-        self.ptr.as_ptr()
+        self.array.has_uniform_stride()
     }
 }

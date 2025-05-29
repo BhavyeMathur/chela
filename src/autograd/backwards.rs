@@ -3,7 +3,7 @@ use crate::{FloatDataType, NdArray, NdArrayMethods};
 use std::cell::RefCell;
 use std::rc::Rc;
 use crate::broadcast::get_broadcasted_axes;
-use crate::reshape::Reshape;
+use crate::traits::Reshape;
 use crate::util::to_vec::ToVec;
 
 fn reduce_broadcasted_gradient<'a, T: FloatDataType>(grad: &'a NdArray<'a, T>,

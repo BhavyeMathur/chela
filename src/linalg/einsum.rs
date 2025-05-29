@@ -8,7 +8,7 @@ use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::ndarray::{MAX_ARGS, MAX_DIMS};
 use crate::util::functions::{permute_array, transpose_2d_array};
 use crate::{NdArray, NdArrayMethods};
-use crate::reshape::ReshapeImpl;
+use crate::traits::{Reshape, ReshapeImpl};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 

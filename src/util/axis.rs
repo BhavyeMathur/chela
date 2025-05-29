@@ -12,7 +12,7 @@ pub trait AxisType {
     ///
     /// # Arguments
     ///
-    /// * `ndims` - The total number of dimensions in the ndarray .
+    /// * `ndims` - The total number of dimensions in the ndarray.
     ///
     /// # Panics
     /// * If the provided axis is less than `-ndims` (lower bound).

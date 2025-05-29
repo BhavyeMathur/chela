@@ -1,8 +1,8 @@
 use crate::dtype::RawDataType;
-use crate::reshape::{ReshapeImpl};
 use crate::ndarray::flags::NdArrayFlags;
 use crate::util::functions::pad;
 use crate::NdArray;
+use crate::traits::ReshapeImpl;
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Broadcasts the `NdArray` to the specified shape.
@@ -16,9 +16,9 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// the first axis.
     ///
     /// # Panics
-    /// This method panics if the target shape is incompatible with the ndarray .
+    /// This method panics if the target shape is incompatible with the ndarray.
     ///
-    /// - If `shape.len()` is less than the dimensionality of the ndarray .
+    /// - If `shape.len()` is less than the dimensionality of the ndarray.
     /// - If a dimension in `shape` does not equal the corresponding dimension in the ndarray's `shape`
     ///   and cannot be broadcasted (i.e., it is not 1 or does not match).
     ///
@@ -27,7 +27,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```rust
     /// # use chela::*;
     /// let ndarray = NdArray::from([1, 2, 3]);  // shape is [3]
-    /// let broadcasted_array = ndarray .broadcast_to(&[2, 3]);
+    /// let broadcasted_array = ndarray.broadcast_to(&[2, 3]);
     ///
     /// assert_eq!(broadcasted_array.shape(), &[2, 3]);
     /// ```

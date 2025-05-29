@@ -8,7 +8,6 @@ pub mod iterator;
 pub use iterator::*;
 
 pub mod reshape;
-pub use reshape::*;
 
 pub(crate) mod flags;
 use flags::NdArrayFlags;
