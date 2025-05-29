@@ -1,6 +1,7 @@
 mod flags;
 
 pub mod methods;
+mod ops;
 
 use crate::gradient_function::GradientFunction;
 use crate::ndarray::flags::NdArrayFlags;

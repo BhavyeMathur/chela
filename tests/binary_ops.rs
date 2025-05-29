@@ -122,9 +122,14 @@ fn test_divide() {
     let tensor2 = NdArray::from([2.0, 4.0]);
 
     let correct = NdArray::from([[0.5, 0.25], [1.0, 0.5], [3.0, 2.0]]);
-    let output = tensor1 / tensor2;
+    assert_eq!(&tensor1 / &tensor2, correct);
+    assert_eq!(&tensor1 / tensor2, correct);
 
-    assert_eq!(output, correct);
+    let tensor2 = NdArray::from([2.0, 4.0]);
+    assert_eq!(tensor1 / &tensor2, correct);
+
+    let tensor1 = NdArray::from([[1.0, 1.0], [2.0, 2.0], [6.0, 8.0]]);
+    assert_eq!(tensor1 / tensor2, correct);
 }
 
 #[test]
