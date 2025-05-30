@@ -6,7 +6,7 @@ impl<T: RawDataType, const D: usize> Index<[usize; D]> for NdArray<'_, T> {
     type Output = T;
 
     fn index(&self, index: [usize; D]) -> &Self::Output {
-        assert_eq!(D, self.ndims(), "[] index must equal number of tensor dimensions!");
+        assert_eq!(D, self.ndims(), "[] index must equal number of array dimensions!");
 
         let i: usize = index.iter().zip(self.stride.iter())
             .map(|(idx, stride)| idx * stride)
@@ -19,7 +19,7 @@ impl<T: RawDataType, const D: usize> Index<[usize; D]> for NdArray<'_, T> {
 
 impl<T: RawDataType, const D: usize> IndexMut<[usize; D]> for NdArray<'_, T> {
     fn index_mut(&mut self, index: [usize; D]) -> &mut Self::Output {
-        assert_eq!(D, self.ndims(), "[] index must equal number of tensor dimensions!");
+        assert!(D <= self.ndims(), "[] index must be equal number of array dimensions!");
 
         let i: usize = index.iter().zip(self.stride.iter())
                             .map(|(idx, stride)| idx * stride)

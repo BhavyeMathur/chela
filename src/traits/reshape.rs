@@ -131,6 +131,52 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
 
         unsafe { self.reshaped_view(shape, stride) }
     }
+
+    /// Transposes the array along the first 2 dimensions.
+    ///
+    /// # Panics
+    /// - If the array is 1-dimensional or a scalar.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    ///
+    /// let array = NdArray::from([[2, 3, 4], [10, 20, 30]]);
+    ///
+    /// let transposed = array.T();
+    /// assert_eq!(transposed, NdArray::from([[2, 10], [3, 20], [4, 30]]));
+    /// ```
+    #[allow(non_snake_case)]
+    fn T(self) -> NdArray<'a, T> {
+        self.transpose(0, 1)
+    }
+
+    /// Returns a transposed version of this `NdArray`, swapping the specified axes.
+    ///
+    /// # Panics
+    /// - If `axis1` or `axis2` are out of bounds
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use chela::*;
+    ///
+    /// let array = NdArray::from([[2, 3, 4], [10, 20, 30]]);
+    ///
+    /// let transposed = array.transpose(0, 1);
+    /// assert_eq!(transposed, NdArray::from([[2, 10], [3, 20], [4, 30]]));
+    /// ```
+    fn transpose(self, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
+        let axis1 = axis1.as_absolute(self.ndims());
+        let axis2 = axis2.as_absolute(self.ndims());
+
+        let mut shape = self.shape().to_vec();
+        let mut stride = self.stride().to_vec();
+
+        shape.swap(axis1, axis2);
+        stride.swap(axis1, axis2);
+
+        unsafe { self.reshaped_view(shape, stride) }
+    }
 }
 
 impl<'a, T: RawDataType> Reshape<'a, T> for &'a NdArray<'a, T> {}
