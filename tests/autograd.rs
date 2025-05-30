@@ -16,8 +16,8 @@ fn test_autograd1() {
     // dd/da = b^2
     // dd/db = 2ab
 
-    assert_eq!(a.gradient(), Some(&b * &b));
-    assert_eq!(b.gradient(), Some(&a * &b * 2.0));
+    assert_eq!(a.gradient().unwrap(), &b * &b);
+    assert_eq!(b.gradient().unwrap(), &a * &b * 2.0);
 }
 
 #[test]
