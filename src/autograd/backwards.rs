@@ -1,5 +1,5 @@
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{FloatDataType, NdArray, StridedMemory};
+use crate::{FloatDataType, Tensor, StridedMemory, NdArray};
 use std::cell::RefCell;
 use std::rc::Rc;
 use crate::broadcast::get_broadcasted_axes;
@@ -126,7 +126,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for ReshapeBackwards<T> {
 }
 
 impl<T: FloatDataType> AddBackwards<T> {
-    pub(crate) fn new(lhs: &NdArray<T>, rhs: &NdArray<T>) -> GradientFunction<T> {
+    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
         let grad_fn = Self {
             next_functions: [lhs.get_grad_fn(), rhs.get_grad_fn()],
 
@@ -139,7 +139,7 @@ impl<T: FloatDataType> AddBackwards<T> {
 }
 
 impl<T: FloatDataType> SubBackwards<T> {
-    pub(crate) fn new(lhs: &NdArray<T>, rhs: &NdArray<T>) -> GradientFunction<T> {
+    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
         let grad_fn = Self {
             next_functions: [lhs.get_grad_fn(), rhs.get_grad_fn()],
 
@@ -152,7 +152,7 @@ impl<T: FloatDataType> SubBackwards<T> {
 }
 
 impl<T: FloatDataType> MulBackwards<'static, T> {
-    pub(crate) fn new(lhs: &NdArray<T>, rhs: &NdArray<T>) -> GradientFunction<T> {
+    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
         let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
 
         let mut lhs = lhs.clone();
@@ -171,7 +171,7 @@ impl<T: FloatDataType> MulBackwards<'static, T> {
 }
 
 impl<T: FloatDataType> DivBackwards<'static, T> {
-    pub(crate) fn new(lhs: &NdArray<T>, rhs: &NdArray<T>) -> GradientFunction<T> {
+    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
         let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
 
         let mut lhs = lhs.view();
@@ -179,7 +179,7 @@ impl<T: FloatDataType> DivBackwards<'static, T> {
         lhs.set_requires_grad(false);
         rhs.set_requires_grad(false);
 
-        let one = NdArray::scalar_requires_grad(T::one(), false);
+        let one = NdArray::scalar(T::one());
 
         let grad_fn = Self {
             next_functions,
@@ -196,7 +196,7 @@ impl<T: FloatDataType> DivBackwards<'static, T> {
 }
 
 impl<T: FloatDataType> NegBackwards<T> {
-    pub(crate) fn new(rhs: &NdArray<T>) -> GradientFunction<T> {
+    pub(crate) fn new(rhs: &Tensor<T>) -> GradientFunction<T> {
         let grad_fn = Self {
             next_function: rhs.get_grad_fn(),
             shape: rhs.shape().to_vec(),
@@ -207,7 +207,7 @@ impl<T: FloatDataType> NegBackwards<T> {
 }
 
 impl<T: FloatDataType> ReshapeBackwards<T> {
-    pub(crate) fn new(tensor: &NdArray<T>, new_shape: impl ToVec<usize>) -> GradientFunction<T> {
+    pub(crate) fn new(tensor: &Tensor<T>, new_shape: impl ToVec<usize>) -> GradientFunction<T> {
         let grad_fn = Self {
             next_function: tensor.get_grad_fn(),
             shape: new_shape.to_vec(),
