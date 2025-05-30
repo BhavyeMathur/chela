@@ -199,6 +199,10 @@ fn test_iadd() {
     let correct = NdArray::from([[5, 10], [7, 12], [9, 14]]);
     tensor1 += tensor2;
     assert_eq!(tensor1, correct);
+
+    let correct = NdArray::from([[10, 15], [12, 17], [14, 19]]);
+    tensor1 += 5;
+    assert_eq!(tensor1, correct);
 }
 
 #[test]
@@ -212,6 +216,10 @@ fn test_isub() {
 
     let correct = NdArray::from([[-3, -6], [-1, -4], [1, -2]]);
     tensor1 -= tensor2;
+    assert_eq!(tensor1, correct);
+
+    let correct = NdArray::from([[-4, -7], [-2, -5], [0, -3]]);
+    tensor1 -= 1;
     assert_eq!(tensor1, correct);
 }
 

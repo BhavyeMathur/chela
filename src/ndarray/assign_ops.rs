@@ -5,25 +5,37 @@ use std::ops::{AddAssign, BitAndAssign, BitOrAssign, DivAssign, MulAssign, RemAs
 
 macro_rules! define_binary_iop {
     ( $trait_: ident, $operator: tt, $method: ident ) => {
-    impl<T: RawDataType + $trait_> $trait_<NdArray<'_, T>> for NdArray<'_, T> {
-        fn $method(&mut self, rhs: NdArray<'_, T>) {
-            *self $operator &rhs
-        }
-    }
-
-    impl<T: RawDataType + $trait_> $trait_<&NdArray<'_, T>> for NdArray<'_, T> {
-        fn $method(&mut self, rhs: &NdArray<'_, T>) {
-            if !self.flags.contains(NdArrayFlags::Writeable) {
-                panic!("tensor is readonly.");
-            }
-
-            let rhs = rhs.broadcast_to(&self.shape);
-            
-            for (lhs, rhs) in self.flatiter_ptr().zip(rhs.flatiter()) {
-                unsafe { *lhs $operator rhs; }
+        impl<T: RawDataType + $trait_> $trait_<NdArray<'_, T>> for NdArray<'_, T> {
+            fn $method(&mut self, rhs: NdArray<'_, T>) {
+                *self $operator &rhs
             }
         }
-    }
+    
+        impl<T: RawDataType + $trait_> $trait_<&NdArray<'_, T>> for NdArray<'_, T> {
+            fn $method(&mut self, rhs: &NdArray<'_, T>) {
+                if !self.flags.contains(NdArrayFlags::Writeable) {
+                    panic!("tensor is readonly.");
+                }
+    
+                let rhs = rhs.broadcast_to(&self.shape);
+                
+                for (lhs, rhs) in self.flatiter_ptr().zip(rhs.flatiter()) {
+                    unsafe { *lhs $operator rhs; }
+                }
+            }
+        }
+        
+        impl<T: RawDataType + $trait_> $trait_<T> for NdArray<'_, T> {
+            fn $method(&mut self, rhs: T) {
+                if !self.flags.contains(NdArrayFlags::Writeable) {
+                    panic!("tensor is readonly.");
+                }
+                
+                for lhs in self.flatiter_ptr() {
+                    unsafe { *lhs $operator rhs; }
+                }
+            }
+        }
     };
 }
 

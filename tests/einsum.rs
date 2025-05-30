@@ -655,9 +655,11 @@ test_for_all_numeric_dtypes!(
 
         let result = einsum([&a], (["ij"], "ji"));
         assert_almost_eq!(result, expected);
+        assert_almost_eq!(result, (&a).T());
 
         let result = einsum_view(&a, ("ij", "ji")).unwrap();
         assert_almost_eq!(result, expected);
+        assert_almost_eq!(result, (&a).T());
     }
 );
 
