@@ -1,4 +1,4 @@
-use crate::gradient_function::{GradientFunction, NoneBackwards};
+use crate::gradient_function::{GradientFunction};
 use crate::ndarray::flags::NdArrayFlags;
 use crate::ndarray::NdArray;
 use crate::util::flatten::Flatten;
@@ -6,7 +6,7 @@ use crate::util::nested::Nested;
 use crate::util::shape::Shape;
 use crate::util::to_vec::ToVec;
 use crate::{Tensor, TensorDataType};
-
+use crate::none_backwards::NoneBackwards;
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// Constructs a new tensor from the given array, gradient function, and metadata

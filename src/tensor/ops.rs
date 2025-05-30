@@ -1,9 +1,13 @@
-use crate::gradient_function::NoneBackwards;
 use crate::{Tensor, TensorDataType};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
+use crate::add_backwards::*;
+use crate::div_backwards::*;
+use crate::mul_backwards::*;
+use crate::neg_backwards::*;
+use crate::none_backwards::*;
+use crate::sub_backwards::*;
 use paste::paste;
-use crate::ops_backwards::{AddBackwards, AddScalarBackwards, DivBackwards, DivScalarBackwards, MulBackwards, MulScalarBackwards, NegBackwards, SubBackwards};
 
 impl<T: TensorDataType> Neg for Tensor<'_, T> {
     type Output = Tensor<'static, T>;

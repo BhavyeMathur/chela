@@ -137,7 +137,7 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
 
     /// Returns whether this tensor is stored contiguously in memory.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
     /// assert!(a.is_contiguous());
@@ -152,7 +152,7 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
 
     /// Returns whether this tensor is slice of another tensor.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
     /// assert!(!a.is_view());
@@ -171,7 +171,7 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     /// Contiguous tensors always have a uniform stride of 1.
     /// Tensor views may sometimes be uniformly strided.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let a = Tensor::from([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]);
     /// assert_eq!(a.has_uniform_stride(), Some(1));

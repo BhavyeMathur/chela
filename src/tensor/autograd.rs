@@ -1,6 +1,7 @@
-use crate::gradient_function::{AccumulateGrad, GradientFunction};
+use crate::gradient_function::{GradientFunction};
 use crate::ndarray::flags::NdArrayFlags;
 use crate::{Tensor, StridedMemory, TensorDataType, NdArray};
+use crate::accumulate_grad::AccumulateGrad;
 use crate::into::IntoNdArray;
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
