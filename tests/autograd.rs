@@ -144,6 +144,30 @@ fn test_autograd5() {
 }
 
 #[test]
+fn test_autograd6() {
+    let mut a = Tensor::from([1.0f32, 2.0, 3.0]);  // [3]
+    let mut b = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);  // [3, 3]
+    let mut c = Tensor::from([[2.0], [4.0], [6.0]]);  // [3, 1]
+
+    a.set_requires_grad(true);
+    b.set_requires_grad(true);
+    c.set_requires_grad(true);
+
+    let x = (&a / 2.0) + &c;
+    let y = (&c - &b - 2.0) / (&c + 6.0);
+    let z = -&x + &y - (&x * 5.0) + (&x * &y) / &a;
+    z.backward();
+
+    assert_almost_eq!(a.gradient().unwrap(), NdArray::from([-13.2, -9.7, -9.0556]), 1e-4);
+
+    assert_almost_eq!(b.gradient().unwrap(), NdArray::from([[-0.4375, -0.3125, -0.2708],
+                                                           [ -0.55, -0.35, -0.2833],
+                                                           [ -0.6250, -0.375, -0.2917]]), 1e-4);
+
+    assert_almost_eq!(c.gradient().unwrap(), NdArray::from([[-17.0807], [-16.6142], [-16.4740]]), 1e-4);
+}
+
+#[test]
 fn test_autograd_mul_neg() {
     let mut a = Tensor::scalar(2.0f32);
     let mut b = Tensor::scalar(3.0);
