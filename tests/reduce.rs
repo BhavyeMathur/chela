@@ -384,7 +384,7 @@ fn test_reduce_min_slice_f64() {
     let output = slice.min_along([0, 1]);
     assert_eq!(output, correct);
 
-    let correct = NdArray::scalar(-67f32);
+    let correct = NdArray::scalar(-67.0);
     let output = slice.min();
     assert_eq!(output, correct);
 
