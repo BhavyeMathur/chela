@@ -1,5 +1,6 @@
 use crate::autograd::util::reduce_gradient;
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
+use crate::identity_backwards::IdentityBackwards;
 use crate::{FloatDataType, NdArray, StridedMemory, Tensor};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -11,11 +12,7 @@ pub(crate) struct AddBackwards<T: FloatDataType> {
     rhs_shape: Vec<usize>
 }
 
-pub(crate) struct AddScalarBackwards<T: FloatDataType> {
-    next_function: GradientFunction<T>,
-
-    shape: Vec<usize>
-}
+pub(crate) struct AddScalarBackwards {}
 
 impl<T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
@@ -24,12 +21,6 @@ impl<T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
 
         self.next_functions[0].borrow_mut().backward(&lhs_grad);
         self.next_functions[1].borrow_mut().backward(&rhs_grad);
-    }
-}
-
-impl<T: FloatDataType> GradientFuncTrait<T> for AddScalarBackwards<T> {
-    fn backward(&mut self, grad: &NdArray<T>) {
-        self.next_function.borrow_mut().backward(&grad);
     }
 }
 
@@ -46,13 +37,8 @@ impl<T: FloatDataType> AddBackwards<T> {
     }
 }
 
-impl<T: FloatDataType> AddScalarBackwards<T> {
-    pub(crate) fn new(lhs: &Tensor<T>, _: T) -> GradientFunction<T> {
-        let grad_fn = Self {
-            next_function: lhs.get_grad_fn(),
-            shape: lhs.shape().to_vec(),
-        };
-
-        Rc::new(RefCell::new(grad_fn))
+impl AddScalarBackwards {
+    pub(crate) fn new<T: FloatDataType>(lhs: &Tensor<T>, _: T) -> GradientFunction<T> {
+        IdentityBackwards::new(lhs)
     }
 }
