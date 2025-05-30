@@ -3,7 +3,7 @@ use crate::{Tensor, TensorDataType};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use paste::paste;
-use crate::backwards::{AddBackwards, DivBackwards, MulBackwards, NegBackwards, SubBackwards};
+use crate::ops_backwards::{AddBackwards, AddScalarBackwards, DivBackwards, DivScalarBackwards, MulBackwards, MulScalarBackwards, NegBackwards, SubBackwards};
 
 impl<T: TensorDataType> Neg for Tensor<'_, T> {
     type Output = Tensor<'static, T>;
@@ -23,7 +23,7 @@ impl<T: TensorDataType> Neg for &Tensor<'_, T> {
 }
 
 macro_rules! implement_binary_ops {
-    ($($trait_: ident, $operator:tt, $method: ident, $backwards:ident;)* ) => { $(
+    ($($trait_: ident, $operator:tt, $method: ident, $backwards:ident, $backwards_scalar:ident;)* ) => { $(
         impl<T: TensorDataType> $trait_<Tensor<'_, T>> for Tensor<'_, T> {
             type Output = Tensor<'static, T>;
 
@@ -64,7 +64,7 @@ macro_rules! implement_binary_ops {
 
             fn $method(self, rhs: T) -> Self::Output {
                 let requires_grad = self.requires_grad();
-                let grad_fn = if requires_grad { NoneBackwards::new() } else { NoneBackwards::new() };
+                let grad_fn = if requires_grad { $backwards_scalar::new(self, rhs) } else { NoneBackwards::new() };
 
                 unsafe { Tensor::from_raw_parts(&self.array $operator rhs, requires_grad, grad_fn) }
             }
@@ -73,9 +73,9 @@ macro_rules! implement_binary_ops {
 }
 
 implement_binary_ops!(
-    Add, +, add, AddBackwards;
-    Sub, -, sub, SubBackwards;
-    Mul, *, mul, MulBackwards;
-    Div, /, div, DivBackwards;
+    Add, +, add, AddBackwards, AddScalarBackwards;
+    Sub, -, sub, SubBackwards, AddScalarBackwards;
+    Mul, *, mul, MulBackwards, MulScalarBackwards;
+    Div, /, div, DivBackwards, DivScalarBackwards;
     // Rem, %, rem, RemBackwards;
 );
