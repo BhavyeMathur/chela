@@ -33,19 +33,14 @@ pub(crate) struct SubBackwards<T: FloatDataType> {
 pub(crate) struct MulBackwards<'a, T: FloatDataType> {
     next_functions: [GradientFunction<T>; 2],
 
-    lhs: NdArray<'a, T>,
-    rhs: NdArray<'a, T>
-}
-
-pub(crate) struct DivBackwards<'a, T: FloatDataType> {
-    next_functions: [GradientFunction<T>; 2],
-
     lhs_grad: NdArray<'a, T>,
     rhs_grad: NdArray<'a, T>,
 
     lhs_shape: Vec<usize>,
     rhs_shape: Vec<usize>
 }
+
+pub(crate) struct DivBackwards {}
 
 pub(crate) struct AddScalarBackwards<T: FloatDataType> {
     next_function: GradientFunction<T>,
@@ -100,11 +95,11 @@ impl<T: FloatDataType> GradientFuncTrait<T> for SubBackwards<T> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for MulBackwards<'_, T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = &self.rhs * grad;
-        let rhs_grad = &self.lhs * grad;
+        let lhs_grad = &self.lhs_grad * grad;
+        let rhs_grad = &self.rhs_grad * grad;
 
-        let lhs_grad = reduce_broadcasted_gradient(&lhs_grad, self.lhs.shape());
-        let rhs_grad = reduce_broadcasted_gradient(&rhs_grad, self.rhs.shape());
+        let lhs_grad = reduce_broadcasted_gradient(&lhs_grad, &self.lhs_shape);
+        let rhs_grad = reduce_broadcasted_gradient(&rhs_grad, &self.rhs_shape);
 
         self.next_functions[0].borrow_mut().backward(&lhs_grad);
         self.next_functions[1].borrow_mut().backward(&rhs_grad);
@@ -117,19 +112,6 @@ impl<T: FloatDataType> GradientFuncTrait<T> for MulScalarBackwards<T> {
         let grad = reduce_broadcasted_gradient(&grad, &self.shape);
 
         self.next_function.borrow_mut().backward(&grad);
-    }
-}
-
-impl<T: FloatDataType> GradientFuncTrait<T> for DivBackwards<'_, T> {
-    fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = &self.lhs_grad * grad;
-        let rhs_grad = &self.rhs_grad * grad;
-
-        let lhs_grad = reduce_broadcasted_gradient(&lhs_grad, &self.lhs_shape);
-        let rhs_grad = reduce_broadcasted_gradient(&rhs_grad, &self.rhs_shape);
-
-        self.next_functions[0].borrow_mut().backward(&lhs_grad);
-        self.next_functions[1].borrow_mut().backward(&rhs_grad);
     }
 }
 
@@ -185,8 +167,11 @@ impl<T: FloatDataType> MulBackwards<'static, T> {
 
         let grad_fn = Self {
             next_functions,
-            lhs: lhs.detach(),
-            rhs: rhs.detach(),
+            lhs_grad: rhs.detach(),
+            rhs_grad: lhs.detach(),
+
+            lhs_shape: lhs.shape().to_vec(),
+            rhs_shape: rhs.shape().to_vec(),
         };
 
         Rc::new(RefCell::new(grad_fn))
@@ -205,19 +190,17 @@ impl<T: FloatDataType> MulScalarBackwards<T> {
     }
 }
 
-impl<T: FloatDataType> DivBackwards<'static, T> {
-    pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
+impl DivBackwards {
+    pub(crate) fn new<T: FloatDataType>(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
         let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
 
         let lhs = lhs.detach();
         let rhs = rhs.detach();
 
-        let one = NdArray::scalar(T::one());
-
-        let grad_fn = Self {
+        let grad_fn = MulBackwards {
             next_functions,
 
-            lhs_grad: &one / &rhs,
+            lhs_grad: NdArray::scalar(T::one()) / &rhs,
             rhs_grad: -&lhs / (&rhs * &rhs),
 
             lhs_shape: lhs.shape().to_vec(),
