@@ -1,7 +1,9 @@
 mod flags;
 
 pub mod methods;
-mod ops;
+pub mod ops;
+pub mod constructors;
+pub mod equals;
 
 use crate::gradient_function::GradientFunction;
 use crate::ndarray::flags::NdArrayFlags;
