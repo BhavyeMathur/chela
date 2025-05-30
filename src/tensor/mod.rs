@@ -1,5 +1,3 @@
-mod flags;
-
 pub mod methods;
 pub mod ops;
 pub mod constructors;
