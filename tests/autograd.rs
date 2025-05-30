@@ -134,13 +134,13 @@ fn test_autograd5() {
     let z = -&x + &y - (&x * &x) + (&x * &y) / &a;
     z.backward();
 
-    assert_almost_eq!(a.gradient().unwrap(), Tensor::from([-5.6277f32, -3.5112, -23.9599]), 1e-4);
+    assert_almost_eq!(a.gradient().unwrap(), NdArray::from([-5.6277f32, -3.5112, -23.9599]), 1e-4);
 
-    assert_almost_eq!(b.gradient().unwrap(), Tensor::from([[ 0.3333, 0.8750, 32.2667],
+    assert_almost_eq!(b.gradient().unwrap(), NdArray::from([[ 0.3333, 0.8750, 32.2667],
                                                            [ 5.2f32, 1.7613, 8.5238],
                                                            [ 0.2751, 2.6019, 6.9520]]), 1e-4);
 
-    assert_almost_eq!(c.gradient().unwrap(), Tensor::from([[-17.84f32], [-24.5101], [-40.1665]]), 1e-4);
+    assert_almost_eq!(c.gradient().unwrap(), NdArray::from([[-17.84f32], [-24.5101], [-40.1665]]), 1e-4);
 }
 
 #[test]
@@ -158,8 +158,8 @@ fn test_autograd_mul_neg() {
     // dc/da = -b
     // dc/db = -a
 
-    assert_eq!(a.gradient(), Some(Tensor::scalar(-3.0)));
-    assert_eq!(b.gradient(), Some(Tensor::scalar(-2.0)));
+    assert_eq!(a.gradient(), Some(NdArray::scalar(-3.0)));
+    assert_eq!(b.gradient(), Some(NdArray::scalar(-2.0)));
 }
 
 
@@ -178,8 +178,8 @@ fn test_autograd_nested_neg_add() {
     // dc/da = -1
     // dc/db = 1
 
-    assert_eq!(a.gradient(), Some(Tensor::scalar(-1.0)));
-    assert_eq!(b.gradient(), Some(Tensor::scalar(1.0)));
+    assert_eq!(a.gradient(), Some(NdArray::scalar(-1.0)));
+    assert_eq!(b.gradient(), Some(NdArray::scalar(1.0)));
 }
 
 #[test]
@@ -202,7 +202,7 @@ fn test_autograd_mul_div() {
 
     assert_eq!(a.gradient().unwrap(), &b / &c);
     assert_eq!(b.gradient().unwrap(), &a / &c);
-    assert_almost_eq!(c.gradient().unwrap(), -&a * &b / (&c * &c));
+    assert_almost_eq!(c.gradient().unwrap(), (-&a * &b / (&c * &c)).to_ndarray());
 }
 
 #[test]
@@ -226,10 +226,17 @@ fn test_autograd_compound_expression() {
     // de/dc = (a + b) / b
     // de/dd = -1 / b
 
-    assert_almost_eq!(a.gradient().unwrap(), &c / &b);
-    assert_almost_eq!(b.gradient().unwrap(), (&d - &a * &c) / (&b * &b));
-    assert_almost_eq!(c.gradient().unwrap(), (&a + &b) / &b);
-    assert_almost_eq!(d.gradient().unwrap(), -Tensor::scalar(1.0) / &b);
+    let expected =  (&c / &b).to_ndarray();
+    assert_almost_eq!(a.gradient().unwrap(), expected);
+
+    let expected = ((&d - &a * &c) / (&b * &b)).to_ndarray();
+    assert_almost_eq!(b.gradient().unwrap(), expected);
+
+    let expected =  ((&d - &a * &c) / (&b * &b)).to_ndarray();
+    assert_almost_eq!(c.gradient().unwrap(), expected);
+
+    let expected =  -NdArray::scalar(1.0) / b.to_ndarray();
+    assert_almost_eq!(d.gradient().unwrap(), expected);
 }
 
 #[test]
@@ -259,9 +266,9 @@ fn test_autograd_deep_chain_mul_add() {
     // dout/dd = ab + c
     // dout/de = 1
 
-    assert_eq!(a.gradient(), Some(Tensor::scalar(2.0 * 4.0))); // bd = 8
-    assert_eq!(b.gradient(), Some(Tensor::scalar(1.0 * 4.0))); // ad = 4
-    assert_eq!(c.gradient(), Some(Tensor::scalar(4.0)));       // d
-    assert_eq!(d.gradient(), Some(Tensor::scalar(1.0 * 2.0 + 3.0))); // ab + c = 5
-    assert_eq!(e.gradient(), Some(Tensor::scalar(1.0)));       // 1
+    assert_eq!(a.gradient(), Some(NdArray::scalar(2.0 * 4.0))); // bd = 8
+    assert_eq!(b.gradient(), Some(NdArray::scalar(1.0 * 4.0))); // ad = 4
+    assert_eq!(c.gradient(), Some(NdArray::scalar(4.0)));       // d
+    assert_eq!(d.gradient(), Some(NdArray::scalar(1.0 * 2.0 + 3.0))); // ab + c = 5
+    assert_eq!(e.gradient(), Some(NdArray::scalar(1.0)));       // 1
 }

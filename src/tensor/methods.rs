@@ -29,6 +29,10 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     pub fn ndarray(&self) -> &NdArray<'a, T> {
         &self.array
     }
+
+    pub fn to_ndarray(self) -> NdArray<'a, T> {
+        self.array
+    }
 }
 
 #[allow(clippy::len_without_is_empty)]

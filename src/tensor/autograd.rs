@@ -14,7 +14,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     /// 
-    /// let mut tensor = Tensor::from([1, 2, 3]);
+    /// let mut tensor = Tensor::from([1.0, 2.0, 3.0]);
     /// tensor.set_requires_grad(true);
     /// assert!(tensor.is_leaf());
     /// 
@@ -41,7 +41,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let mut tensor = Tensor::from([1, 2, 3]);
+    /// let mut tensor = Tensor::from([1.0, 2.0, 3.0]);
     /// tensor.set_requires_grad(true);
     /// 
     /// let tensor2 = -tensor;
@@ -135,7 +135,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let mut a = Tensor::full(2f32, [3]);  // [2, 2, 2]
+    /// let mut a = Tensor::full(2.0, [3]);  // [2, 2, 2]
     /// let b = Tensor::from([3.0, 1.0, -1.0]);
     ///
     /// a.set_requires_grad(true);
@@ -144,7 +144,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// c.backward_with(Tensor::from([2.0, 1.0, 1.0]));
     ///
     /// // dc/da = b
-    /// assert_eq!(a.gradient().unwrap(), Tensor::from([6f32, 1.0, -1.0]));
+    /// assert_eq!(a.gradient().unwrap(), Tensor::from([6.0, 1.0, -1.0]));
     /// ```
     pub fn backward_with(&self, gradient: impl IntoTensor<'a, T>) {
         let gradient = gradient.as_tensor();
@@ -160,7 +160,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let mut a = Tensor::full(2f32, [3]);  // [2, 2, 2]
+    /// let mut a = Tensor::full(2.0, [3]);  // [2, 2, 2]
     /// let b = Tensor::from([3.0, 1.0, -1.0]);
     ///
     /// a.set_requires_grad(true);
@@ -169,7 +169,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// c.backward();
     ///
     /// // dc/da = b
-    /// assert_eq!(a.gradient().unwrap(), Tensor::from([3f32, 1.0, -1.0]));
+    /// assert_eq!(a.gradient().unwrap(), Tensor::from([3.0, 1.0, -1.0]));
     /// ```
     pub fn backward(&self) {
         self.backward_with(NdArray::ones(self.shape()))
