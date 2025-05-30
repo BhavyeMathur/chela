@@ -226,7 +226,7 @@ fn test_autograd_mul_div() {
 
     assert_eq!(a.gradient().unwrap(), &b / &c);
     assert_eq!(b.gradient().unwrap(), &a / &c);
-    assert_almost_eq!(c.gradient().unwrap(), (-&a * &b / (&c * &c)).to_ndarray());
+    assert_almost_eq!(c.gradient().unwrap(), (-&a * &b / (&c * &c)).into_ndarray());
 }
 
 #[test]
@@ -250,16 +250,16 @@ fn test_autograd_compound_expression() {
     // de/dc = (a + b) / b
     // de/dd = -1 / b
 
-    let expected =  (&c / &b).to_ndarray();
+    let expected =  (&c / &b).into_ndarray();
     assert_almost_eq!(a.gradient().unwrap(), expected);
 
-    let expected = ((&d - &a * &c) / (&b * &b)).to_ndarray();
+    let expected = ((&d - &a * &c) / (&b * &b)).into_ndarray();
     assert_almost_eq!(b.gradient().unwrap(), expected);
 
-    let expected =  ((&a + &b) / &b).to_ndarray();
+    let expected =  ((&a + &b) / &b).into_ndarray();
     assert_almost_eq!(c.gradient().unwrap(), expected);
 
-    let expected =  -NdArray::scalar(1.0) / b.to_ndarray();
+    let expected =  -NdArray::scalar(1.0) / b.into_ndarray();
     assert_almost_eq!(d.gradient().unwrap(), expected);
 }
 

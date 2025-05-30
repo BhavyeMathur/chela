@@ -48,7 +48,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for MulScalarBackwards<T> {
 
 impl<T: FloatDataType> MulBackwards<'static, T> {
     pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
-        let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
+        let next_functions = [lhs.grad_fn(), rhs.grad_fn()];
 
         let grad_fn = Self {
             next_functions,
@@ -66,7 +66,7 @@ impl<T: FloatDataType> MulBackwards<'static, T> {
 impl<T: FloatDataType> MulScalarBackwards<T> {
     pub(crate) fn new(lhs: &Tensor<T>, rhs: T) -> GradientFunction<T> {
         let grad_fn = Self {
-            next_function: lhs.get_grad_fn(),
+            next_function: lhs.grad_fn(),
             shape: lhs.shape().to_vec(),
             scalar: rhs
         };

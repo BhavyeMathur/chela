@@ -20,7 +20,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for ReshapeBackwards<T> {
 impl<T: FloatDataType> ReshapeBackwards<T> {
     pub(crate) fn new(tensor: &Tensor<T>, new_shape: impl ToVec<usize>) -> GradientFunction<T> {
         let grad_fn = Self {
-            next_function: tensor.get_grad_fn(),
+            next_function: tensor.grad_fn(),
             shape: new_shape.to_vec(),
         };
 

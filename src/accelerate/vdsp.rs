@@ -2,7 +2,7 @@
 
 use std::ffi::{c_double, c_float};
 
-#[cfg(use_apple_accelerate)]
+#[cfg(apple_accelerate)]
 #[link(name = "Accelerate")]
 extern "C" {
     // vector sum

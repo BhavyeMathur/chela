@@ -10,7 +10,7 @@ pub(crate) struct DivScalarBackwards {}
 
 impl DivBackwards {
     pub(crate) fn new<T: FloatDataType>(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
-        let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
+        let next_functions = [lhs.grad_fn(), rhs.grad_fn()];
 
         let lhs = lhs.detach();
         let rhs = rhs.detach();

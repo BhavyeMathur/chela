@@ -21,7 +21,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     }
 
     pub fn iter_along(&'a self, axis: impl AxisType) -> NdIterator<'a, T> {
-        NdIterator::from(self, [axis.get_absolute(self.shape.len())])
+        NdIterator::from(self, [axis.as_absolute(self.shape.len())])
     }
 
     pub fn nditer(&'a self, axes: impl AxesType) -> NdIterator<'a, T> {

@@ -1,9 +1,9 @@
 [target.'cfg(all(target_os = "macos", target_arch = "aarch64"))']
 rustflags = [
-        "--cfg", "use_apple_accelerate",
-        "--cfg", "use_apple_vdsp",
-        "--cfg", "use_apple_blas",
-        "--cfg", "use_neon_simd"
+        "--cfg", "apple_accelerate",
+        "--cfg", "apple_vdsp",
+        "--cfg", "blas",
+        "--cfg", "neon_simd"
 ]
 
 [build]

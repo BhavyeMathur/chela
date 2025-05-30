@@ -5,7 +5,7 @@
 #![allow(ambiguous_glob_reexports)]
 
 
-#[cfg(use_apple_accelerate)]
+#[cfg(apple_accelerate)]
 mod accelerate;
 
 pub mod ndarray;

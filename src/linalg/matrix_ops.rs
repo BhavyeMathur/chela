@@ -49,7 +49,7 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
 
         if self.ndims() == 2 && other.ndims() == 2 {
             assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-matrix product: {:?} and {:?})", self.shape(), other.shape());
-            
+
             let output_shape = [self.shape()[0], other.shape()[1]];
 
             let result = NdArray::zeros(output_shape);
@@ -82,7 +82,7 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
         assert_eq!(self.ndims(), 3, "batch matrix multiplication requires 3D tensors");
         assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D tensors");
         assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
-        
+
         let output_shape = [self.len(), self.shape()[1], other.shape()[2]];
 
         let result = NdArray::zeros(output_shape);
@@ -111,7 +111,7 @@ impl<'a, T: SumOfProductsType> NdArray<'a, T> {
         assert_eq!(self.ndims(), 1, "dot product requires a tensor with 1 dimension");
         assert_eq!(other.ndims(), 1, "dot product requires a tensor with 1 dimension");
         assert_eq!(self.len(), other.len(), "dot product requires tensors with the same length");
-        
+
         let result = NdArray::scalar(T::default());
 
         unsafe {
@@ -287,8 +287,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     pub fn offset_diagonal_along(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
         assert!(self.ndims() >= 2, "diagonals require a tensor with at least 2 dimensions");
 
-        let axis1 = axis1.get_absolute(self.ndims());
-        let axis2 = axis2.get_absolute(self.ndims());
+        let axis1 = axis1.as_absolute(self.ndims());
+        let axis2 = axis2.as_absolute(self.ndims());
 
         assert_ne!(axis1, axis2, "axis1 and axis2 cannot be the same");
 
@@ -418,7 +418,7 @@ trait MatrixOps: SumOfProductsType {
 impl<T: IntegerDataType> MatrixOps for T {}
 
 impl MatrixOps for f32 {
-    #[cfg(use_apple_blas)]
+    #[cfg(blas)]
     unsafe fn matrix_matrix_product<'a>(lhs: &NdArray<'a, Self>,
                                         rhs: &NdArray<'a, Self>,
                                         result_stride: &[usize],
@@ -443,7 +443,7 @@ impl MatrixOps for f32 {
         }
     }
 
-    #[cfg(all(use_apple_blas, not(use_neon_simd)))]
+    #[cfg(all(blas, not(neon_simd)))]
     unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &NdArray<'a, Self>,
                                                 vector: &NdArray<'b, Self>) -> NdArray<'r, Self> {
         use crate::accelerate::cblas::{cblas_sgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
@@ -473,7 +473,7 @@ impl MatrixOps for f32 {
 }
 
 impl MatrixOps for f64 {
-    #[cfg(use_apple_blas)]
+    #[cfg(blas)]
     unsafe fn matrix_matrix_product<'a>(lhs: &NdArray<'a, Self>,
                                         rhs: &NdArray<'a, Self>,
                                         result_stride: &[usize],
@@ -498,7 +498,7 @@ impl MatrixOps for f64 {
         }
     }
 
-    #[cfg(all(use_apple_blas, not(use_neon_simd)))]
+    #[cfg(all(blas, not(neon_simd)))]
     unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &NdArray<'a, Self>,
                                                 vector: &NdArray<'b, Self>) -> NdArray<'r, Self> {
         use crate::accelerate::cblas::{cblas_dgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};

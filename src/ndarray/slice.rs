@@ -41,7 +41,7 @@ fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {
 impl<'a, T: RawDataType> NdArray<'a, T> {
     pub fn slice_along<S: Indexer>(&self, axis: Axis, index: S) -> NdArray<'a, T>
     {
-        let axis = axis.get_absolute(self.ndims());
+        let axis = axis.as_absolute(self.ndims());
 
         let mut new_shape = self.shape.clone();
         let mut new_stride = self.stride.clone();

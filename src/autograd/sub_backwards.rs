@@ -30,7 +30,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for SubBackwards<T> {
 impl<T: FloatDataType> SubBackwards<T> {
     pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
         let grad_fn = Self {
-            next_functions: [lhs.get_grad_fn(), rhs.get_grad_fn()],
+            next_functions: [lhs.grad_fn(), rhs.grad_fn()],
 
             lhs_shape: lhs.shape().to_vec(),
             rhs_shape: rhs.shape().to_vec()

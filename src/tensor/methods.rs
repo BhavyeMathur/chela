@@ -32,7 +32,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     }
 
     /// Converts the tensor to an `NdArray`
-    pub fn to_ndarray(self) -> NdArray<'a, T> {
+    pub fn into_ndarray(self) -> NdArray<'a, T> {
         self.array
     }
 }

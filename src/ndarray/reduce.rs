@@ -20,7 +20,7 @@ fn reduced_shape_and_stride(axes: &[isize], shape: &[usize]) -> (Vec<usize>, Vec
     let mut axis_mask = vec![false; ndims];
 
     for &axis in axes.iter() {
-        let axis = axis.get_absolute(ndims);
+        let axis = axis.as_absolute(ndims);
         if axis_mask[axis] {
             panic!("duplicate axes specified");
         }
@@ -154,14 +154,14 @@ impl<T: NumericDataType> NdArray<'_, T> {
     }
 }
 
-// #[cfg(not(use_apple_vdsp))]
+// #[cfg(not(apple_vdsp))]
 // impl NdArrayNumericReduce<f32> for NdArray<'_, f32> {}
 //
-// #[cfg(not(use_apple_vdsp))]
+// #[cfg(not(apple_vdsp))]
 // impl NdArrayNumericReduce<f64> for NdArray<'_, f64> {}
 // TODO
 // 
-// #[cfg(use_apple_vdsp)]
+// #[cfg(apple_vdsp)]
 // impl NdArrayNumericReduce<f32> for NdArray<'_, f32> {
 //     fn sum<'a, 'b>(&'a self) -> NdArray<'b, f32> {
 //         match self.has_uniform_stride() {
@@ -219,7 +219,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
 //     }
 // }
 //
-// #[cfg(use_apple_vdsp)]
+// #[cfg(apple_vdsp)]
 // impl NdArrayNumericReduce<f64> for NdArray<'_, f64> {
 //     fn sum<'a, 'b>(&'a self) -> NdArray<'b, f64> {
 //         match self.has_uniform_stride() {

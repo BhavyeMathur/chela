@@ -22,11 +22,11 @@ pub trait AxisType {
     ///
     /// ```rust
     /// # use chela::*;
-    /// assert_eq!(Axis(-1).get_absolute(4), 3);
-    /// assert_eq!(Axis(-2).get_absolute(4), 2);
-    /// assert_eq!(Axis(1).get_absolute(4), 1);
+    /// assert_eq!(Axis(-1).as_absolute(4), 3);
+    /// assert_eq!(Axis(-2).as_absolute(4), 2);
+    /// assert_eq!(Axis(1).as_absolute(4), 1);
     /// ```
-    fn get_absolute(&self, ndims: usize) -> usize {
+    fn as_absolute(&self, ndims: usize) -> usize {
         let axis = self.isize();
         let ndims = ndims as isize;
 

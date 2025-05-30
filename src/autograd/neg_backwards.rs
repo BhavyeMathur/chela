@@ -22,7 +22,7 @@ impl<T: FloatDataType> GradientFuncTrait<T> for NegBackwards<T> {
 impl<T: FloatDataType> NegBackwards<T> {
     pub(crate) fn new(rhs: &Tensor<T>) -> GradientFunction<T> {
         let grad_fn = Self {
-            next_function: rhs.get_grad_fn(),
+            next_function: rhs.grad_fn(),
             shape: rhs.shape().to_vec(),
         };
 

@@ -74,7 +74,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// This is `NoneBackwards` if the tensor has `requires_grad = false`
     /// or `AccumulateBackwards` if the tensor is a leaf node.
-    pub(crate) fn get_grad_fn(&self) -> GradientFunction<T> {
+    pub(crate) fn grad_fn(&self) -> GradientFunction<T> {
         self.grad_fn.clone()
     }
 

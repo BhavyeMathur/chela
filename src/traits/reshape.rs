@@ -116,7 +116,7 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// assert_eq!(unsqueezed.shape(), &[2, 1, 3]);
     /// ```
     fn unsqueeze(self, axis: impl AxisType) -> NdArray<'a, T> {
-        let axis = axis.get_absolute(self.ndims() + 1);
+        let axis = axis.as_absolute(self.ndims() + 1);
 
         let mut shape = self.shape().to_vec();
         let mut stride = self.stride().to_vec();
