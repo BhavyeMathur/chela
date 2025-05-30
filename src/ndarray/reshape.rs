@@ -20,10 +20,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```
     pub fn flatten(&self) -> NdArray<'static, T> {
         unsafe {
-            NdArray::from_contiguous_owned_buffer(vec![self.size()],
-                                                  self.clone_data(),
-                                                  self.requires_grad(),
-                                                  false)
+            NdArray::from_contiguous_owned_buffer(vec![self.size()], self.clone_data())
         }
     }
 
@@ -51,8 +48,6 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
             stride,
             flags,
 
-            grad_fn: self.grad_fn.clone(),
-
             _marker: self._marker,
         }
     }
@@ -74,8 +69,6 @@ impl<'a, T: RawDataType> ReshapeImpl<'static, T> for NdArray<'a, T> {
             stride,
             flags,
 
-            grad_fn: self.grad_fn.clone(),
-
             _marker: Default::default(),
         }
     }
@@ -95,8 +88,6 @@ impl<'a, T: RawDataType> ReshapeImpl<'a, T> for &'a NdArray<'a, T> {
             shape,
             stride,
             flags,
-
-            grad_fn: self.grad_fn.clone(),
 
             _marker: Default::default(),
         }

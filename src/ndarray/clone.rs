@@ -7,7 +7,7 @@ use std::ptr::copy_nonoverlapping;
 impl<'a, T: RawDataType> NdArray<'a, T> {
     #[allow(clippy::should_implement_trait)]
     pub fn clone<'r>(&self) -> NdArray<'r, T> {
-        unsafe { NdArray::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data(), self.requires_grad(), false) }
+        unsafe { NdArray::from_contiguous_owned_buffer(self.shape.clone(), self.clone_data()) }
     }
 
     pub(super) fn clone_data(&self) -> Vec<T> {

@@ -49,11 +49,10 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
 
         if self.ndims() == 2 && other.ndims() == 2 {
             assert_eq!(self.shape()[1], other.shape()[0], "mismatched shape for matrix-matrix product: {:?} and {:?})", self.shape(), other.shape());
-
-            let requires_grad = self.requires_grad() || other.requires_grad();
+            
             let output_shape = [self.shape()[0], other.shape()[1]];
 
-            let result = NdArray::zeros_requires_grad(output_shape, requires_grad);
+            let result = NdArray::zeros(output_shape);
             unsafe { <T as MatrixOps>::matrix_matrix_product(self, other, result.stride(), result.mut_ptr()) };
             return result;
         }
@@ -83,11 +82,10 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
         assert_eq!(self.ndims(), 3, "batch matrix multiplication requires 3D tensors");
         assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D tensors");
         assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
-
-        let requires_grad = self.requires_grad() || other.requires_grad();
+        
         let output_shape = [self.len(), self.shape()[1], other.shape()[2]];
 
-        let result = NdArray::zeros_requires_grad(output_shape, requires_grad);
+        let result = NdArray::zeros(output_shape);
         unsafe { <T as MatrixOps>::batch_matrix_matrix_product(self, other, result.stride(), result.mut_ptr()); }
         result
     }
@@ -113,9 +111,8 @@ impl<'a, T: SumOfProductsType> NdArray<'a, T> {
         assert_eq!(self.ndims(), 1, "dot product requires a tensor with 1 dimension");
         assert_eq!(other.ndims(), 1, "dot product requires a tensor with 1 dimension");
         assert_eq!(self.len(), other.len(), "dot product requires tensors with the same length");
-
-        let requires_grad = self.requires_grad() || other.requires_grad();
-        let result = NdArray::scalar_requires_grad(T::default(), requires_grad);
+        
+        let result = NdArray::scalar(T::default());
 
         unsafe {
             <T as SumOfProductsType>::sum_of_products_in_strides_n_n_out_stride_0(&[self.mut_ptr(), other.mut_ptr(), result.mut_ptr()],
@@ -408,15 +405,13 @@ trait MatrixOps: SumOfProductsType {
         let mut matrix_row = matrix.mut_ptr();
         let mut dst = result.as_mut_ptr();
 
-        let requires_grad = matrix.requires_grad() || vector.requires_grad();
-
         for _ in 0..rows {
             Self::sum_of_products_in_strides_n_n_out_stride_0(&[matrix_row, vector.mut_ptr(), dst], strides, cols);
             matrix_row = matrix_row.add(matrix.stride()[0]);
             dst = dst.add(1);
         }
 
-        NdArray::from_contiguous_owned_buffer(vec![rows], result, requires_grad, false)
+        NdArray::from_contiguous_owned_buffer(vec![rows], result)
     }
 }
 

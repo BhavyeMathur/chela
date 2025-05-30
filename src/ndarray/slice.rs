@@ -70,8 +70,6 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
             shape: new_shape,
             stride: new_stride,
             flags,
-            
-            grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,
         }
@@ -118,8 +116,6 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
             shape: new_shape,
             stride: new_stride,
             flags,
-            
-            grad_fn: NoneBackwards::new(),
 
             _marker: self._marker,
         }

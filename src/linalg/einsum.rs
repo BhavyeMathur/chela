@@ -302,9 +302,7 @@ pub fn prepare_einsum<'a, T, String, ArrString>(operands: &[&NdArray<'a, T>],
                                                 strides: &mut [[usize; MAX_ARGS]; MAX_DIMS],
                                                 iter_ndims: &mut usize,
                                                 iter_shape: &mut Vec<usize>,
-                                                output_shape: &mut Vec<usize>,
-
-                                                requires_grad: &mut bool)
+                                                output_shape: &mut Vec<usize>)
 where
     T: SumOfProductsType + 'a,
 
@@ -331,7 +329,6 @@ where
         parse_operand_subscripts(subscript.as_ref(), operand,
                                  &mut operand_labels[i], &mut label_counts, &mut label_dims, &mut broadcast_dims);
         max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
-        *requires_grad |= operand.requires_grad();
     }
 
     let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
@@ -421,10 +418,8 @@ where
     let mut iter_shape = Vec::new();
     let mut output_shape = Vec::new();
 
-    let mut requires_grad = false;
-
     prepare_einsum(operands, subscripts,
-                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape, &mut requires_grad);
+                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
 
     let mut output = vec![T::zero(); output_shape.iter().product()];
 
@@ -433,7 +428,7 @@ where
             unspecialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, output.as_mut_ptr());
         }
 
-        NdArray::from_contiguous_owned_buffer(output_shape, output, requires_grad, false)
+        NdArray::from_contiguous_owned_buffer(output_shape, output)
     }
 }
 
@@ -455,10 +450,8 @@ where
     let mut iter_shape = Vec::new();
     let mut output_shape = Vec::new();
 
-    let mut requires_grad = false;
-
     prepare_einsum(operands, subscripts,
-                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape, &mut requires_grad);
+                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
 
     if let Some(stride) = has_uniform_stride(&output_shape, result_stride) {
         assert_eq!(stride, 1, "only contiguous result tensors are currently supported");

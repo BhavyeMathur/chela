@@ -63,19 +63,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// # Safety
     /// - `data` must remain valid and not be used elsewhere after being passed to this function.
     /// - `shape.iter().product()` must equal `data.len()`
-    pub(crate) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>,
-                                                      data: Vec<T>,
-                                                      requires_grad: bool,
-                                                      user_created: bool) -> Self {
-        let mut flags = NdArrayFlags::Owned | NdArrayFlags::Contiguous | NdArrayFlags::UniformStride | NdArrayFlags::Writeable;
-
-        if requires_grad {
-            flags |= NdArrayFlags::RequiresGrad;
-        }
-
-        if user_created {
-            flags |= NdArrayFlags::UserCreated;
-        }
+    pub(crate) unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>, data: Vec<T>) -> Self {
+        let flags = NdArrayFlags::Owned | NdArrayFlags::Contiguous | NdArrayFlags::UniformStride | NdArrayFlags::Writeable;
 
         // take control of the data so that Rust doesn't drop it once the vector goes out of scope
         let mut data = ManuallyDrop::new(data);
@@ -89,8 +78,6 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
             shape,
             stride,
             flags,
-
-            grad_fn: NoneBackwards::new(),
 
             _marker: Default::default(),
         }
@@ -123,7 +110,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
 
         assert!(!data.is_empty(), "Tensor::from() failed, cannot create data buffer from empty data");
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, data, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, data) }
     }
 
     /// Creates an ndarray filled with a specified value and given shape.
@@ -150,35 +137,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         let data = vec![n; shape.iter().product()];
         assert!(!data.is_empty(), "Cannot create an empty tensor!");
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, data, false, true) }
-    }
-
-    /// Creates an ndarray filled with a specified value and given shape.
-    ///
-    /// # Parameters
-    ///
-    /// * `n` - The value to fill the ndarray with (can be any valid data type like float, integer, or bool).
-    /// * `shape` - An array or vector representing the shape of the ndarray (e.g. `[2, 3, 5]`).
-    /// * `requires_grad` - If gradients need to be computed for this ndarray.
-    ///
-    /// # Panics
-    /// This function panics if the provided shape is empty.
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    ///
-    /// let ndarray = NdArray::full_requires_grad(5i32, [2, 3], true); // 2x3 ndarray filled with 5.
-    /// let ndarray = NdArray::full_requires_grad(true, [2, 3, 5], true); // 2x3x5 ndarray filled with 'true'
-    /// ```
-    pub(crate) fn full_requires_grad(n: T, shape: impl ToVec<usize>, requires_grad: bool) -> Self {
-        let shape = shape.to_vec();
-
-        let data = vec![n; shape.iter().product()];
-        assert!(!data.is_empty(), "Cannot create an empty tensor!");
-
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, data, requires_grad, false) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, data) }
     }
 
     /// Creates a new ndarray filled with zeros with the given shape.
@@ -203,29 +162,6 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         Self::full(false.into(), shape)
     }
 
-    /// Creates a new ndarray filled with zeros with the given shape.
-    ///
-    /// # Parameters
-    /// - `shape`: An array or vector representing the shape of the ndarray (e.g. `[2, 3, 5]`).
-    /// - `requires_grad` - If gradients need to be computed for this ndarray.
-    ///
-    /// # Panics
-    /// This function panics if the provided shape is empty.
-    ///
-    /// # Examples
-    /// ```ignore
-    /// # use chela::*;
-    ///
-    /// let ndarray = NdArray::<i32>::zeros_requires_grad([2, 3], true);
-    /// let ndarray = NdArray::<bool>::zeros_requires_grad([2, 3], true);  // filled with 'false'
-    /// ```
-    pub(crate) fn zeros_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
-    where
-        T: From<bool>,
-    {
-        Self::full_requires_grad(false.into(), shape, requires_grad)
-    }
-
     /// Creates a new ndarray filled with ones with the given shape.
     ///
     /// # Parameters
@@ -248,29 +184,6 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         Self::full(true.into(), shape)
     }
 
-    /// Creates a new ndarray filled with ones with the given shape.
-    ///
-    /// # Parameters
-    /// - `shape`: An array or vector representing the shape of the ndarray (e.g. `[2, 3, 5]`).
-    /// - `requires_grad` - If gradients need to be computed for this ndarray.
-    ///
-    /// # Panics
-    /// This function panics if the provided shape is empty.
-    ///
-    /// # Examples
-    /// ```ignore
-    /// # use chela::*;
-    ///
-    /// let ndarray = NdArray::<i32>::ones_requires_grad([2, 3], true);
-    /// let ndarray = NdArray::<bool>::ones_requires_grad([2, 3], true);  // filled with 'true'
-    /// ```
-    pub(crate) fn ones_requires_grad(shape: impl ToVec<usize>, requires_grad: bool) -> Self
-    where
-        T: From<bool>,
-    {
-        Self::full_requires_grad(true.into(), shape, requires_grad)
-    }
-
     /// Creates a 0-dimensional (shapeless) ndarray containing a single value.
     ///
     /// # Parameters
@@ -286,24 +199,6 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```
     pub fn scalar(n: T) -> Self {
         NdArray::full(n, [])
-    }
-
-    /// Creates a 0-dimensional (shapeless) ndarray containing a single value.
-    ///
-    /// # Parameters
-    /// - `n`: The value to be stored in the scalar ndarray.
-    /// - `requires_grad` - If gradients need to be computed for this ndarray.
-    ///
-    /// # Example
-    /// ```ignore
-    /// # use chela::*;
-    ///
-    /// let scalar_array = NdArray::scalar_requires_grad(42, true);
-    /// assert_eq!(scalar_array.shape(), []);
-    /// assert_eq!(scalar_array.value(), 42);
-    /// ```
-    pub(crate) fn scalar_requires_grad(n: T, requires_grad: bool) -> Self {
-        NdArray::full_requires_grad(n, [], requires_grad)
     }
 
     // Maybe we should support empty arrays one day.
@@ -382,7 +277,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
             *item = <T as NumCast>::from(i).unwrap() * step + start;
         }
 
-        unsafe { NdArray::from_contiguous_owned_buffer(vec![data.len()], data, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(vec![data.len()], data) }
     }
 }
 
@@ -411,7 +306,7 @@ impl<T: FloatDataType> NdArray<'_, T> {
         assert!(num > 0);
 
         if num == 1 {
-            return unsafe { NdArray::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
+            return unsafe { NdArray::from_contiguous_owned_buffer(vec![1], vec![start]) };
         }
 
         let step = (stop - start) / (<T as NumCast>::from(num).unwrap() - T::one());
@@ -444,7 +339,7 @@ impl<T: FloatDataType> NdArray<'_, T> {
         assert!(num > 0);
 
         if num == 1 {
-            return unsafe { NdArray::from_contiguous_owned_buffer(vec![1], vec![start], false, true) };
+            return unsafe { NdArray::from_contiguous_owned_buffer(vec![1], vec![start]) };
         }
 
         let step = (stop - start) / <T as NumCast>::from(num).unwrap();

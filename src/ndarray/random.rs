@@ -18,7 +18,7 @@ impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
             .map(|_| <T as NumCast>::from(normal.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers) }
     }
 
     pub fn rand(shape: impl ToVec<usize>) -> Self {
@@ -31,7 +31,7 @@ impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers) }
     }
 }
 
@@ -48,6 +48,6 @@ impl<T: NumericDataType> NdArray<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers, false, true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers) }
     }
 }

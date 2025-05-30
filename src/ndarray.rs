@@ -32,7 +32,6 @@ pub(crate) const MAX_DIMS: usize = 32;
 pub(crate) const MAX_ARGS: usize = 16;
 
 use crate::dtype::RawDataType;
-use crate::gradient_function::GradientFunction;
 
 pub struct NdArray<'a, T: RawDataType> {
     pub(crate) ptr: NonNull<T>,
@@ -42,8 +41,6 @@ pub struct NdArray<'a, T: RawDataType> {
     shape: Vec<usize>,
     stride: Vec<usize>,
     pub(crate) flags: NdArrayFlags,
-
-    pub(crate) grad_fn: GradientFunction<T>,
 
     _marker: PhantomData<&'a T>,
 }

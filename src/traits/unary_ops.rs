@@ -9,7 +9,7 @@ pub(crate) trait UnaryOps<T: RawDataType> {
         let rhs = rhs.as_ref();
 
         let data = rhs.flatiter().map(|rhs| -rhs).collect();
-        unsafe { NdArray::from_contiguous_owned_buffer(rhs.shape().to_vec(), data, false, false) }
+        unsafe { NdArray::from_contiguous_owned_buffer(rhs.shape().to_vec(), data) }
     }
 }
 

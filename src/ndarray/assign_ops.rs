@@ -17,12 +17,8 @@ macro_rules! define_binary_iop {
                 panic!("tensor is readonly.");
             }
 
-            if self.requires_grad() && self.is_leaf() {
-                panic!("a leaf tensor that requires grad cannot be used in an in-place operation.");
-            }
-
             let rhs = rhs.broadcast_to(&self.shape);
-
+            
             for (lhs, rhs) in self.flatiter_ptr().zip(rhs.flatiter()) {
                 unsafe { *lhs $operator rhs; }
             }

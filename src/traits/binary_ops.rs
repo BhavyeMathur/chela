@@ -21,7 +21,7 @@ macro_rules! define_binary_ops {
                 let rhs = rhs.broadcast_to(&shape);
 
                 let data = lhs.flatiter().zip(rhs.flatiter()).map(|(lhs, rhs)| lhs $operator rhs).collect();
-                unsafe { $object::from_contiguous_owned_buffer(shape, data, false, false) }
+                unsafe { $object::from_contiguous_owned_buffer(shape, data) }
             }
 
             paste! { fn [<$method _scalar>] <'a, 'b>(lhs: impl AsRef<$object<'a, T>>,
@@ -32,7 +32,7 @@ macro_rules! define_binary_ops {
                     let lhs = lhs.as_ref();
 
                     let data = lhs.flatiter().map(|lhs| lhs $operator rhs).collect();
-                    unsafe { $object::from_contiguous_owned_buffer(lhs.shape().to_vec(), data, false, false) }
+                    unsafe { $object::from_contiguous_owned_buffer(lhs.shape().to_vec(), data) }
                 }
             }
         )*

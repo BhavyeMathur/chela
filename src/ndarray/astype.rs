@@ -11,8 +11,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
             *dst = NumCast::from(src).expect("astype conversion failed");
         }
         
-        // TODO need to figure out behaviour of requires_grad and user_created for this method
-        unsafe { NdArray::from_contiguous_owned_buffer(self.shape().to_vec(), data, self.requires_grad(), true) }
+        unsafe { NdArray::from_contiguous_owned_buffer(self.shape().to_vec(), data) }
     }
 }
 

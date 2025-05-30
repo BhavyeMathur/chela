@@ -64,7 +64,7 @@ impl<T: RawDataType> NdArray<'_, T> {
             src = src.add(1);  // TODO we can generalise this to other strides
         }
 
-        NdArray::scalar_requires_grad(output, self.requires_grad())
+        NdArray::scalar(output)
     }
 }
 
@@ -86,7 +86,7 @@ impl<T: RawDataType> NdArray<'_, T> {
             }
         }
 
-        unsafe { NdArray::from_contiguous_owned_buffer(out_shape, output, self.requires_grad(), false) }
+        unsafe { NdArray::from_contiguous_owned_buffer(out_shape, output) }
     }
 
     pub fn reduce<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> NdArray<'b, T> {
@@ -100,7 +100,7 @@ impl<T: RawDataType> NdArray<'_, T> {
             output = func(el, output);
         }
 
-        NdArray::scalar_requires_grad(output, self.requires_grad())
+        NdArray::scalar(output)
     }
 }
 
