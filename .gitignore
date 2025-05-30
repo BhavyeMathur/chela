@@ -1,2 +1,7 @@
 /target
-*.pyc
+**.pyc
+
+.DS_STORE
+
+countlines.py
+test.py
