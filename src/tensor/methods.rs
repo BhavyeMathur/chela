@@ -13,7 +13,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::scalar(50f32);
+    /// let tensor = Tensor::scalar(50.0);
     /// let value = tensor.value();
     /// assert_eq!(value, 50.0);
     /// ```
@@ -42,13 +42,13 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let a = Tensor::from([3, 4, 5]);
+    /// let a = Tensor::from([3.0, 4.0, 5.0]);
     /// assert_eq!(a.shape(), &[3]);
     ///
-    /// let b = Tensor::from([[3], [5]]);
+    /// let b = Tensor::from([[3.0], [5.0]]);
     /// assert_eq!(b.shape(), &[2, 1]);
     ///
-    /// let c = Tensor::scalar(0);
+    /// let c = Tensor::scalar(0.0);
     /// assert_eq!(c.shape(), &[]);
     /// ```
     #[inline]
@@ -63,7 +63,7 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let a = Tensor::from([[3, 4], [5, 6]]);
+    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
     /// assert_eq!(a.stride(), &[2, 1]);
     /// ```
     #[inline]
@@ -75,13 +75,13 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([3, 4, 5]);
+    /// let a = Tensor::from([3.0, 4.0, 5.0]);
     /// assert_eq!(a.ndims(), 1);
     ///
-    /// let b = Tensor::from([[3], [5]]);
+    /// let b = Tensor::from([[3.0], [5.0]]);
     /// assert_eq!(b.ndims(), 2);
     ///
-    /// let c = Tensor::scalar(0);
+    /// let c = Tensor::scalar(0.0);
     /// assert_eq!(c.ndims(), 0);
     /// ```
     fn ndims(&self) -> usize {
@@ -95,13 +95,13 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     ///
     /// ```
     /// # use chela::*;
-    /// let a = Tensor::from([3, 4, 5]);
+    /// let a = Tensor::from([3.0, 4.0, 5.0]);
     /// assert_eq!(a.len(), 3);
     ///
-    /// let b = Tensor::from([[3], [5]]);
+    /// let b = Tensor::from([[3.0], [5.0]]);
     /// assert_eq!(b.len(), 2);
     ///
-    /// let c = Tensor::scalar(0);
+    /// let c = Tensor::scalar(0.0);
     /// assert_eq!(c.len(), 0);
     /// ```
     #[inline]
@@ -113,13 +113,13 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([3, 4, 5]);
+    /// let a = Tensor::from([3.0, 4.0, 5.0]);
     /// assert_eq!(a.size(), 3);
     ///
-    /// let b = Tensor::from([[3], [5]]);
+    /// let b = Tensor::from([[3.0], [5.0]]);
     /// assert_eq!(b.size(), 2);
     ///
-    /// let c = Tensor::scalar(0);
+    /// let c = Tensor::scalar(0.0);
     /// assert_eq!(c.size(), 1);
     /// ```
     #[inline]
@@ -137,7 +137,7 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([[3, 4], [5, 6]]);
+    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
     /// assert!(a.is_contiguous());
     ///
     /// let b = a.slice_along(Axis(1), 0);
@@ -152,7 +152,7 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([[3, 4], [5, 6]]);
+    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
     /// assert!(!a.is_view());
     ///
     /// let b = a.slice_along(Axis(1), 0);
@@ -171,7 +171,7 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = Tensor::from([[3, 4, 5], [6, 7, 8]]);
+    /// let a = Tensor::from([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]);
     /// assert_eq!(a.has_uniform_stride(), Some(1));
     ///
     /// let b = a.slice_along(Axis(1), 0);

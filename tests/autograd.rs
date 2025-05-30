@@ -158,7 +158,7 @@ fn test_autograd_mul_neg() {
     // dc/da = -b
     // dc/db = -a
 
-    assert_eq!(a.gradient(), Some(NdArray::scalar(-3.0)));
+    assert_eq!(a.gradient().unwrap(), -b.ndarray());
     assert_eq!(b.gradient(), Some(NdArray::scalar(-2.0)));
 }
 
@@ -178,8 +178,8 @@ fn test_autograd_nested_neg_add() {
     // dc/da = -1
     // dc/db = 1
 
-    assert_eq!(a.gradient(), Some(NdArray::scalar(-1.0)));
-    assert_eq!(b.gradient(), Some(NdArray::scalar(1.0)));
+    assert_eq!(a.gradient().unwrap(), NdArray::scalar(-1.0));
+    assert_eq!(b.gradient().unwrap(), NdArray::scalar(1.0));
 }
 
 #[test]
@@ -232,7 +232,7 @@ fn test_autograd_compound_expression() {
     let expected = ((&d - &a * &c) / (&b * &b)).to_ndarray();
     assert_almost_eq!(b.gradient().unwrap(), expected);
 
-    let expected =  ((&d - &a * &c) / (&b * &b)).to_ndarray();
+    let expected =  ((&a + &b) / &b).to_ndarray();
     assert_almost_eq!(c.gradient().unwrap(), expected);
 
     let expected =  -NdArray::scalar(1.0) / b.to_ndarray();
