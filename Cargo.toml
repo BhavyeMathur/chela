@@ -1,6 +1,6 @@
 [package]
 name = "chela"
-version = "0.0.0"
+version = "0.0.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "High-performance Machine Learning, Auto-Differentiation and Tensor Algebra crate for Rust"
