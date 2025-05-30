@@ -5,7 +5,7 @@ use crate::util::flatten::Flatten;
 use crate::util::nested::Nested;
 use crate::util::shape::Shape;
 use crate::util::to_vec::ToVec;
-use crate::{FloatDataType, RawDataType, StridedMemory};
+use crate::{FloatDataType, RawDataType};
 use num::NumCast;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
@@ -204,30 +204,6 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     // pub fn empty() -> Self {
     //     unsafe { NdArray::from_contiguous_owned_buffer(vec![0], vec![]) }
     // }
-
-    /// Retrieves the single value contained within an ndarray with a singular element.
-    ///
-    /// # Panics
-    /// If the ndarray contains more than one element (i.e., it is not a scalar or an ndarray with a
-    /// single element)
-    ///
-    /// # Example
-    /// ```
-    /// # use chela::*;
-    ///
-    /// let ndarray = NdArray::scalar(50f32);
-    /// let value = ndarray.value();
-    /// assert_eq!(value, 50.0);
-    /// ```
-    ///
-    /// # Notes
-    /// This function is only meant for arrays that are guaranteed to have
-    /// exactly one element. For arrays with multiple elements, consider using
-    /// appropriate methods to access individual elements or slices safely.
-    pub fn value(&self) -> T {
-        assert_eq!(self.size(), 1, "cannot get value of a tensor with more than one element");
-        unsafe { self.ptr.read() }
-    }
 }
 
 impl<T: NumericDataType> NdArray<'_, T> {
