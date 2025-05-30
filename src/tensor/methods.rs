@@ -26,10 +26,12 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
         self.array.value()
     }
 
+    /// Returns a reference to the underlying `NdArray` of the tensor
     pub fn ndarray(&self) -> &NdArray<'a, T> {
         &self.array
     }
 
+    /// Converts the tensor to an `NdArray`
     pub fn to_ndarray(self) -> NdArray<'a, T> {
         self.array
     }

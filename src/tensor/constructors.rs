@@ -96,8 +96,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::full(5i32, [2, 3]); // creates a 2x3 tensor filled with the value 5.
-    /// let tensor = Tensor::full(true, [2, 3, 5]); // creates a 2x3x5 tensor filled with 'true'
+    /// let tensor = Tensor::full(5.0, [2, 3]); // creates a 2x3 tensor filled with the value 5.
     /// ```
     pub fn full(n: T, shape: impl ToVec<usize>) -> Self {
         let array = NdArray::full(n, shape);
@@ -116,8 +115,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::<i32>::zeros([2, 3]);
-    /// let tensor = Tensor::<bool>::zeros([2, 3]);  // creates a tensor filled with 'false'
+    /// let tensor = Tensor::<f32>::zeros([2, 3]);
     /// ```
     pub fn zeros(shape: impl ToVec<usize>) -> Self {
         let array = NdArray::zeros(shape);
@@ -136,8 +134,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let tensor = Tensor::<i32>::ones([2, 3]);
-    /// let tensor = Tensor::<bool>::ones([2, 3]);  // creates a tensor filled with 'true'
+    /// let tensor = Tensor::<f32>::ones([2, 3]);
     /// ```
     pub fn ones(shape: impl ToVec<usize>) -> Self {
         let array = NdArray::ones(shape);
@@ -153,9 +150,9 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let scalar_array = Tensor::scalar(42);
+    /// let scalar_array = Tensor::scalar(42.0);
     /// assert_eq!(scalar_array.shape(), []);
-    /// assert_eq!(scalar_array.value(), 42);
+    /// assert_eq!(scalar_array.value(), 42.0);
     /// ```
     pub fn scalar(n: T) -> Self {
         let array = NdArray::scalar(n);
@@ -178,7 +175,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let tensor = Tensor::arange(0i32, 5); // [0, 1, 2, 3, 4].
+    /// let tensor = Tensor::arange(0.0, 5.0); // [0, 1, 2, 3, 4].
     /// ```
     pub fn arange(start: T, stop: T) -> Tensor<'static, T> {
         let array = NdArray::arange(start, stop);
@@ -197,7 +194,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let tensor = Tensor::arange_with_step(0i32, 5, 2); // [0, 2, 4].
+    /// let tensor = Tensor::arange_with_step(0.0, 5.0, 2.0); // [0, 2, 4].
     /// ```
     pub fn arange_with_step(start: T, stop: T, step: T) -> Tensor<'static, T> {
         let array = NdArray::arange_with_step(start, stop, step);

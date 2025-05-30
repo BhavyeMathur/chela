@@ -1,3 +1,3 @@
 pub mod gradient_function;
-pub mod into_gradient;
+pub mod into;
 pub mod backwards;

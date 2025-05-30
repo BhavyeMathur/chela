@@ -1,7 +1,7 @@
 use crate::gradient_function::{AccumulateGrad, GradientFunction};
 use crate::ndarray::flags::NdArrayFlags;
 use crate::{Tensor, StridedMemory, TensorDataType, NdArray};
-use crate::into_gradient::IntoTensor;
+use crate::into::IntoNdArray;
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// Checks if the tensor is a leaf.
@@ -13,13 +13,13 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// ```
     /// # use chela::*;
-    /// 
+    ///
     /// let mut tensor = Tensor::from([1.0, 2.0, 3.0]);
     /// tensor.set_requires_grad(true);
     /// assert!(tensor.is_leaf());
-    /// 
+    ///
     /// let tensor2 = -tensor;
-    /// assert!(!tensor.is_leaf());
+    /// assert!(!tensor2.is_leaf());
     /// ```
     #[inline]
     pub fn is_leaf(&self) -> bool {
@@ -43,7 +43,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// let mut tensor = Tensor::from([1.0, 2.0, 3.0]);
     /// tensor.set_requires_grad(true);
-    /// 
+    ///
     /// let tensor2 = -tensor;
     /// assert!(tensor2.requires_grad());
     /// ```
@@ -52,6 +52,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
         self.flags().contains(NdArrayFlags::RequiresGrad)
     }
 
+    /// Sets whether gradients must be computed for this tensor.
     pub fn set_requires_grad(&mut self, requires_grad: bool) -> &mut Self {
         let required_grad = self.requires_grad();
 
@@ -141,13 +142,13 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// a.set_requires_grad(true);
     ///
     /// let c = &a * &b;
-    /// c.backward_with(Tensor::from([2.0, 1.0, 1.0]));
+    /// c.backward_with([2f32, 1.0, 1.0]);
     ///
     /// // dc/da = b
     /// assert_eq!(a.gradient().unwrap(), Tensor::from([6.0, 1.0, -1.0]));
     /// ```
-    pub fn backward_with(&self, gradient: impl IntoTensor<'a, T>) {
-        let gradient = gradient.as_tensor();
+    pub fn backward_with(&self, gradient: impl IntoNdArray<'a, T>) {
+        let gradient = gradient.as_ndarray();
         assert_eq!(gradient.shape(), self.shape());
 
         self.grad_fn.borrow_mut().backward(&gradient);
@@ -175,6 +176,21 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
         self.backward_with(NdArray::ones(self.shape()))
     }
 
+    /// Detaches the tensor from the computation graph and returns an `NdArray`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use chela::*;
+    ///
+    /// let mut a = Tensor::full(2.0, [3]);
+    /// a.set_requires_grad(true);
+    ///
+    /// let c = &a * 5.0;
+    ///
+    /// let d = c.detach();
+    /// assert_eq!(d, NdArray::from([10.0, 10.0, 10.0]));
+    /// ```
     pub fn detach(&self) -> NdArray<'static, T> {
         self.array.clone()
     }

@@ -88,8 +88,8 @@ impl<T: FloatDataType> GradientFuncTrait<T> for MulBackwards<'_, T> {
         let lhs_grad = &self.rhs * grad;
         let rhs_grad = &self.lhs * grad;
 
-        let lhs_grad = reduce_broadcasted_gradient(&lhs_grad, &self.lhs.shape());
-        let rhs_grad = reduce_broadcasted_gradient(&rhs_grad, &self.rhs.shape());
+        let lhs_grad = reduce_broadcasted_gradient(&lhs_grad, self.lhs.shape());
+        let rhs_grad = reduce_broadcasted_gradient(&rhs_grad, self.rhs.shape());
 
         self.next_functions[0].borrow_mut().backward(&lhs_grad);
         self.next_functions[1].borrow_mut().backward(&rhs_grad);
