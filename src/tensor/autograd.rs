@@ -174,4 +174,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     pub fn backward(&self) {
         self.backward_with(NdArray::ones(self.shape()))
     }
+
+    pub fn detach(&self) -> NdArray<'static, T> {
+        self.array.clone()
+    }
 }

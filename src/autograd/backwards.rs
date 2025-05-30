@@ -155,15 +155,10 @@ impl<T: FloatDataType> MulBackwards<'static, T> {
     pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
         let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
 
-        let mut lhs = lhs.clone();
-        let mut rhs = rhs.clone();
-        lhs.set_requires_grad(false);
-        rhs.set_requires_grad(false);
-
         let grad_fn = Self {
             next_functions,
-            lhs,
-            rhs,
+            lhs: lhs.detach(),
+            rhs: rhs.detach(),
         };
 
         Rc::new(RefCell::new(grad_fn))
@@ -174,10 +169,8 @@ impl<T: FloatDataType> DivBackwards<'static, T> {
     pub(crate) fn new(lhs: &Tensor<T>, rhs: &Tensor<T>) -> GradientFunction<T> {
         let next_functions = [lhs.get_grad_fn(), rhs.get_grad_fn()];
 
-        let mut lhs = lhs.view();
-        let mut rhs = rhs.view();
-        lhs.set_requires_grad(false);
-        rhs.set_requires_grad(false);
+        let lhs = lhs.detach();
+        let rhs = rhs.detach();
 
         let one = NdArray::scalar(T::one());
 

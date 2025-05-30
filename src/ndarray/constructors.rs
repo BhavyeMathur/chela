@@ -1,5 +1,4 @@
 use crate::dtype::NumericDataType;
-use crate::gradient_function::NoneBackwards;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::ndarray::NdArray;
 use crate::util::flatten::Flatten;

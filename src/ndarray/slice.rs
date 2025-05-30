@@ -4,7 +4,6 @@ use crate::index::Indexer;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::{AxisType, NdArray, StridedMemory};
-use crate::gradient_function::NoneBackwards;
 
 pub(super) fn update_flags_with_contiguity(mut flags: NdArrayFlags, shape: &[usize], stride: &[usize]) -> NdArrayFlags {
     match has_uniform_stride(shape, stride) {

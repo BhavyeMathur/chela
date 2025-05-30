@@ -1,6 +1,35 @@
-use crate::{Tensor, TensorDataType};
 use crate::ndarray::flags::NdArrayFlags;
 use crate::traits::methods::StridedMemory;
+use crate::{NdArray, Tensor, TensorDataType};
+
+impl<'a, T: TensorDataType> Tensor<'a, T> {
+    /// Retrieves the single value contained within a tensor with a singular element.
+    ///
+    /// # Panics
+    /// If the tensor contains more than one element (i.e., it is not a scalar or a tensor with a
+    /// single element)
+    ///
+    /// # Example
+    /// ```
+    /// # use chela::*;
+    ///
+    /// let tensor = Tensor::scalar(50f32);
+    /// let value = tensor.value();
+    /// assert_eq!(value, 50.0);
+    /// ```
+    ///
+    /// # Notes
+    /// This function is only meant for arrays that are guaranteed to have
+    /// exactly one element. For arrays with multiple elements, consider using
+    /// appropriate methods to access individual elements or slices safely.
+    pub fn value(&self) -> T {
+        self.array.value()
+    }
+
+    pub fn ndarray(&self) -> &NdArray<'a, T> {
+        &self.array
+    }
+}
 
 #[allow(clippy::len_without_is_empty)]
 impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
