@@ -1,5 +1,5 @@
 use crate::dtype::RawDataType;
-use crate::{NdArray, NdArrayMethods};
+use crate::{NdArray, StridedMemory};
 use std::fmt;
 
 

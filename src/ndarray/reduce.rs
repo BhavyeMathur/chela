@@ -2,7 +2,7 @@ use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::util::to_vec::ToVec;
-use crate::{AxisType, FloatDataType, NdArray, NdArrayMethods};
+use crate::{AxisType, FloatDataType, NdArray, StridedMemory};
 use num::{NumCast};
 use std::collections::VecDeque;
 

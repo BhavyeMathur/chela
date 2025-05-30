@@ -6,7 +6,7 @@ use crate::util::flatten::Flatten;
 use crate::util::nested::Nested;
 use crate::util::shape::Shape;
 use crate::util::to_vec::ToVec;
-use crate::{FloatDataType, RawDataType, NdArrayMethods};
+use crate::{FloatDataType, RawDataType, StridedMemory};
 use num::NumCast;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;

@@ -197,5 +197,5 @@ impl FloatDataType for f32 {}
 impl FloatDataType for f64 {}
 
 
-pub trait TensorDataType: NumericDataType {}
+pub trait TensorDataType: FloatDataType {}
 impl<T: FloatDataType> TensorDataType for T {}

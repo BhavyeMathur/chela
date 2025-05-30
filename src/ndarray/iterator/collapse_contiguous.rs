@@ -42,7 +42,7 @@ pub(in crate::ndarray) fn collapse_contiguous(shape: &[usize], stride: &[usize])
 //
 // shape (2, 2, 2), stride (6, 3, 2) -> shape (4, 2), stride (3, 2)
 // [[[0, 2], [3, 5]], [[6, 8], [9, 11]]] -> [[0, 2], [3, 5], [6, 8], [9, 11]]
-pub(in crate::ndarray) fn collapse_to_uniform_stride(shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
+pub(crate) fn collapse_to_uniform_stride(shape: &[usize], stride: &[usize]) -> (Vec<usize>, Vec<usize>) {
     let ndims = shape.len();
     if ndims == 0 {
         return (vec![], vec![]);

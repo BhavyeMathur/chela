@@ -1,7 +1,7 @@
 use crate::dtype::RawDataType;
 use crate::slice::update_flags_with_contiguity;
 use crate::ndarray::flags::NdArrayFlags;
-use crate::{NdArray, NdArrayMethods};
+use crate::{NdArray, StridedMemory};
 use crate::traits::ReshapeImpl;
 
 impl<'a, T: RawDataType> NdArray<'a, T> {

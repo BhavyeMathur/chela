@@ -1,7 +1,7 @@
 use crate::dtype::RawDataType;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::iterator::flat_index_generator::FlatIndexGenerator;
-use crate::{NdArray, NdArrayMethods};
+use crate::{NdArray, StridedMemory};
 use std::ptr::copy_nonoverlapping;
 
 impl<'a, T: RawDataType> NdArray<'a, T> {

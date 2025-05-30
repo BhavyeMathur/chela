@@ -1,4 +1,4 @@
-use crate::NdArrayMethods;
+use crate::StridedMemory;
 use crate::broadcast::broadcast_shapes;
 use crate::{IntegerDataType, NdArray, RawDataType};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};

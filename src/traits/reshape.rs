@@ -1,7 +1,7 @@
-use crate::{AxisType, NdArray, NdArrayMethods, RawDataType};
+use crate::{AxisType, NdArray, StridedMemory, RawDataType};
 use crate::util::to_vec::ToVec;
 
-pub(crate) trait ReshapeImpl<'a, T: RawDataType>: NdArrayMethods {
+pub(crate) trait ReshapeImpl<'a, T: RawDataType>: StridedMemory {
     /// Provides a non-owning view of the ndarray with the specified shape and stride.
     /// The data pointed to by the view is shared with the original ndarray.
     ///

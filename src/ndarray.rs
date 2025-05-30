@@ -2,7 +2,6 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 
 pub mod methods;
-pub use methods::*;
 
 pub mod iterator;
 pub use iterator::*;

@@ -1,5 +1,5 @@
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{FloatDataType, NdArray, NdArrayMethods};
+use crate::{FloatDataType, NdArray, StridedMemory};
 use std::cell::RefCell;
 use std::rc::Rc;
 use crate::broadcast::get_broadcasted_axes;

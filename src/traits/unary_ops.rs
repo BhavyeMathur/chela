@@ -1,4 +1,4 @@
-use crate::{NdArray, NdArrayMethods, RawDataType};
+use crate::{NdArray, StridedMemory, RawDataType};
 use std::ops::Neg;
 
 pub(crate) trait UnaryOps<T: RawDataType> {

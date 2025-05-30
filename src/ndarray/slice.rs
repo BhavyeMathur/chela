@@ -3,7 +3,7 @@ use crate::dtype::RawDataType;
 use crate::index::Indexer;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::ndarray::flags::NdArrayFlags;
-use crate::{AxisType, NdArray, NdArrayMethods};
+use crate::{AxisType, NdArray, StridedMemory};
 use crate::gradient_function::NoneBackwards;
 
 pub(super) fn update_flags_with_contiguity(mut flags: NdArrayFlags, shape: &[usize], stride: &[usize]) -> NdArrayFlags {
