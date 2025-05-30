@@ -21,7 +21,7 @@ trybuild = "1.0"
 [lints.rust]
 private_bounds = "allow"
 dead_code = "allow"
-unexpected_cfgs = { level = "warn", check-cfg = ["cfg(use_apple_accelerate)", "cfg(use_neon_simd)", "cfg(use_apple_blas)", "cfg(use_apple_vdsp)", "cfg(use_openblas)"] }
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(apple_accelerate)", "cfg(neon_simd)", "cfg(blas)", "cfg(apple_vdsp)", "cfg(openblas)"] }
 
 [profile.release]
 overflow-checks = false

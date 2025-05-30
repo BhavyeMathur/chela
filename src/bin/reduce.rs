@@ -10,7 +10,7 @@ type T = f32;
 
 
 fn reduce0() -> u128 {
-    let tensor = Tensor::<f32>::rand([N]).astype::<T>();
+    let tensor = NdArray::<f32>::rand([N]).astype::<T>();
 
     let start = ProcessTime::now();
     _ = tensor.sum();
@@ -18,7 +18,7 @@ fn reduce0() -> u128 {
 }
 
 fn reduce1() -> u128 {
-    let tensor = Tensor::<f32>::rand([N]).astype::<T>();
+    let tensor = NdArray::<f32>::rand([N]).astype::<T>();
 
     let start = ProcessTime::now();
     _ = tensor.product();
@@ -26,7 +26,7 @@ fn reduce1() -> u128 {
 }
 
 fn reduce2() -> u128 {
-    let tensor = Tensor::<f32>::rand([N]).astype::<T>();
+    let tensor = NdArray::<f32>::rand([N]).astype::<T>();
 
     let start = ProcessTime::now();
     _ = tensor.min();
@@ -34,7 +34,7 @@ fn reduce2() -> u128 {
 }
 
 fn reduce3() -> u128 {
-    let tensor = Tensor::<f32>::rand([N]).astype::<T>();
+    let tensor = NdArray::<f32>::rand([N]).astype::<T>();
 
     let start = ProcessTime::now();
     _ = tensor.max();
@@ -42,7 +42,7 @@ fn reduce3() -> u128 {
 }
 
 fn reduce10() -> u128 {
-    let tensor = Tensor::<f32>::rand([N, 2]).astype::<T>();
+    let tensor = NdArray::<f32>::rand([N, 2]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0);
 
     let start = ProcessTime::now();
@@ -51,7 +51,7 @@ fn reduce10() -> u128 {
 }
 
 fn reduce11() -> u128 {
-    let tensor = Tensor::<f32>::rand([N, 2]).astype::<T>();
+    let tensor = NdArray::<f32>::rand([N, 2]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0);
 
     let start = ProcessTime::now();
@@ -60,7 +60,7 @@ fn reduce11() -> u128 {
 }
 
 fn reduce12() -> u128 {
-    let tensor = Tensor::<f32>::rand([N, 2]).astype::<T>();
+    let tensor = NdArray::<f32>::rand([N, 2]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0);
 
     let start = ProcessTime::now();
@@ -69,7 +69,7 @@ fn reduce12() -> u128 {
 }
 
 fn reduce13() -> u128 {
-    let tensor = Tensor::<f32>::rand([N, 2]).astype::<T>();
+    let tensor = NdArray::<f32>::rand([N, 2]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0);
 
     let start = ProcessTime::now();

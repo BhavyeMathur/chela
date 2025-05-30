@@ -23,10 +23,10 @@ pub(crate) trait Indexer: Clone {
     fn indexed_length(&self, axis_length: usize) -> usize;
     
     /// The first element along the dimension indexed by this kind of indexer
-    /// For example, 0 for `tensor[..]` or `tensor[..2]` but 5 for `tensor[5..]` or `tensor[5]`
+    /// For example, 0 for `ndarray [..]` or `ndarray [..2]` but 5 for `ndarray [5..]` or `ndarray [5]`
     fn index_of_first_element(&self) -> usize;
 
-    /// When indexed with this kind of object, does the dimension of the tensor collapse?
+    /// When indexed with this kind of object, does the dimension of the ndarray collapse?
     /// Only true for usize since all range-based indexers retain the dimension.
     fn collapse_dimension(&self) -> bool {
         false

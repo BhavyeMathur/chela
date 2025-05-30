@@ -4,7 +4,7 @@ use cpu_time::ProcessTime;
 
 fn profile(size: usize) -> u128 {
     let start = ProcessTime::now();
-    let _tensor: Tensor<f32> = Tensor::ones(size);
+    let _tensor: NdArray<f32> = NdArray::ones(size);
     start.elapsed().as_nanos()
 }
 

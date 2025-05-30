@@ -1,14 +1,14 @@
-use crate::constructors::stride_from_shape;
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::fill::fill_shape_and_stride;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
 use crate::linalg::sum_of_products::SumOfProductsType;
-use crate::tensor::{MAX_ARGS, MAX_DIMS};
+use crate::ndarray::{MAX_ARGS, MAX_DIMS};
 use crate::util::functions::{permute_array, transpose_2d_array};
-use crate::{Tensor, TensorMethods};
-use crate::reshape::ReshapeImpl;
+use crate::{NdArray, StridedMemory};
+use crate::ndarray::constructors::stride_from_shape;
+use crate::traits::{Reshape, ReshapeImpl};
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -24,7 +24,7 @@ Examples:
     subscripts="abbcbc",  ndim=6 -> result = [97, 98, -1, 99, -3, -2]
     subscripts="ab..bc", ndim=6 -> result = [97, 98, 0, 0, -3, 99]
  */
-fn parse_operand_subscripts<A: TensorMethods>(subscripts: &str,
+fn parse_operand_subscripts<A: StridedMemory>(subscripts: &str,
                                               operand: &A,
                                               result: &mut [i8; MAX_DIMS],
                                               label_counts: &mut [u32; 128],
@@ -162,7 +162,7 @@ fn parse_output_subscripts(subscripts: &str,
 }
 
 
-fn reshape_shape_and_stride_for_einsum<A: TensorMethods>(operand: &A,
+fn reshape_shape_and_stride_for_einsum<A: StridedMemory>(operand: &A,
                                                          labels: &[i8; MAX_DIMS],
                                                          output_dims: usize,
                                                          output_labels: &[i8]) -> Option<(Vec<usize>, Vec<usize>)> {
@@ -191,10 +191,10 @@ fn reshape_shape_and_stride_for_einsum<A: TensorMethods>(operand: &A,
     Some((new_stride, new_shape))
 }
 
-fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
+fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &'a NdArray<'a, T>,
                                               labels: &[i8; MAX_DIMS],
                                               output_dims: usize,
-                                              output_labels: &[i8]) -> Option<Tensor<'a, T>> {
+                                              output_labels: &[i8]) -> Option<NdArray<'a, T>> {
     match reshape_shape_and_stride_for_einsum(operand, labels, output_dims, output_labels) {
         None => None,
         Some((new_stride, new_shape)) => {
@@ -207,8 +207,8 @@ fn try_reshape_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
 /*
 Collapses dimensions with repeated subscripts. For example in ii-> (trace) or ii->i (diagonal)
  */
-fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a Tensor<'a, T>,
-                                                  labels: &mut [i8; MAX_DIMS]) -> Tensor<'a, T> {
+fn reshape_operand_for_einsum<'a, T: RawDataType>(operand: &'a NdArray<'a, T>,
+                                                  labels: &mut [i8; MAX_DIMS]) -> NdArray<'a, T> {
     // fast path if operand dimensions cannot be combined
     if labels.iter().all(|&val| val >= 0) {
         return operand.view();
@@ -277,8 +277,8 @@ fn operand_stride_for_einsum(ndims: usize,
     }
 }
 
-pub fn einsum_view<'a, T: NumericDataType>(operand: &'a Tensor<'a, T>,
-                                           subscripts: (&str, &str)) -> Option<Tensor<'a, T>> {
+pub fn einsum_view<'a, T: NumericDataType>(operand: &'a NdArray<'a, T>,
+                                           subscripts: (&str, &str)) -> Option<NdArray<'a, T>> {
     let mut labels = [0; MAX_DIMS];
     let mut output_labels = [0; MAX_DIMS];
     let mut label_counts = [0; 128];
@@ -292,19 +292,17 @@ pub fn einsum_view<'a, T: NumericDataType>(operand: &'a Tensor<'a, T>,
     let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
     let output_labels = &output_labels[0..output_dims];
 
-    // try returning a reshaped view of the tensor
+    // try returning a reshaped view of the ndarray
     try_reshape_for_einsum(operand, &labels, output_dims, output_labels)
 }
 
-pub fn prepare_einsum<'a, T, String, ArrString>(operands: &[&Tensor<'a, T>],
+pub fn prepare_einsum<'a, T, String, ArrString>(operands: &[&NdArray<'a, T>],
                                                 subscripts: (ArrString, &str),
 
                                                 strides: &mut [[usize; MAX_ARGS]; MAX_DIMS],
                                                 iter_ndims: &mut usize,
                                                 iter_shape: &mut Vec<usize>,
-                                                output_shape: &mut Vec<usize>,
-
-                                                requires_grad: &mut bool)
+                                                output_shape: &mut Vec<usize>)
 where
     T: SumOfProductsType + 'a,
 
@@ -331,7 +329,6 @@ where
         parse_operand_subscripts(subscript.as_ref(), operand,
                                  &mut operand_labels[i], &mut label_counts, &mut label_dims, &mut broadcast_dims);
         max_broadcast_dims = max_broadcast_dims.max(broadcast_dims);
-        *requires_grad |= operand.requires_grad();
     }
 
     let output_dims = parse_output_subscripts(subscripts.1, &mut output_labels, max_broadcast_dims, &label_counts);
@@ -341,7 +338,7 @@ where
     let output_labels = &output_labels[0..output_dims];
 
 
-    // check if the output can be generated by only reshaping the tensor
+    // check if the output can be generated by only reshaping the ndarray
 
     if n_operands == 1 && reshape_shape_and_stride_for_einsum(operands[0], &operand_labels[0], output_dims, output_labels).is_some() {
         eprintln!("\x1b[33mchela warning: use einsum_view() or reshape() to improve performance for this operation\x1b[0m");
@@ -405,11 +402,11 @@ where
 
 pub fn einsum<'a, 'r, 'c, T, String, ArrTensor, ArrString>(operands: ArrTensor,
                                                            subscripts: (ArrString, &str))
-                                                           -> Tensor<'r, T>
+                                                           -> NdArray<'r, T>
 where
     'a: 'c,
     T: SumOfProductsType + 'a,
-    ArrTensor: AsRef<[&'c Tensor<'a, T>]>,
+    ArrTensor: AsRef<[&'c NdArray<'a, T>]>,
 
     String: AsRef<str>,
     ArrString: AsRef<[String]>,
@@ -421,10 +418,8 @@ where
     let mut iter_shape = Vec::new();
     let mut output_shape = Vec::new();
 
-    let mut requires_grad = false;
-
     prepare_einsum(operands, subscripts,
-                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape, &mut requires_grad);
+                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
 
     let mut output = vec![T::zero(); output_shape.iter().product()];
 
@@ -433,11 +428,11 @@ where
             unspecialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, output.as_mut_ptr());
         }
 
-        Tensor::from_contiguous_owned_buffer(output_shape, output, requires_grad, false)
+        NdArray::from_contiguous_owned_buffer(output_shape, output)
     }
 }
 
-pub(super) unsafe fn einsum_into_ptr<'a, 'r, T, String, ArrString>(operands: impl AsRef<[&'r Tensor<'a, T>]>,
+pub(super) unsafe fn einsum_into_ptr<'a, 'r, T, String, ArrString>(operands: impl AsRef<[&'r NdArray<'a, T>]>,
                                                                    subscripts: (ArrString, &str),
                                                                    result_stride: &[usize],
                                                                    result: *mut T)
@@ -455,10 +450,8 @@ where
     let mut iter_shape = Vec::new();
     let mut output_shape = Vec::new();
 
-    let mut requires_grad = false;
-
     prepare_einsum(operands, subscripts,
-                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape, &mut requires_grad);
+                   &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
 
     if let Some(stride) = has_uniform_stride(&output_shape, result_stride) {
         assert_eq!(stride, 1, "only contiguous result tensors are currently supported");
@@ -480,7 +473,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_invalid_ellipsis_multiple() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 4]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 4]);
         let mut result = [3; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -492,7 +485,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_invalid_ellipsis() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 6]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 6]);
         let mut result = [1; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -504,7 +497,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_invalid_ellipsis_at_end() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 3]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 3]);
         let mut result = [4; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -515,7 +508,7 @@ mod tests {
 
     #[test]
     fn test_unique_labels2() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 6]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 6]);
         let mut result = [1; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -528,7 +521,7 @@ mod tests {
 
     #[test]
     fn test_parse_operand_subscripts_with_repeats() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 6]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 6]);
         let mut result = [5; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -542,7 +535,7 @@ mod tests {
 
     #[test]
     fn test_ellipsis_middle() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 7]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 7]);
         let mut result = [9; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -555,7 +548,7 @@ mod tests {
 
     #[test]
     fn test_ellipsis_middle2() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 9]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 9]);
         let mut result = [9; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -568,7 +561,7 @@ mod tests {
 
     #[test]
     fn test_ellipsis_start() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 5]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 5]);
         let mut result = [2; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -581,7 +574,7 @@ mod tests {
 
     #[test]
     fn test_multiple_operands() {
-        let tensor: Tensor<f32> = Tensor::zeros([1; 4]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 4]);
         let mut result = [0; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
@@ -591,12 +584,12 @@ mod tests {
         assert_eq!(result[0..4], [97, 98, -1, 0]);
         assert_eq!(broadcast_dims, 1);
 
-        let tensor: Tensor<f32> = Tensor::zeros([1; 5]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 5]);
         parse_operand_subscripts("abb..", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..5], [97, 98, -1, 0, 0]);
         assert_eq!(broadcast_dims, 2);
 
-        let tensor: Tensor<f32> = Tensor::zeros([1; 4]);
+        let tensor: NdArray<f32> = NdArray::zeros([1; 4]);
         parse_operand_subscripts("baba", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..4], [98, 97, -2, -2]);
         assert_eq!(broadcast_dims, 0);

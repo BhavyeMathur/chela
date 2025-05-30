@@ -9,6 +9,9 @@ pub(crate) mod haslength;
 pub(crate) mod to_vec;
 pub(crate) mod functions;
 
+pub mod dtype;
+pub use dtype::*;
+
 pub mod index;
 pub use index::*;
 

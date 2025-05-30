@@ -7,7 +7,7 @@ type blasint = i32;
 type float = f32;
 
 
-#[cfg(use_openblas)]
+#[cfg(openblas)]
 extern "C" {
     pub(crate) fn cblas_sgemm_batch(Order: CBLAS_ORDER,
                              TransA_array: *const CBLAS_TRANSPOSE,

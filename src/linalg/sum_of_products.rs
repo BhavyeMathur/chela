@@ -6,7 +6,7 @@ use std::hint::assert_unchecked;
 
 use paste::paste;
 
-#[cfg(use_neon_simd)]
+#[cfg(neon_simd)]
 use std::arch::aarch64::*;
 
 pub(super) fn get_sum_of_products_function<const N: usize, T: SumOfProductsType>(strides: &[usize; N])
@@ -296,20 +296,20 @@ macro_rules! simd_kernel {
     $($func_name:ident, { $($body:tt)* },)+) => {
 
         impl SumOfProductsType for f32 {
-            #[cfg(use_neon_simd)]
+            #[cfg(neon_simd)]
             simd_kernel_for_dtype!(f32, 4, $ptrs, $strides, $count, $dst, $lanes,
                                     $simd_load, vld1q_f32, $simd_store, vst1q_f32, $simd_add, vaddq_f32, $simd_mul, vmulq_f32,
                                     $simd_muladd, vfmaq_f32, $simd_sum, vaddvq_f32, $simd_dup, vdupq_n_f32,
                                     $($func_name, { $($body)* };)+);
 
-            #[cfg(use_apple_vdsp)]
+            #[cfg(apple_vdsp)]
             #[inline(always)]
             unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
                 use crate::accelerate::vdsp::vDSP_dotpr;
                 vDSP_dotpr(ptrs[0], strides[0] as isize, ptrs[1], strides[1] as isize, ptrs[2], count as isize);
             }
 
-            #[cfg(all(not(use_apple_vdsp), not(use_neon_simd), use_apple_blas))]
+            #[cfg(all(not(apple_vdsp), not(neon_simd), blas))]
             #[inline(always)]
             unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
                 use crate::accelerate::cblas::cblas_sdot;
@@ -318,20 +318,20 @@ macro_rules! simd_kernel {
         }
 
         impl SumOfProductsType for f64 {
-            #[cfg(use_neon_simd)]
+            #[cfg(neon_simd)]
             simd_kernel_for_dtype!(f64, 2, $ptrs, $strides, $count, $dst, $lanes,
                                     $simd_load, vld1q_f64, $simd_store, vst1q_f64, $simd_add, vaddq_f64, $simd_mul, vmulq_f64,
                                     $simd_muladd, vfmaq_f64, $simd_sum, vaddvq_f64, $simd_dup, vdupq_n_f64,
                                     $($func_name, { $($body)* };)+);
 
-            #[cfg(use_apple_vdsp)]
+            #[cfg(apple_vdsp)]
             #[inline(always)]
             unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
                 use crate::accelerate::vdsp::vDSP_dotprD;
                 vDSP_dotprD(ptrs[0], strides[0] as isize, ptrs[1], strides[1] as isize, ptrs[2], count as isize);
             }
             
-            #[cfg(all(not(use_apple_vdsp), not(use_neon_simd), use_apple_blas))]
+            #[cfg(all(not(apple_vdsp), not(neon_simd), blas))]
             #[inline(always)]
             unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
                 use crate::accelerate::cblas::cblas_ddot;

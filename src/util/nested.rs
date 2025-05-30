@@ -1,4 +1,4 @@
-use crate::tensor::dtype::RawDataType;
+use crate::RawDataType;
 
 pub(crate) trait Nested<const D: usize> {}
 

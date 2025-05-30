@@ -14,7 +14,7 @@ pub(crate) const CBLAS_NO_TRANS: i32 = 111;
 pub(crate) const CBLAS_TRANS: i32 = 112;
 
 
-#[cfg(use_apple_blas)]
+#[cfg(blas)]
 #[link(name = "cblas")]
 extern "C" {
     // Fill

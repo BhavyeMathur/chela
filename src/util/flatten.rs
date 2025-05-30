@@ -4,17 +4,16 @@
 // [[[0]]] -> [0]
 
 use crate::recursive_trait_base_cases;
-use crate::tensor::dtype::RawDataType;
 use crate::util::shape::Shape;
 use std::fmt::Debug;
 
 use std::ptr::copy_nonoverlapping;
 
-pub(crate) trait Flatten<A: RawDataType> {
+pub(crate) trait Flatten<A> {
     fn flatten(self) -> Vec<A>;
 }
 
-impl<A: RawDataType, T> Flatten<A> for Vec<T>
+impl<A, T> Flatten<A> for Vec<T>
 where
     T: Flatten<A>,
 {
@@ -34,7 +33,7 @@ where
     }
 }
 
-impl<A: RawDataType, T, const N: usize> Flatten<A> for [T; N]
+impl<A, T, const N: usize> Flatten<A> for [T; N]
 where
     T: Flatten<A>,
     [T; N]: Shape,
