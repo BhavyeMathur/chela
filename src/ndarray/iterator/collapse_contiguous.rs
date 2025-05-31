@@ -91,7 +91,7 @@ mod tests {
     use super::collapse_contiguous;
     use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride, has_uniform_stride};
     use crate::{s, NdArray};
-    use crate::traits::constructors::Constructors;
+    use crate::common::constructors::Constructors;
 
     #[test]
     fn test_collapse_contiguous() {

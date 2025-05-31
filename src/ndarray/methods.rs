@@ -1,6 +1,6 @@
 use crate::dtype::RawDataType;
 use crate::ndarray::flags::NdArrayFlags;
-use crate::traits::methods::StridedMemory;
+use crate::common::methods::StridedMemory;
 use crate::NdArray;
 
 impl<'a, T: RawDataType> NdArray<'a, T> {

@@ -14,8 +14,8 @@ pub use ndarray::*;
 pub mod tensor;
 pub use tensor::*;
 
-pub mod traits;
-pub use traits::*;
+pub mod common;
+pub use common::*;
 
 pub mod linalg;
 pub use linalg::*;

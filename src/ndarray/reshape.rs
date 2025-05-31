@@ -2,7 +2,7 @@ use crate::dtype::RawDataType;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::slice::update_flags_with_contiguity;
 use crate::{NdArray, Reshape, StridedMemory};
-use crate::traits::constructors::Constructors;
+use crate::common::constructors::Constructors;
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Returns a 1D copy of a flattened multidimensional ndarray.

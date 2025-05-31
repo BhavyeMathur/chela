@@ -1,5 +1,5 @@
 use crate::sum_of_products::SumOfProductsType;
-use crate::traits::binary_ops::BinaryOps;
+use crate::common::binary_ops::BinaryOps;
 use num::traits::MulAdd;
 use num::{Bounded, Float, NumCast, One, ToPrimitive, Zero};
 use rand::distributions::uniform::SampleUniform;

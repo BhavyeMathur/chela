@@ -8,7 +8,7 @@ use crate::ndarray::{MAX_ARGS, MAX_DIMS};
 use crate::util::functions::{permute_array, transpose_2d_array};
 use crate::{Constructors, NdArray, StridedMemory};
 use crate::ndarray::constructors::stride_from_shape;
-use crate::traits::Reshape;
+use crate::common::Reshape;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 

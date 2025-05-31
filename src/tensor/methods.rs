@@ -1,5 +1,5 @@
 use crate::ndarray::flags::NdArrayFlags;
-use crate::traits::methods::StridedMemory;
+use crate::common::methods::StridedMemory;
 use crate::{NdArray, Tensor, TensorDataType};
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
@@ -73,118 +73,10 @@ impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
         self.array.stride()
     }
 
-    /// Returns the number of dimensions in the tensor.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([3.0, 4.0, 5.0]);
-    /// assert_eq!(a.ndims(), 1);
-    ///
-    /// let b = Tensor::from([[3.0], [5.0]]);
-    /// assert_eq!(b.ndims(), 2);
-    ///
-    /// let c = Tensor::scalar(0.0);
-    /// assert_eq!(c.ndims(), 0);
-    /// ```
-    fn ndims(&self) -> usize {
-        self.array.ndims()
-    }
-
-    /// Returns the length along the first dimension of the tensor.
-    /// If the tensor is a scalar, this returns 0.
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([3.0, 4.0, 5.0]);
-    /// assert_eq!(a.len(), 3);
-    ///
-    /// let b = Tensor::from([[3.0], [5.0]]);
-    /// assert_eq!(b.len(), 2);
-    ///
-    /// let c = Tensor::scalar(0.0);
-    /// assert_eq!(c.len(), 0);
-    /// ```
-    #[inline]
-    fn len(&self) -> usize {
-        self.array.len()
-    }
-
-    /// Returns the total number of elements in the tensor.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([3.0, 4.0, 5.0]);
-    /// assert_eq!(a.size(), 3);
-    ///
-    /// let b = Tensor::from([[3.0], [5.0]]);
-    /// assert_eq!(b.size(), 2);
-    ///
-    /// let c = Tensor::scalar(0.0);
-    /// assert_eq!(c.size(), 1);
-    /// ```
-    #[inline]
-    fn size(&self) -> usize {
-        self.array.size()
-    }
-
     /// Returns flags containing information about various tensor metadata.
     #[inline]
     fn flags(&self) -> NdArrayFlags {
         self.flags
-    }
-
-    /// Returns whether this tensor is stored contiguously in memory.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
-    /// assert!(a.is_contiguous());
-    ///
-    /// let b = a.slice_along(Axis(1), 0);
-    /// assert!(!b.is_contiguous());
-    /// ```
-    #[inline]
-    fn is_contiguous(&self) -> bool {
-        self.array.is_contiguous()
-    }
-
-    /// Returns whether this tensor is slice of another tensor.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
-    /// assert!(!a.is_view());
-    ///
-    /// let b = a.slice_along(Axis(1), 0);
-    /// assert!(b.is_view());
-    /// ```
-    #[inline]
-    fn is_view(&self) -> bool {
-        self.array.is_view()
-    }
-
-    /// If the elements of this tensor are stored in memory with a uniform distance between them,
-    /// returns this distance.
-    ///
-    /// Contiguous tensors always have a uniform stride of 1.
-    /// Tensor views may sometimes be uniformly strided.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]);
-    /// assert_eq!(a.has_uniform_stride(), Some(1));
-    ///
-    /// let b = a.slice_along(Axis(1), 0);
-    /// assert_eq!(b.has_uniform_stride(), Some(3));
-    ///
-    /// let c = a.slice_along(Axis(1), ..2);
-    /// assert_eq!(c.has_uniform_stride(), None);
-    /// ```
-    #[inline]
-    fn has_uniform_stride(&self) -> Option<usize> {
-        self.array.has_uniform_stride()
     }
 }
 
@@ -224,117 +116,9 @@ impl<T: TensorDataType> StridedMemory for &Tensor<'_, T> {
         self.array.stride()
     }
 
-    /// Returns the number of dimensions in the tensor.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([3.0, 4.0, 5.0]);
-    /// assert_eq!(a.ndims(), 1);
-    ///
-    /// let b = Tensor::from([[3.0], [5.0]]);
-    /// assert_eq!(b.ndims(), 2);
-    ///
-    /// let c = Tensor::scalar(0.0);
-    /// assert_eq!(c.ndims(), 0);
-    /// ```
-    fn ndims(&self) -> usize {
-        self.array.ndims()
-    }
-
-    /// Returns the length along the first dimension of the tensor.
-    /// If the tensor is a scalar, this returns 0.
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([3.0, 4.0, 5.0]);
-    /// assert_eq!(a.len(), 3);
-    ///
-    /// let b = Tensor::from([[3.0], [5.0]]);
-    /// assert_eq!(b.len(), 2);
-    ///
-    /// let c = Tensor::scalar(0.0);
-    /// assert_eq!(c.len(), 0);
-    /// ```
-    #[inline]
-    fn len(&self) -> usize {
-        self.array.len()
-    }
-
-    /// Returns the total number of elements in the tensor.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([3.0, 4.0, 5.0]);
-    /// assert_eq!(a.size(), 3);
-    ///
-    /// let b = Tensor::from([[3.0], [5.0]]);
-    /// assert_eq!(b.size(), 2);
-    ///
-    /// let c = Tensor::scalar(0.0);
-    /// assert_eq!(c.size(), 1);
-    /// ```
-    #[inline]
-    fn size(&self) -> usize {
-        self.array.size()
-    }
-
     /// Returns flags containing information about various tensor metadata.
     #[inline]
     fn flags(&self) -> NdArrayFlags {
         self.flags
-    }
-
-    /// Returns whether this tensor is stored contiguously in memory.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
-    /// assert!(a.is_contiguous());
-    ///
-    /// let b = a.slice_along(Axis(1), 0);
-    /// assert!(!b.is_contiguous());
-    /// ```
-    #[inline]
-    fn is_contiguous(&self) -> bool {
-        self.array.is_contiguous()
-    }
-
-    /// Returns whether this tensor is slice of another tensor.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
-    /// assert!(!a.is_view());
-    ///
-    /// let b = a.slice_along(Axis(1), 0);
-    /// assert!(b.is_view());
-    /// ```
-    #[inline]
-    fn is_view(&self) -> bool {
-        self.array.is_view()
-    }
-
-    /// If the elements of this tensor are stored in memory with a uniform distance between them,
-    /// returns this distance.
-    ///
-    /// Contiguous tensors always have a uniform stride of 1.
-    /// Tensor views may sometimes be uniformly strided.
-    ///
-    /// ```ignore
-    /// # use chela::*;
-    /// let a = Tensor::from([[3.0, 4.0, 5.0], [6.0, 7.0, 8.0]]);
-    /// assert_eq!(a.has_uniform_stride(), Some(1));
-    ///
-    /// let b = a.slice_along(Axis(1), 0);
-    /// assert_eq!(b.has_uniform_stride(), Some(3));
-    ///
-    /// let c = a.slice_along(Axis(1), ..2);
-    /// assert_eq!(c.has_uniform_stride(), None);
-    /// ```
-    #[inline]
-    fn has_uniform_stride(&self) -> Option<usize> {
-        self.array.has_uniform_stride()
     }
 }

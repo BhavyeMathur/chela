@@ -1,6 +1,6 @@
 use crate::ndarray::flags::NdArrayFlags;
 use crate::ndarray::NdArray;
-use crate::traits::constructors::Constructors;
+use crate::common::constructors::Constructors;
 use crate::RawDataType;
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;

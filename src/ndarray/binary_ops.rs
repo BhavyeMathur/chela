@@ -1,4 +1,4 @@
-use crate::traits::binary_ops::BinaryOps;
+use crate::common::binary_ops::BinaryOps;
 use crate::{NdArray, RawDataType};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
