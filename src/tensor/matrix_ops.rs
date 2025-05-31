@@ -1,8 +1,9 @@
+use crate::bmm_backwards::BMMBackwards;
 use crate::dot_backwards::DotBackwards;
 use crate::matrix_product_backwards::MatrixProductBackwards;
 use crate::matrix_vec_backwards::MatrixVecBackwards;
+use crate::none_backwards::NoneBackwards;
 use crate::{StridedMemory, Tensor, TensorDataType};
-use crate::bmm_backwards::BMMBackwards;
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// Calculates the dot product of two 1D tensors.
@@ -21,9 +22,11 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     pub fn dot<'b, 'r>(&self, other: impl AsRef<Tensor<'b, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
-        let requires_grad = self.requires_grad() || other.requires_grad();
 
-        unsafe { Tensor::from_raw_parts(self.array.dot(&other.array), requires_grad, DotBackwards::new(self, other)) }
+        let requires_grad = self.requires_grad() || other.requires_grad();
+        let grad_fn = if requires_grad { DotBackwards::new(self, other) } else { NoneBackwards::new() };
+
+        unsafe { Tensor::from_raw_parts(self.array.dot(&other.array), requires_grad, grad_fn) }
     }
 
     /// Calculates the matrix product of two tensors.
@@ -66,13 +69,17 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
         let requires_grad = self.requires_grad() || other.requires_grad();
         let result = self.array.matmul(&other.array);
 
-        if self.ndims() == 2 && other.ndims() == 1 {
-            unsafe { Tensor::from_raw_parts(result, requires_grad, MatrixVecBackwards::new(self, other)) }
-        } else if self.ndims() == 2 && other.ndims() == 2 {
-            unsafe { Tensor::from_raw_parts(result, requires_grad, MatrixProductBackwards::new(self, other)) }
-        } else {
-            panic!("this should never happen")
-        }
+        let grad_fn = if requires_grad {
+            if self.ndims() == 2 && other.ndims() == 1 {
+                MatrixVecBackwards::new(self, other)
+            } else if self.ndims() == 2 && other.ndims() == 2 {
+                MatrixProductBackwards::new(self, other)
+            } else {
+                panic!("this should never happen")
+            }
+        } else { NoneBackwards::new() };
+
+        unsafe { Tensor::from_raw_parts(result, requires_grad, grad_fn) }
     }
 
     /// Performs batch matrix multiplication on 3D tensors.
@@ -95,8 +102,10 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     pub fn bmm<'r>(&self, other: impl AsRef<Tensor<'a, T>>) -> Tensor<'r, T> {
         let other = other.as_ref();
+        
         let requires_grad = self.requires_grad() || other.requires_grad();
+        let grad_fn = if requires_grad { BMMBackwards::new(self, other) } else { NoneBackwards::new() };
 
-        unsafe { Tensor::from_raw_parts(self.array.bmm(&other.array), requires_grad, BMMBackwards::new(self, other)) }
+        unsafe { Tensor::from_raw_parts(self.array.bmm(&other.array), requires_grad, grad_fn) }
     }
 }
