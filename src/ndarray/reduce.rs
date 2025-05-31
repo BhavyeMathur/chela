@@ -3,7 +3,7 @@ use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
 use crate::util::to_vec::ToVec;
 use crate::{AxisType, Constructors, FloatDataType, NdArray, StridedMemory};
-use num::{NumCast};
+use num::NumCast;
 use std::collections::VecDeque;
 
 /// Returns a tuple `(output_shape, map_stride)`
@@ -48,20 +48,21 @@ impl<T: RawDataType> NdArray<'_, T> {
     /// Reduces the elements of a contiguous ndarray into a scalar using the specified function.
     ///
     /// # Safety
-    /// - Ensure that the underlying ndarray is contiguous in memory with a stride of 1.
+    /// - Ensure that the underlying ndarray has uniform stride in memory
     ///
     /// # Parameters
     /// - `func`: A closure or function that takes two arguments (the next value to be reduced
     ///   and the value of the accumulator) and returns a reduction of both.
     ///   For example, when the reduction operation is addition, `|src, acc| src + acc`
     /// - `default`: The initial value used as the accumulator for the reduction.
-    unsafe fn reduce_contiguous<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> NdArray<'b, T> {
+    /// - `stride`: The number of `T` elements in memory between consecutive elements of `self`
+    unsafe fn reduce_uniform_stride<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T, stride: usize) -> NdArray<'b, T> {
         let mut output = default;
 
         let mut src = self.ptr();
-        for _ in 0..self.len {
+        for _ in 0..self.size() {
             output = func(*src, output);
-            src = src.add(1);  // TODO we can generalise this to other strides
+            src = src.add(stride);
         }
 
         NdArray::scalar(output)
@@ -90,8 +91,8 @@ impl<T: RawDataType> NdArray<'_, T> {
     }
 
     pub fn reduce<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> NdArray<'b, T> {
-        if self.is_contiguous() {
-            return unsafe { self.reduce_contiguous(func, default) };
+        if let Some(stride) = self.has_uniform_stride() {
+            return unsafe { self.reduce_uniform_stride(func, default, stride) };
         }
 
         let mut output = default;
@@ -292,7 +293,7 @@ impl<T: FloatDataType> NdArray<'_, T> {
             assert!(axis >= 0, "negative axes are not currently supported");
             n *= self.shape[axis as usize];
         }
-        
+
         let n: T = NumCast::from(n).unwrap();
         self.sum_along(axes) / n
     }
