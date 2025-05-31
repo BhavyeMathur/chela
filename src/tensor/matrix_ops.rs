@@ -43,20 +43,20 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// # use chela::*;
     ///
     /// let a = Tensor::from(vec![
-    ///     [1, 2, 3],
-    ///     [4, 5, 6],
+    ///     [1.0, 2.0, 3.0],
+    ///     [4.0, 5.0, 6.0],
     /// ]);
     ///
     /// let b = Tensor::from(vec![
-    ///     [7, 8],
-    ///     [9, 10],
-    ///     [11, 12],
+    ///     [7.0, 8.0],
+    ///     [9.0, 10.0],
+    ///     [11.0, 12.0],
     /// ]);
     ///
     /// let result = a.matmul(&b);
-    /// assert_eq!(result, NdArray::from(vec![
-    ///     [58, 64],
-    ///     [139, 154],
+    /// assert_eq!(result, Tensor::from([
+    ///     [58.0, 64.0],
+    ///     [139.0, 154.0],
     /// ]));
     /// ```
     pub fn matmul<'r>(&self, other: impl AsRef<Tensor<'a, T>>) -> Tensor<'r, T> {

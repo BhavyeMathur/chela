@@ -54,7 +54,9 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
 }
 
 impl<'a, T: RawDataType> ReshapeImpl<'static, T> for NdArray<'a, T> {
-    unsafe fn reshaped_view(mut self, shape: Vec<usize>, stride: Vec<usize>) -> NdArray<'static, T> {
+    type Output = NdArray<'static, T>;
+    
+    unsafe fn reshaped_view(mut self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output {
         let flags = update_flags_with_contiguity(self.flags, &shape, &stride);
 
         // prevent ndarray's data from being deallocated once this method ends
@@ -75,7 +77,9 @@ impl<'a, T: RawDataType> ReshapeImpl<'static, T> for NdArray<'a, T> {
 }
 
 impl<'a, T: RawDataType> ReshapeImpl<'a, T> for &'a NdArray<'a, T> {
-    unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> NdArray<'a, T> {
+    type Output = NdArray<'a, T>;
+    
+    unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output {
         let mut flags = update_flags_with_contiguity(self.flags, &shape, &stride);
         flags -= NdArrayFlags::UserCreated;
         flags -= NdArrayFlags::Owned;

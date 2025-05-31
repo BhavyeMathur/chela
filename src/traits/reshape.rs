@@ -1,14 +1,16 @@
 use crate::{AxisType, NdArray, StridedMemory, RawDataType};
 use crate::util::to_vec::ToVec;
 
-pub(crate) trait ReshapeImpl<'a, T: RawDataType>: StridedMemory {
+pub trait ReshapeImpl<'a, T: RawDataType>: StridedMemory {
+    type Output; 
+    
     /// Provides a non-owning view of the ndarray with the specified shape and stride.
     /// The data pointed to by the view is shared with the original ndarray.
     ///
     /// # Safety
     /// - Ensure the memory layout referenced by `shape`, and `stride` is valid and owned
     ///   by the original ndarray.
-    unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> NdArray<'a, T>;
+    unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output;
 }
 
 pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
@@ -22,7 +24,7 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// let view = (&ndarray).view();
     /// assert!(view.is_view())
     /// ```
-    fn view(self) -> NdArray<'a, T> {
+    fn view(self) -> Self::Output {
         let shape = self.shape().to_vec();
         let stride = self.stride().to_vec();
         unsafe { self.reshaped_view(shape, stride) }
@@ -51,7 +53,7 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// assert_eq!(ndarray.shape(), &[4]);
     /// assert_eq!(reshaped_array, NdArray::from([[0, 1], [2, 3]]));
     /// ```
-    fn reshape(self, new_shape: impl ToVec<usize>) -> NdArray<'a, T> {
+    fn reshape(self, new_shape: impl ToVec<usize>) -> Self::Output {
         let new_shape = new_shape.to_vec();
 
         if self.size() != new_shape.iter().product() {
@@ -85,7 +87,7 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// assert_eq!(ndarray.shape(), &[4, 1]);
     /// assert_eq!(squeezed, NdArray::from([3, 5, 7, 9]));
     /// ```
-    fn squeeze(self) -> NdArray<'a, T> {
+    fn squeeze(self) -> Self::Output {
         let mut shape = self.shape().to_vec();
         let mut stride = self.stride().to_vec();
 
@@ -115,7 +117,7 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// assert_eq!(ndarray.shape(), &[2, 3]);
     /// assert_eq!(unsqueezed.shape(), &[2, 1, 3]);
     /// ```
-    fn unsqueeze(self, axis: impl AxisType) -> NdArray<'a, T> {
+    fn unsqueeze(self, axis: impl AxisType) -> Self::Output {
         let axis = axis.as_absolute(self.ndims() + 1);
 
         let mut shape = self.shape().to_vec();
@@ -147,11 +149,11 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// assert_eq!(transposed, NdArray::from([[2, 10], [3, 20], [4, 30]]));
     /// ```
     #[allow(non_snake_case)]
-    fn T(self) -> NdArray<'a, T> {
+    fn T(self) -> Self::Output {
         self.transpose(0, 1)
     }
 
-    /// Returns a transposed version of this `NdArray`, swapping the specified axes.
+    /// Returns a transposed version of the array, swapping the specified axes.
     ///
     /// # Panics
     /// - If `axis1` or `axis2` are out of bounds
@@ -165,7 +167,7 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     /// let transposed = array.transpose(0, 1);
     /// assert_eq!(transposed, NdArray::from([[2, 10], [3, 20], [4, 30]]));
     /// ```
-    fn transpose(self, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
+    fn transpose(self, axis1: impl AxisType, axis2: impl AxisType) -> Self::Output {
         let axis1 = axis1.as_absolute(self.ndims());
         let axis2 = axis2.as_absolute(self.ndims());
 
@@ -179,5 +181,7 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
     }
 }
 
+
 impl<'a, T: RawDataType> Reshape<'a, T> for &'a NdArray<'a, T> {}
+
 impl<T: RawDataType> Reshape<'static, T> for NdArray<'static, T> {}

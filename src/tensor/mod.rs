@@ -5,6 +5,7 @@ pub mod equals;
 pub mod autograd;
 pub mod print;
 pub mod matrix_ops;
+pub mod reshape;
 
 use crate::gradient_function::GradientFunction;
 use crate::ndarray::flags::NdArrayFlags;
