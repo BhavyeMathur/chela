@@ -7,7 +7,8 @@ use crate::{Constructors, Tensor, TensorDataType};
 
 impl<'a, T: TensorDataType> Constructors<T> for Tensor<'a, T> {
     unsafe fn from_contiguous_owned_buffer(shape: Vec<usize>, data: Vec<T>) -> Self {
-        Self::from_array_and_flags(NdArray::from_contiguous_owned_buffer(shape, data), false, true)
+        let array = NdArray::from_contiguous_owned_buffer(shape, data);
+        Self::from_array_and_flags(array, false, true)
     }
 }
 

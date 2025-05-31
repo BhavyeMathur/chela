@@ -21,15 +21,6 @@ where
         self.into_iter()
             .flat_map(|nested| nested.flatten().into_iter())
             .collect()
-
-        // TODO need to test performance with the following
-        // let len = self.shape().iter().product();
-        // let mut result = Vec::with_capacity(len);
-        //
-        // for nested in self {
-        //     result.append(nested.flatten().as_mut());
-        // }
-        // result
     }
 }
 
