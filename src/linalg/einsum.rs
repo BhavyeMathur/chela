@@ -454,7 +454,7 @@ where
                    &mut strides, &mut iter_ndims, &mut iter_shape, &mut output_shape);
 
     if let Some(stride) = has_uniform_stride(&output_shape, result_stride) {
-        assert_eq!(stride, 1, "only contiguous result tensors are currently supported");
+        assert_eq!(stride, 1, "only contiguous result ndarrays are currently supported");
     }
 
     fill_shape_and_stride(result, T::zero(), &output_shape, result_stride);
@@ -473,61 +473,61 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_invalid_ellipsis_multiple() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 4]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 4]);
         let mut result = [3; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("a..b..", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("a..b..", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
     }
 
     #[test]
     #[should_panic]
     fn test_invalid_ellipsis() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 6]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 6]);
         let mut result = [1; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("a.b", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("a.b", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
     }
 
     #[test]
     #[should_panic]
     fn test_invalid_ellipsis_at_end() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 3]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 3]);
         let mut result = [4; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("ab.", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("ab.", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
     }
 
     #[test]
     fn test_unique_labels2() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 6]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 6]);
         let mut result = [1; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 1;
 
-        parse_operand_subscripts("abcdef", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("abcdef", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..6], [97, 98, 99, 100, 101, 102]);
         assert_eq!(broadcast_dims, 0);
     }
 
     #[test]
     fn test_parse_operand_subscripts_with_repeats() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 6]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 6]);
         let mut result = [5; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 60;
 
-        parse_operand_subscripts("abbcbc", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("abbcbc", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
 
         assert_eq!(result[0..6], [97, 98, -1, 99, -3, -2]);
         assert_eq!(broadcast_dims, 0);
@@ -535,62 +535,62 @@ mod tests {
 
     #[test]
     fn test_ellipsis_middle() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 7]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 7]);
         let mut result = [9; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("ab..bc", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("ab..bc", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..7], [97, 98, 0, 0, 0, -4, 99]);
         assert_eq!(broadcast_dims, 3);
     }
 
     #[test]
     fn test_ellipsis_middle2() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 9]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 9]);
         let mut result = [9; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("ab..bc", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("ab..bc", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..9], [97, 98, 0, 0, 0, 0, 0, -6, 99]);
         assert_eq!(broadcast_dims, 5);
     }
 
     #[test]
     fn test_ellipsis_start() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 5]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 5]);
         let mut result = [2; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("..ab", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("..ab", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..5], [0, 0, 0, 97, 98]);
         assert_eq!(broadcast_dims, 3);
     }
 
     #[test]
     fn test_multiple_operands() {
-        let tensor: NdArray<f32> = NdArray::zeros([1; 4]);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 4]);
         let mut result = [0; MAX_DIMS];
         let mut label_counts = [0; 128];
         let mut label_dims = [0; 128];
         let mut broadcast_dims = 0;
 
-        parse_operand_subscripts("abb..", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        parse_operand_subscripts("abb..", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..4], [97, 98, -1, 0]);
         assert_eq!(broadcast_dims, 1);
 
-        let tensor: NdArray<f32> = NdArray::zeros([1; 5]);
-        parse_operand_subscripts("abb..", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 5]);
+        parse_operand_subscripts("abb..", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..5], [97, 98, -1, 0, 0]);
         assert_eq!(broadcast_dims, 2);
 
-        let tensor: NdArray<f32> = NdArray::zeros([1; 4]);
-        parse_operand_subscripts("baba", &tensor, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
+        let ndarray: NdArray<f32> = NdArray::zeros([1; 4]);
+        parse_operand_subscripts("baba", &ndarray, &mut result, &mut label_counts, &mut label_dims, &mut broadcast_dims);
         assert_eq!(result[0..4], [98, 97, -2, -2]);
         assert_eq!(broadcast_dims, 0);
     }

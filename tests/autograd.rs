@@ -296,3 +296,21 @@ fn test_autograd_deep_chain_mul_add() {
     assert_eq!(d.gradient(), Some(NdArray::scalar(1.0 * 2.0 + 3.0))); // ab + c = 5
     assert_eq!(e.gradient(), Some(NdArray::scalar(1.0)));       // 1
 }
+
+#[test]
+fn test_autograd_matrix_vector_ops() {
+    let mut vector1 = Tensor::from([1.0, 2.0, 3.0]);
+    let mut vector2 = Tensor::from([-1.0, 5.0, -9.0]);
+    
+    let mut matrix = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);
+
+    vector1.set_requires_grad(true);
+    vector2.set_requires_grad(true);
+    matrix.set_requires_grad(true);
+    
+    let x = vector1.dot(&vector2);
+    x.backward();
+    
+    assert_eq!(vector1.gradient().unwrap(), vector2.ndarray());
+    assert_eq!(vector2.gradient().unwrap(), vector1.ndarray());
+}

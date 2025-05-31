@@ -56,7 +56,7 @@ pub(super) fn get_sum_of_products_function_generic_nops<T: SumOfProductsType>(st
 }
 
 
-pub(super) trait SumOfProductsType: NumericDataType {
+pub(crate) trait SumOfProductsType: NumericDataType {
     #[inline(always)]
     unsafe fn sum_of_products_generic_(ptrs: &[*mut Self], strides: &[usize], count: usize) {
         let nops = ptrs.len();

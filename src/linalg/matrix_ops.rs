@@ -5,14 +5,14 @@ use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, NdArray, Stride
 use std::cmp::min;
 
 impl<'a, T: MatrixOps> NdArray<'a, T> {
-    /// Calculates the matrix product of two tensors.
+    /// Calculates the matrix product of two ndarrays.
     ///
-    /// - If both tensors are 1D, then their dot product is returned.
-    /// - If both tensors are 2D, then their matrix product is returned.
+    /// - If both ndarrays are 1D, then their dot product is returned.
+    /// - If both ndarrays are 2D, then their matrix product is returned.
     /// - If the first ndarray is 2D and the second ndarray is 1D, then the matrix-vector product is returned.
     ///
     /// # Panics
-    /// - If the dimensions/shape of the tensors is incompatible
+    /// - If the dimensions/shape of the ndarrays is incompatible
     ///
     /// # Example
     /// ```
@@ -57,30 +57,30 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
             return result;
         }
 
-        panic!("matmul requires a tensor with 1 or 2 dimensions");
+        panic!("matmul requires a ndarray with 1 or 2 dimensions");
     }
 
-    /// Performs batch matrix multiplication on 3D tensors.
+    /// Performs batch matrix multiplication on 3D ndarrays.
     ///
     /// The shape of the resulting ndarray will be `[batch_size, self.shape()[1], other.shape()[2]]`,
-    /// where `batch_size` is the shared first dimension of both input tensors.
+    /// where `batch_size` is the shared first dimension of both input ndarrays.
     ///
     /// # Panics
     /// - If either ndarray is not 3D
-    /// - If the tensors do not have dimensions compatible for batch matrix multiplication.
+    /// - If the ndarrays do not have dimensions compatible for batch matrix multiplication.
     ///
     /// # Example
     /// ```rust
     /// # use chela::*;
-    /// let tensor_a = NdArray::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
-    /// let tensor_b = NdArray::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices
-    /// let result = tensor_a.bmm(&tensor_b);
+    /// let arr1 = NdArray::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
+    /// let arr2 = NdArray::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices
+    /// let result = arr1.bmm(&arr2);
     /// assert_eq!(result.shape(), [3, 2, 5]); // result is 3 batches of 2x5 matrices
     /// ```
     pub fn bmm<'r>(&self, other: impl AsRef<NdArray<'a, T>>) -> NdArray<'r, T> {
         let other = other.as_ref();
-        assert_eq!(self.ndims(), 3, "batch matrix multiplication requires 3D tensors");
-        assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D tensors");
+        assert_eq!(self.ndims(), 3, "batch matrix multiplication requires 3D ndarrays");
+        assert_eq!(other.ndims(), 3, "batch matrix multiplication requires 3D ndarrays");
         assert_eq!(self.len(), other.len(), "incompatible batch sizes for batch matrix multiplication: {:?} and {:?})", self.shape(), other.shape());
 
         let output_shape = [self.len(), self.shape()[1], other.shape()[2]];
@@ -92,25 +92,25 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
 }
 
 impl<'a, T: SumOfProductsType> NdArray<'a, T> {
-    /// Calculates the dot product of two 1D tensors.
+    /// Calculates the dot product of two 1D arrays.
     ///
     /// # Panics
-    /// - Panics if either ndarray is not 1D
-    /// - Panics if the lengths of the two tensors are not equal
+    /// - Panics if either array is not 1D
+    /// - Panics if the lengths of the two arrays are not equal
     ///
     /// # Examples
     /// ```
     /// # use chela::*;
-    /// let tensor1 = NdArray::from([1, 2, 3]);
-    /// let tensor2 = NdArray::from([4, 5, 6]);
-    /// let result = tensor1.dot(tensor2);
+    /// let arr1 = NdArray::from([1, 2, 3]);
+    /// let arr2 = NdArray::from([4, 5, 6]);
+    /// let result = arr1.dot(arr2);
     /// assert_eq!(result.value(), 32); // 1*4 + 2*5 + 3*6 = 32
     /// ```
     pub fn dot<'b, 'r>(&self, other: impl AsRef<NdArray<'b, T>>) -> NdArray<'r, T> {
         let other = other.as_ref();
-        assert_eq!(self.ndims(), 1, "dot product requires a tensor with 1 dimension");
-        assert_eq!(other.ndims(), 1, "dot product requires a tensor with 1 dimension");
-        assert_eq!(self.len(), other.len(), "dot product requires tensors with the same length");
+        assert_eq!(self.ndims(), 1, "dot product requires an array with 1 dimension");
+        assert_eq!(other.ndims(), 1, "dot product requires an array with 1 dimension");
+        assert_eq!(self.len(), other.len(), "dot product requires array with the same length");
 
         let result = NdArray::scalar(T::default());
 
@@ -133,13 +133,13 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([
+    /// let arr = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(ndarray.trace(), NdArray::scalar(1 + 5 + 9));
+    /// assert_eq!(arr.trace(), NdArray::scalar(1 + 5 + 9));
     pub fn trace<'r>(&self) -> NdArray<'r, T> {
         self.offset_trace(0)
     }
@@ -152,13 +152,13 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([
+    /// let arr = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// assert_eq!(ndarray.offset_trace(-1), NdArray::scalar(4 + 8));
+    /// assert_eq!(arr.offset_trace(-1), NdArray::scalar(4 + 8));
     pub fn offset_trace<'r>(&self, offset: isize) -> NdArray<'r, T> {
         self.offset_trace_along(offset, 0, 1)
     }
@@ -276,16 +276,16 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([
+    /// let arr = NdArray::from([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
-    /// let diagonal = ndarray.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
+    /// let diagonal = arr.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
     /// assert_eq!(diagonal, NdArray::from([4, 8]));
     pub fn offset_diagonal_along(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
-        assert!(self.ndims() >= 2, "diagonals require a tensor with at least 2 dimensions");
+        assert!(self.ndims() >= 2, "diagonals require a ndarray with at least 2 dimensions");
 
         let axis1 = axis1.as_absolute(self.ndims());
         let axis2 = axis2.as_absolute(self.ndims());

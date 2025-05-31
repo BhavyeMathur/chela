@@ -1,5 +1,5 @@
 use crate::dtype::NumericDataType;
-use crate::{NdArray, RawDataType, StridedMemory};
+use crate::{NdArray, StridedMemory};
 use num::NumCast;
 
 impl<T: NumericDataType> NdArray<'_, T> {
@@ -12,11 +12,5 @@ impl<T: NumericDataType> NdArray<'_, T> {
         }
         
         unsafe { NdArray::from_contiguous_owned_buffer(self.shape().to_vec(), data) }
-    }
-}
-
-impl<'a, T: RawDataType> AsRef<NdArray<'a, T>> for NdArray<'a, T> {
-    fn as_ref(&self) -> &NdArray<'a, T> {
-        self
     }
 }
