@@ -62,16 +62,17 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
 
     /// Performs batch matrix multiplication on 3D ndarrays.
     ///
-    /// The shape of the resulting ndarray will be `[batch_size, self.shape()[1], other.shape()[2]]`,
-    /// where `batch_size` is the shared first dimension of both input ndarrays.
+    /// The shape of the resulting array will be `[batch_size, self.shape()[1], other.shape()[2]]`,
+    /// where `batch_size` is the shared first dimension of both input arrays.
     ///
     /// # Panics
-    /// - If either ndarray is not 3D
-    /// - If the ndarrays do not have dimensions compatible for batch matrix multiplication.
+    /// - If either array is not 3D
+    /// - If the arrays do not have dimensions compatible for batch matrix multiplication.
     ///
     /// # Example
     /// ```rust
     /// # use chela::*;
+    /// 
     /// let arr1 = NdArray::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
     /// let arr2 = NdArray::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices
     /// let result = arr1.bmm(&arr2);

@@ -2,6 +2,7 @@ use crate::dot_backwards::DotBackwards;
 use crate::matrix_product_backwards::MatrixProductBackwards;
 use crate::matrix_vec_backwards::MatrixVecBackwards;
 use crate::{StridedMemory, Tensor, TensorDataType};
+use crate::bmm_backwards::BMMBackwards;
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// Calculates the dot product of two 1D tensors.
@@ -72,5 +73,30 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
         } else {
             panic!("this should never happen")
         }
+    }
+
+    /// Performs batch matrix multiplication on 3D tensors.
+    ///
+    /// The shape of the resulting ndarray will be `[batch_size, self.shape()[1], other.shape()[2]]`,
+    /// where `batch_size` is the shared first dimension of both input tensors.
+    ///
+    /// # Panics
+    /// - If either tensor is not 3D
+    /// - If the tensors do not have dimensions compatible for batch matrix multiplication.
+    ///
+    /// # Example
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let arr1 = Tensor::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
+    /// let arr2 = Tensor::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices
+    /// let result = arr1.bmm(&arr2);
+    /// assert_eq!(result.shape(), [3, 2, 5]); // result is 3 batches of 2x5 matrices
+    /// ```
+    pub fn bmm<'r>(&self, other: impl AsRef<Tensor<'a, T>>) -> Tensor<'r, T> {
+        let other = other.as_ref();
+        let requires_grad = self.requires_grad() || other.requires_grad();
+
+        unsafe { Tensor::from_raw_parts(self.array.bmm(&other.array), requires_grad, BMMBackwards::new(self, other)) }
     }
 }
