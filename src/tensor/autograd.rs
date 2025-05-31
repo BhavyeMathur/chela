@@ -1,8 +1,8 @@
-use crate::gradient_function::{GradientFunction};
-use crate::ndarray::flags::NdArrayFlags;
-use crate::{Tensor, StridedMemory, TensorDataType, NdArray, Constructors};
 use crate::accumulate_grad::AccumulateGrad;
-use crate::into::IntoNdArray;
+use crate::gradient_function::GradientFunction;
+use crate::ndarray::flags::NdArrayFlags;
+use crate::{Constructors, NdArray, StridedMemory, Tensor, TensorDataType};
+
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// Checks if the tensor is a leaf.
@@ -69,7 +69,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
 
         self
     }
-    
+
     /// Retrieves the gradient function associated with the current object.
     ///
     /// This is `NoneBackwards` if the tensor has `requires_grad = false`
@@ -121,7 +121,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// assert_eq!(a.gradient().unwrap(), Tensor::scalar(0.0));
     /// ```
     pub fn zero_gradient(&self) {
-        if let Some(mut grad ) = self.gradient() {
+        if let Some(mut grad) = self.gradient() {
             grad.zero();
         }
     }
@@ -143,13 +143,13 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// a.set_requires_grad(true);
     ///
     /// let c = &a * &b;
-    /// c.backward_with([2f32, 1.0, 1.0]);
+    /// c.backward_with(NdArray::new([2.0, 1.0, 1.0]));
     ///
     /// // dc/da = b
     /// assert_eq!(a.gradient().unwrap(), Tensor::new([6.0, 1.0, -1.0]));
     /// ```
-    pub fn backward_with(&self, gradient: impl IntoNdArray<'a, T>) {
-        let gradient = gradient.as_ndarray();
+    pub fn backward_with(&self, gradient: impl AsRef<NdArray<'a, T>>) {
+        let gradient = gradient.as_ref();
         assert_eq!(gradient.shape(), self.shape());
 
         self.grad_fn.borrow_mut().backward(&gradient);
