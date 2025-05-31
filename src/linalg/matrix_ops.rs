@@ -12,7 +12,7 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
     /// - If the first ndarray is 2D and the second ndarray is 1D, then the matrix-vector product is returned.
     ///
     /// # Panics
-    /// - If the dimensions/shape of the ndarrays is incompatible
+    /// - If the dimensions/shape of the ndarrays are incompatible
     ///
     /// # Example
     /// ```
@@ -346,7 +346,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
 }
 
 
-trait MatrixOps: SumOfProductsType {
+pub(crate) trait MatrixOps: SumOfProductsType {
     /// Performs an unchecked batched matrix-matrix product operation
     /// and writes the result to the given pointer
     ///

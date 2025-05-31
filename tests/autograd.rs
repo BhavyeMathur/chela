@@ -250,16 +250,16 @@ fn test_autograd_compound_expression() {
     // de/dc = (a + b) / b
     // de/dd = -1 / b
 
-    let expected =  (&c / &b).into_ndarray();
+    let expected = (&c / &b).into_ndarray();
     assert_almost_eq!(a.gradient().unwrap(), expected);
 
     let expected = ((&d - &a * &c) / (&b * &b)).into_ndarray();
     assert_almost_eq!(b.gradient().unwrap(), expected);
 
-    let expected =  ((&a + &b) / &b).into_ndarray();
+    let expected = ((&a + &b) / &b).into_ndarray();
     assert_almost_eq!(c.gradient().unwrap(), expected);
 
-    let expected =  -NdArray::scalar(1.0) / b.into_ndarray();
+    let expected = -NdArray::scalar(1.0) / b.into_ndarray();
     assert_almost_eq!(d.gradient().unwrap(), expected);
 }
 
@@ -298,19 +298,55 @@ fn test_autograd_deep_chain_mul_add() {
 }
 
 #[test]
-fn test_autograd_matrix_vector_ops() {
+fn test_autograd_matmul_ops() {
     let mut vector1 = Tensor::from([1.0, 2.0, 3.0]);
     let mut vector2 = Tensor::from([-1.0, 5.0, -9.0]);
-    
-    let mut matrix = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);
+
+    let mut matrix1 = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);
+    let mut matrix2 = Tensor::from([[1.0, -5.0, 4.0], [-3.0, -5.5, 3.0], [-9.0, 2.0, 1.5]]);
 
     vector1.set_requires_grad(true);
     vector2.set_requires_grad(true);
-    matrix.set_requires_grad(true);
-    
+    matrix1.set_requires_grad(true);
+    matrix2.set_requires_grad(true);
+
+
+    // Dot Product
+
     let x = vector1.dot(&vector2);
     x.backward();
-    
+
     assert_eq!(vector1.gradient().unwrap(), vector2.ndarray());
     assert_eq!(vector2.gradient().unwrap(), vector1.ndarray());
+
+
+    // Matrix-Vector Product 1
+
+    let x = matrix1.matmul(&vector1);
+    vector1.zero_gradient();
+    x.backward();
+
+    assert_eq!(matrix1.gradient().unwrap(), NdArray::from([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]));
+    assert_eq!(vector1.gradient().unwrap(), NdArray::from([-2.0, -1.5, 5.5]));
+
+
+    // Matrix-Vector Product 1
+
+    let x = matrix1.matmul(&vector2);
+    matrix1.zero_gradient();
+    vector2.zero_gradient();
+    x.backward();
+
+    assert_eq!(matrix1.gradient().unwrap(), NdArray::from([[-1.0, 5.0, -9.0], [-1.0, 5.0, -9.0], [-1.0, 5.0, -9.0]]));
+    assert_eq!(vector2.gradient().unwrap(), NdArray::from([-2.0, -1.5, 5.5]));
+
+
+    // Matrix-Matrix Product
+
+    let x = matrix1.matmul(&matrix2);
+    matrix1.zero_gradient();
+    x.backward();
+
+    assert_eq!(matrix1.gradient().unwrap(), NdArray::from([[0.0, -5.5, -5.5], [0.0, -5.5, -5.5], [0.0, -5.5, -5.5]]));
+    assert_eq!(matrix2.gradient().unwrap(), NdArray::from([[-2.0, -2.0, -2.0], [-1.5, -1.5, -1.5], [5.5, 5.5, 5.5]]));
 }

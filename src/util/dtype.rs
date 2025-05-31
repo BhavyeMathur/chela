@@ -6,6 +6,7 @@ use rand::distributions::uniform::SampleUniform;
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
+use crate::linalg::matrix_ops::MatrixOps;
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync + BinaryOps<Self> + 'static {}
 
@@ -192,7 +193,8 @@ impl IntegerDataType for i64 {}
 impl IntegerDataType for i128 {}
 impl IntegerDataType for isize {}
 
-pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform + Neg<Output=Self> + SumOfProductsType {}
+pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform + Neg<Output=Self>
++ SumOfProductsType + MatrixOps {}
 
 impl FloatDataType for f32 {}
 impl FloatDataType for f64 {}

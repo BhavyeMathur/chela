@@ -1,5 +1,7 @@
 use crate::dot_backwards::DotBackwards;
-use crate::{Tensor, TensorDataType};
+use crate::matrix_product_backwards::MatrixProductBackwards;
+use crate::matrix_vec_backwards::MatrixVecBackwards;
+use crate::{StridedMemory, Tensor, TensorDataType};
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// Calculates the dot product of two 1D tensors.
@@ -21,5 +23,54 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
         let requires_grad = self.requires_grad() || other.requires_grad();
 
         unsafe { Tensor::from_raw_parts(self.array.dot(&other.array), requires_grad, DotBackwards::new(self, other)) }
+    }
+
+    /// Calculates the matrix product of two tensors.
+    ///
+    /// - If both tensors are 1D, then their dot product is returned.
+    /// - If both tensors are 2D, then their matrix product is returned.
+    /// - If the first tensor is 2D and the second tensor is 1D, then the matrix-vector product is returned.
+    ///
+    /// # Panics
+    /// - If the dimensions/shape of the tensors are incompatible
+    ///
+    /// # Example
+    /// ```
+    /// # use chela::*;
+    ///
+    /// let a = Tensor::from(vec![
+    ///     [1, 2, 3],
+    ///     [4, 5, 6],
+    /// ]);
+    ///
+    /// let b = Tensor::from(vec![
+    ///     [7, 8],
+    ///     [9, 10],
+    ///     [11, 12],
+    /// ]);
+    ///
+    /// let result = a.matmul(&b);
+    /// assert_eq!(result, NdArray::from(vec![
+    ///     [58, 64],
+    ///     [139, 154],
+    /// ]));
+    /// ```
+    pub fn matmul<'r>(&self, other: impl AsRef<Tensor<'a, T>>) -> Tensor<'r, T> {
+        let other = other.as_ref();
+
+        if self.ndims() == 1 && other.ndims() == 1 {
+            return self.dot(other);
+        }
+
+        let requires_grad = self.requires_grad() || other.requires_grad();
+        let result = self.array.matmul(&other.array);
+
+        if self.ndims() == 2 && other.ndims() == 1 {
+            unsafe { Tensor::from_raw_parts(result, requires_grad, MatrixVecBackwards::new(self, other)) }
+        } else if self.ndims() == 2 && other.ndims() == 2 {
+            unsafe { Tensor::from_raw_parts(result, requires_grad, MatrixProductBackwards::new(self, other)) }
+        } else {
+            panic!("this should never happen")
+        }
     }
 }

@@ -16,3 +16,5 @@ pub mod backwards;
 pub mod identity_backwards;
 
 pub mod dot_backwards;
+pub mod matrix_vec_backwards;
+pub mod matrix_product_backwards;
