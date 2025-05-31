@@ -1,8 +1,7 @@
 use crate::dtype::RawDataType;
-use crate::slice::update_flags_with_contiguity;
 use crate::ndarray::flags::NdArrayFlags;
-use crate::{NdArray, StridedMemory};
-use crate::traits::ReshapeImpl;
+use crate::slice::update_flags_with_contiguity;
+use crate::{NdArray, Reshape, StridedMemory};
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Returns a 1D copy of a flattened multidimensional ndarray.
@@ -53,9 +52,9 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     }
 }
 
-impl<'a, T: RawDataType> ReshapeImpl<'static, T> for NdArray<'a, T> {
+impl<T: RawDataType> Reshape<T> for NdArray<'_, T> {
     type Output = NdArray<'static, T>;
-    
+
     unsafe fn reshaped_view(mut self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output {
         let flags = update_flags_with_contiguity(self.flags, &shape, &stride);
 
@@ -76,9 +75,9 @@ impl<'a, T: RawDataType> ReshapeImpl<'static, T> for NdArray<'a, T> {
     }
 }
 
-impl<'a, T: RawDataType> ReshapeImpl<'a, T> for &'a NdArray<'a, T> {
+impl<'a, T: RawDataType> Reshape<T> for &'a NdArray<'a, T> {
     type Output = NdArray<'a, T>;
-    
+
     unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output {
         let mut flags = update_flags_with_contiguity(self.flags, &shape, &stride);
         flags -= NdArrayFlags::UserCreated;

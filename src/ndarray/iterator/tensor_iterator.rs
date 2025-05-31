@@ -1,8 +1,8 @@
 use crate::dtype::RawDataType;
 use crate::iterator::util::split_by_indices;
 use crate::util::haslength::HasLength;
-use crate::NdArray;
-use crate::traits::ReshapeImpl;
+use crate::{NdArray, Reshape};
+
 
 #[non_exhaustive]
 pub struct NdIterator<'a, T: RawDataType> {

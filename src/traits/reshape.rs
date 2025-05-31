@@ -1,9 +1,10 @@
-use crate::{AxisType, NdArray, StridedMemory, RawDataType};
+use crate::{AxisType, StridedMemory, RawDataType};
 use crate::util::to_vec::ToVec;
 
-pub trait ReshapeImpl<'a, T: RawDataType>: StridedMemory {
-    type Output; 
-    
+
+pub trait Reshape<T: RawDataType>: StridedMemory {
+    type Output;
+
     /// Provides a non-owning view of the ndarray with the specified shape and stride.
     /// The data pointed to by the view is shared with the original ndarray.
     ///
@@ -11,9 +12,7 @@ pub trait ReshapeImpl<'a, T: RawDataType>: StridedMemory {
     /// - Ensure the memory layout referenced by `shape`, and `stride` is valid and owned
     ///   by the original ndarray.
     unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output;
-}
-
-pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
+    
     /// Provides a non-owning view of the ndarray that shares its data with the original ndarray.
     ///
     /// # Example
@@ -180,8 +179,3 @@ pub trait Reshape<'a, T: RawDataType>: ReshapeImpl<'a, T> {
         unsafe { self.reshaped_view(shape, stride) }
     }
 }
-
-
-impl<'a, T: RawDataType> Reshape<'a, T> for &'a NdArray<'a, T> {}
-
-impl<T: RawDataType> Reshape<'static, T> for NdArray<'static, T> {}

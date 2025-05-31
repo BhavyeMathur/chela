@@ -1,8 +1,8 @@
 use crate::dtype::RawDataType;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::util::functions::pad;
-use crate::NdArray;
-use crate::traits::ReshapeImpl;
+use crate::{NdArray, Reshape};
+
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Broadcasts the `NdArray` to the specified shape.
