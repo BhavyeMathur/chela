@@ -3,7 +3,7 @@ use paste::paste;
 
 #[test]
 fn test_constructor_requires_grad() {
-    let a = Tensor::from([1.0, 2.0, 3.0]);
+    let a = Tensor::new([1.0, 2.0, 3.0]);
     assert!(!a.requires_grad());
     assert!(a.is_leaf());
 

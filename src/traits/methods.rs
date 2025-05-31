@@ -8,10 +8,10 @@ pub trait StridedMemory: Sized {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let a = NdArray::from([3, 4, 5]);
+    /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.shape(), &[3]);
     ///
-    /// let b = NdArray::from([[3], [5]]);
+    /// let b = NdArray::new([[3], [5]]);
     /// assert_eq!(b.shape(), &[2, 1]);
     ///
     /// let c = NdArray::scalar(0);
@@ -26,7 +26,7 @@ pub trait StridedMemory: Sized {
     /// ```rust
     /// # use chela::*;
     ///
-    /// let a = NdArray::from([[3, 4], [5, 6]]);
+    /// let a = NdArray::new([[3, 4], [5, 6]]);
     /// assert_eq!(a.stride(), &[2, 1]);
     /// ```
     fn stride(&self) -> &[usize];
@@ -35,10 +35,10 @@ pub trait StridedMemory: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = NdArray::from([3, 4, 5]);
+    /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.ndims(), 1);
     ///
-    /// let b = NdArray::from([[3], [5]]);
+    /// let b = NdArray::new([[3], [5]]);
     /// assert_eq!(b.ndims(), 2);
     ///
     /// let c = NdArray::scalar(0);
@@ -55,10 +55,10 @@ pub trait StridedMemory: Sized {
     ///
     /// ```
     /// # use chela::*;
-    /// let a = NdArray::from([3, 4, 5]);
+    /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.len(), 3);
     ///
-    /// let b = NdArray::from([[3], [5]]);
+    /// let b = NdArray::new([[3], [5]]);
     /// assert_eq!(b.len(), 2);
     ///
     /// let c = NdArray::scalar(0);
@@ -77,10 +77,10 @@ pub trait StridedMemory: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = NdArray::from([3, 4, 5]);
+    /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.size(), 3);
     ///
-    /// let b = NdArray::from([[3], [5]]);
+    /// let b = NdArray::new([[3], [5]]);
     /// assert_eq!(b.size(), 2);
     ///
     /// let c = NdArray::scalar(0);
@@ -98,7 +98,7 @@ pub trait StridedMemory: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = NdArray::from([[3, 4], [5, 6]]);
+    /// let a = NdArray::new([[3, 4], [5, 6]]);
     /// assert!(a.is_contiguous());
     ///
     /// let b = a.slice_along(Axis(1), 0);
@@ -113,7 +113,7 @@ pub trait StridedMemory: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = NdArray::from([[3, 4], [5, 6]]);
+    /// let a = NdArray::new([[3, 4], [5, 6]]);
     /// assert!(!a.is_view());
     ///
     /// let b = a.slice_along(Axis(1), 0);
@@ -132,7 +132,7 @@ pub trait StridedMemory: Sized {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let a = NdArray::from([[3, 4, 5], [6, 7, 8]]);
+    /// let a = NdArray::new([[3, 4, 5], [6, 7, 8]]);
     /// assert_eq!(a.has_uniform_stride(), Some(1));
     ///
     /// let b = a.slice_along(Axis(1), 0);

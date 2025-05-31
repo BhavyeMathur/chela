@@ -26,7 +26,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([1, 2, 3]);  // shape is [3]
+    /// let ndarray = NdArray::new([1, 2, 3]);  // shape is [3]
     /// let broadcasted_array = ndarray.broadcast_to(&[2, 3]);
     ///
     /// assert_eq!(broadcasted_array.shape(), &[2, 3]);

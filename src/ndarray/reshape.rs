@@ -2,6 +2,7 @@ use crate::dtype::RawDataType;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::slice::update_flags_with_contiguity;
 use crate::{NdArray, Reshape, StridedMemory};
+use crate::traits::constructors::Constructors;
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Returns a 1D copy of a flattened multidimensional ndarray.
@@ -13,9 +14,9 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let ndarray = NdArray::from([[1, 2, 3], [4, 5, 6]]);
+    /// let ndarray = NdArray::new([[1, 2, 3], [4, 5, 6]]);
     /// let flat_array = ndarray.flatten();
-    /// assert_eq!(flat_array, NdArray::from([1, 2, 3, 4, 5, 6]));
+    /// assert_eq!(flat_array, NdArray::new([1, 2, 3, 4, 5, 6]));
     /// ```
     pub fn flatten(&self) -> NdArray<'static, T> {
         unsafe {

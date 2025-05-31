@@ -1,12 +1,12 @@
 use crate::util::to_vec::ToVec;
-use crate::{FloatDataType, NdArray, NumericDataType};
+use crate::{Constructors, FloatDataType, NdArray, NumericDataType, RawDataType, Tensor, TensorDataType};
 use num::{Float, NumCast};
 use rand::distributions::uniform::SampleUniform;
 use rand::distributions::{Distribution, Uniform};
 use rand::thread_rng;
 use rand_distr::Normal;
 
-impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
+pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// Samples an `NdArray` with the specified shape
     /// from a standard normal distribution (0 mean, unit standard deviation).
     ///
@@ -17,7 +17,10 @@ impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
     /// let ndarray = NdArray::<f64>::randn([2, 3]);
     /// println!("{:?}", ndarray);
     /// ```
-    pub fn randn(shape: impl ToVec<usize>) -> Self {
+    fn randn(shape: impl ToVec<usize>) -> Self
+    where
+        T: FloatDataType + SampleUniform
+    {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
         let n = shape.iter().product();
@@ -28,7 +31,7 @@ impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
             .map(|_| <T as NumCast>::from(normal.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers) }
+        unsafe { Self::from_contiguous_owned_buffer(shape, random_numbers) }
     }
 
     /// Samples an `NdArray` with the specified shape
@@ -41,7 +44,10 @@ impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
     /// let ndarray = NdArray::<f64>::rand([2, 3]);
     /// println!("{:?}", ndarray);
     /// ```
-    pub fn rand(shape: impl ToVec<usize>) -> Self {
+    fn rand(shape: impl ToVec<usize>) -> Self
+    where
+        T: FloatDataType + SampleUniform
+    {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
         let n = shape.iter().product();
@@ -51,7 +57,7 @@ impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers) }
+        unsafe { Self::from_contiguous_owned_buffer(shape, random_numbers) }
     }
 
     /// Samples an `NdArray` with the specified shape
@@ -64,7 +70,10 @@ impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
     /// let ndarray = NdArray::<f64>::uniform([2, 3], -5.0, 3.0);
     /// println!("{:?}", ndarray);
     /// ```
-    pub fn uniform(shape: impl ToVec<usize>, low: T, high: T) -> Self {
+    fn uniform(shape: impl ToVec<usize>, low: T, high: T) -> Self
+    where
+        T: FloatDataType + SampleUniform
+    {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
         let n = shape.iter().product();
@@ -74,11 +83,9 @@ impl<T: FloatDataType + SampleUniform> NdArray<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng)).unwrap())
             .collect();
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers) }
+        unsafe { Self::from_contiguous_owned_buffer(shape, random_numbers) }
     }
-}
 
-impl<T: NumericDataType> NdArray<'_, T> {
     /// Samples an `NdArray` with the specified shape
     /// with integer values uniformly distributed between `low` (inclusive) and `high` (exclusive).
     ///
@@ -89,7 +96,10 @@ impl<T: NumericDataType> NdArray<'_, T> {
     /// let ndarray = NdArray::<isize>::randint([2, 3], -5, 3);
     /// println!("{:?}", ndarray);
     /// ```
-    pub fn randint(shape: impl ToVec<usize>, low: T, high: T) -> Self {
+    fn randint(shape: impl ToVec<usize>, low: T, high: T) -> Self
+    where
+        T: NumericDataType
+    {
         assert!(low < high, "randint: low must be less than high");
 
         let mut rng = thread_rng();
@@ -101,6 +111,9 @@ impl<T: NumericDataType> NdArray<'_, T> {
             .map(|_| <T as NumCast>::from(uniform.sample(&mut rng).round()).unwrap())
             .collect();
 
-        unsafe { NdArray::from_contiguous_owned_buffer(shape, random_numbers) }
+        unsafe { Self::from_contiguous_owned_buffer(shape, random_numbers) }
     }
 }
+
+impl<'a, T: RawDataType> RandomConstructors<T> for NdArray<'a, T> {}
+impl<'a, T: TensorDataType> RandomConstructors<T> for Tensor<'a, T> {}

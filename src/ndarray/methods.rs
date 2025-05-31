@@ -34,7 +34,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let ndarray = NdArray::from([[50, 60], [-5, -10]]);
+    /// let ndarray = NdArray::new([[50, 60], [-5, -10]]);
     /// let data = ndarray.data_slice();
     /// assert_eq!(data, &[50, 60, -5, -10]);
     /// ```
@@ -51,7 +51,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let ndarray = NdArray::from([[50, 60], [-5, -10]]);
+    /// let ndarray = NdArray::new([[50, 60], [-5, -10]]);
     /// let data = ndarray.into_data_vector();
     /// assert_eq!(data, vec![50, 60, -5, -10]);
     /// ```
@@ -62,7 +62,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
 
         // ensure the vector's data is not dropped when self goes out of scope and is destroyed
         self.flags -= NdArrayFlags::Owned;
-        
+
         unsafe { Vec::from_raw_parts(self.mut_ptr(), self.len, self.capacity) }
     }
 }

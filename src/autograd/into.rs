@@ -1,5 +1,5 @@
 use crate::util::to_vec::ToVec;
-use crate::{NdArray, RawDataType};
+use crate::{Constructors, NdArray, RawDataType};
 
 pub(crate) trait IntoNdArray<'a, T: RawDataType> {
     #[allow(clippy::wrong_self_convention)]

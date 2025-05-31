@@ -1,7 +1,7 @@
 use crate::axis::AxisType;
 use crate::einsum::einsum_into_ptr;
 use crate::linalg::sum_of_products::SumOfProductsType;
-use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, NdArray, StridedMemory};
+use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, NdArray, StridedMemory, Constructors};
 use std::cmp::min;
 
 impl<'a, T: MatrixOps> NdArray<'a, T> {
@@ -16,21 +16,21 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use chela::NdArray;
+    /// # use chela::*;
     ///
-    /// let a = NdArray::from(vec![
+    /// let a = NdArray::new(vec![
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     /// ]);
     ///
-    /// let b = NdArray::from(vec![
+    /// let b = NdArray::new(vec![
     ///     [7, 8],
     ///     [9, 10],
     ///     [11, 12],
     /// ]);
     ///
     /// let result = a.matmul(&b);
-    /// assert_eq!(result, NdArray::from(vec![
+    /// assert_eq!(result, NdArray::new(vec![
     ///     [58, 64],
     ///     [139, 154],
     /// ]));
@@ -72,7 +72,7 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
     /// # Example
     /// ```rust
     /// # use chela::*;
-    /// 
+    ///
     /// let arr1 = NdArray::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
     /// let arr2 = NdArray::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices
     /// let result = arr1.bmm(&arr2);
@@ -102,8 +102,8 @@ impl<'a, T: SumOfProductsType> NdArray<'a, T> {
     /// # Examples
     /// ```
     /// # use chela::*;
-    /// let arr1 = NdArray::from([1, 2, 3]);
-    /// let arr2 = NdArray::from([4, 5, 6]);
+    /// let arr1 = NdArray::new([1, 2, 3]);
+    /// let arr2 = NdArray::new([4, 5, 6]);
     /// let result = arr1.dot(arr2);
     /// assert_eq!(result.value(), 32); // 1*4 + 2*5 + 3*6 = 32
     /// ```
@@ -134,7 +134,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let arr = NdArray::from([
+    /// let arr = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
@@ -153,7 +153,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let arr = NdArray::from([
+    /// let arr = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
@@ -173,7 +173,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([
+    /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
@@ -193,7 +193,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([
+    /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
@@ -215,14 +215,14 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([
+    /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
     /// let diagonal = ndarray.diagonal();
-    /// assert_eq!(diagonal, NdArray::from([1, 5, 9]));
+    /// assert_eq!(diagonal, NdArray::new([1, 5, 9]));
     pub fn diagonal(&'a self) -> NdArray<'a, T> {
         self.diagonal_along(0, 1)
     }
@@ -235,14 +235,14 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([
+    /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
     /// let diagonal = ndarray.offset_diagonal(1);
-    /// assert_eq!(diagonal, NdArray::from([2, 6]));
+    /// assert_eq!(diagonal, NdArray::new([2, 6]));
     pub fn offset_diagonal(&'a self, offset: isize) -> NdArray<'a, T> {
         self.offset_diagonal_along(offset, 0, 1)
     }
@@ -256,14 +256,14 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let ndarray = NdArray::from([
+    /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
     /// let diagonal = ndarray.diagonal_along(Axis(0), Axis(1));  // or .diagonal_along(0, 1)
-    /// assert_eq!(diagonal, NdArray::from([1, 5, 9]));
+    /// assert_eq!(diagonal, NdArray::new([1, 5, 9]));
     pub fn diagonal_along(&'a self, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
         self.offset_diagonal_along(0, axis1, axis2)
     }
@@ -277,14 +277,14 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// # Examples
     /// ```rust
     /// # use chela::*;
-    /// let arr = NdArray::from([
+    /// let arr = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
     ///     [7, 8, 9]
     /// ]);
     ///
     /// let diagonal = arr.offset_diagonal_along(-1, Axis(0), Axis(1));  // or .offset_diagonal_along(-1, 0, 1)
-    /// assert_eq!(diagonal, NdArray::from([4, 8]));
+    /// assert_eq!(diagonal, NdArray::new([4, 8]));
     pub fn offset_diagonal_along(&'a self, offset: isize, axis1: impl AxisType, axis2: impl AxisType) -> NdArray<'a, T> {
         assert!(self.ndims() >= 2, "diagonals require a ndarray with at least 2 dimensions");
 

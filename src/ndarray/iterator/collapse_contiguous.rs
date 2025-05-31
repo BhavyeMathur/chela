@@ -91,10 +91,11 @@ mod tests {
     use super::collapse_contiguous;
     use crate::iterator::collapse_contiguous::{collapse_to_uniform_stride, has_uniform_stride};
     use crate::{s, NdArray};
+    use crate::traits::constructors::Constructors;
 
     #[test]
     fn test_collapse_contiguous() {
-        let a = NdArray::from([
+        let a = NdArray::new([
             [[0, 1, 2], [3, 4, 5]],
             [[6, 7, 8], [9, 10, 11]],
             [[12, 13, 14], [15, 16, 17]],

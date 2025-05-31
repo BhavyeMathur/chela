@@ -1,6 +1,6 @@
 use crate::gradient_function::{GradientFunction};
 use crate::ndarray::flags::NdArrayFlags;
-use crate::{Tensor, StridedMemory, TensorDataType, NdArray};
+use crate::{Tensor, StridedMemory, TensorDataType, NdArray, Constructors};
 use crate::accumulate_grad::AccumulateGrad;
 use crate::into::IntoNdArray;
 
@@ -15,7 +15,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let mut tensor = Tensor::from([1.0, 2.0, 3.0]);
+    /// let mut tensor = Tensor::new([1.0, 2.0, 3.0]);
     /// tensor.set_requires_grad(true);
     /// assert!(tensor.is_leaf());
     ///
@@ -42,7 +42,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let mut tensor = Tensor::from([1.0, 2.0, 3.0]);
+    /// let mut tensor = Tensor::new([1.0, 2.0, 3.0]);
     /// tensor.set_requires_grad(true);
     ///
     /// let tensor2 = -tensor;
@@ -138,7 +138,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// # use chela::*;
     ///
     /// let mut a = Tensor::full(2.0, [3]);  // [2, 2, 2]
-    /// let b = Tensor::from([3.0, 1.0, -1.0]);
+    /// let b = Tensor::new([3.0, 1.0, -1.0]);
     ///
     /// a.set_requires_grad(true);
     ///
@@ -146,7 +146,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// c.backward_with([2f32, 1.0, 1.0]);
     ///
     /// // dc/da = b
-    /// assert_eq!(a.gradient().unwrap(), Tensor::from([6.0, 1.0, -1.0]));
+    /// assert_eq!(a.gradient().unwrap(), Tensor::new([6.0, 1.0, -1.0]));
     /// ```
     pub fn backward_with(&self, gradient: impl IntoNdArray<'a, T>) {
         let gradient = gradient.as_ndarray();
@@ -163,7 +163,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// # use chela::*;
     ///
     /// let mut a = Tensor::full(2.0, [3]);  // [2, 2, 2]
-    /// let b = Tensor::from([3.0, 1.0, -1.0]);
+    /// let b = Tensor::new([3.0, 1.0, -1.0]);
     ///
     /// a.set_requires_grad(true);
     ///
@@ -171,7 +171,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// c.backward();
     ///
     /// // dc/da = b
-    /// assert_eq!(a.gradient().unwrap(), Tensor::from([3.0, 1.0, -1.0]));
+    /// assert_eq!(a.gradient().unwrap(), Tensor::new([3.0, 1.0, -1.0]));
     /// ```
     pub fn backward(&self) {
         self.backward_with(NdArray::ones(self.shape()))
@@ -190,7 +190,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// let c = &a * 5.0;
     ///
     /// let d = c.detach();
-    /// assert_eq!(d, NdArray::from([10.0, 10.0, 10.0]));
+    /// assert_eq!(d, NdArray::new([10.0, 10.0, 10.0]));
     /// ```
     pub fn detach(&self) -> NdArray<'static, T> {
         self.array.clone()

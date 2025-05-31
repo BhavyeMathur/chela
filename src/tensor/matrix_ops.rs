@@ -15,8 +15,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// # Examples
     /// ```
     /// # use chela::*;
-    /// let tensor1 = Tensor::from([1.0, 2.0, 3.0]);
-    /// let tensor2 = Tensor::from([4.0, 5.0, 6.0]);
+    /// let tensor1 = Tensor::new([1.0, 2.0, 3.0]);
+    /// let tensor2 = Tensor::new([4.0, 5.0, 6.0]);
     /// let result = tensor1.dot(tensor2);
     /// assert_eq!(result.value(), 32.0); // 1*4 + 2*5 + 3*6 = 32
     /// ```
@@ -42,19 +42,19 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     /// # use chela::*;
     ///
-    /// let a = Tensor::from(vec![
+    /// let a = Tensor::new(vec![
     ///     [1.0, 2.0, 3.0],
     ///     [4.0, 5.0, 6.0],
     /// ]);
     ///
-    /// let b = Tensor::from(vec![
+    /// let b = Tensor::new(vec![
     ///     [7.0, 8.0],
     ///     [9.0, 10.0],
     ///     [11.0, 12.0],
     /// ]);
     ///
     /// let result = a.matmul(&b);
-    /// assert_eq!(result, Tensor::from([
+    /// assert_eq!(result, Tensor::new([
     ///     [58.0, 64.0],
     ///     [139.0, 154.0],
     /// ]));

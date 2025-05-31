@@ -21,7 +21,6 @@ pub mod clone;
 pub mod equals;
 pub mod broadcast;
 pub mod binary_ops;
-pub mod random;
 pub mod astype;
 
 mod print;

@@ -18,8 +18,8 @@ We can easily define multidimensional arrays and operate on them as follows:
 use chela::*;
 
 fn main() {
-    let matrix = NdArray::from([[7, 12, 3], [5, 6, 4], [0, 0, 1]]);
-    let vector = NdArray::from(vec![5, 10, -5]);
+    let matrix = NdArray::new([[7, 12, 3], [5, 6, 4], [0, 0, 1]]);
+    let vector = NdArray::new(vec![5, 10, -5]);
     
     let result = matrix.matmul(vector);
     println!("{result:?}");
@@ -53,8 +53,8 @@ Chela provides a wrapper around `NdArray` called `Tensor` (only for floating poi
 
 ```rust
 fn main() {
-    let mut a = Tensor::from([[7.5, 12.0], [5.0, 6.25]]);
-    let b = Tensor::from([[0.5, -2.0]]);
+    let mut a = Tensor::new([[7.5, 12.0], [5.0, 6.25]]);
+    let b = Tensor::new([[0.5, -2.0]]);
     let c = Tensor::scalar(10.0);
 
     // we wish to compute the gradient for a and b

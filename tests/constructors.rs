@@ -123,7 +123,7 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_arange, {
         let a = NdArray::<T>::arange(0 as T, 1 as T);
-        let expected = NdArray::from([0]).astype::<T>();
+        let expected = NdArray::new([0]).astype::<T>();
 
         assert_eq!(a, expected);
         assert_eq!(a.shape(), &[1]);
@@ -132,7 +132,7 @@ test_for_all_numeric_dtypes!(
         assert_eq!(a.has_uniform_stride(), Some(1));
 
         let b = NdArray::<T>::arange(8 as T, 15 as T);
-        let expected = NdArray::from([8, 9, 10, 11, 12, 13, 14]).astype::<T>();
+        let expected = NdArray::new([8, 9, 10, 11, 12, 13, 14]).astype::<T>();
         assert_eq!(b, expected);
     }
 );
@@ -140,7 +140,7 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_arange_with_step, {
         let a = NdArray::<T>::arange_with_step(0 as T, 1 as T, 2 as T);
-        let expected = NdArray::from([0]).astype::<T>();
+        let expected = NdArray::new([0]).astype::<T>();
 
         assert_eq!(a, expected);
         assert_eq!(a.shape(), &[1]);
@@ -149,7 +149,7 @@ test_for_all_numeric_dtypes!(
         assert_eq!(a.has_uniform_stride(), Some(1));
 
         let b = NdArray::<T>::arange_with_step(8 as T, 15 as T, 2 as T);
-        let expected = NdArray::from([8, 10, 12, 14]).astype::<T>();
+        let expected = NdArray::new([8, 10, 12, 14]).astype::<T>();
         assert_eq!(b, expected);
     }
 );
@@ -157,11 +157,11 @@ test_for_all_numeric_dtypes!(
 test_for_signed_dtypes!(
     test_arange_with_negative_step, {
         let a = NdArray::<T>::arange_with_step(15 as T, 8 as T, -3 as T);
-        let expected = NdArray::from([15, 12, 9]).astype::<T>();
+        let expected = NdArray::new([15, 12, 9]).astype::<T>();
         assert_eq!(a, expected);
 
         let a = NdArray::<T>::arange_with_step(21 as T, -48 as T, -7 as T);
-        let expected = NdArray::from([21, 14, 7, 0, -7, -14, -21, -28, -35, -42]).astype::<T>();
+        let expected = NdArray::new([21, 14, 7, 0, -7, -14, -21, -28, -35, -42]).astype::<T>();
         assert_eq!(a, expected);
     }
 );

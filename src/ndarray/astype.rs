@@ -1,5 +1,5 @@
 use crate::dtype::NumericDataType;
-use crate::{NdArray, StridedMemory};
+use crate::{Constructors, NdArray, StridedMemory};
 use num::NumCast;
 
 impl<T: NumericDataType> NdArray<'_, T> {

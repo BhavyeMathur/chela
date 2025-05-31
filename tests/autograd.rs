@@ -73,9 +73,9 @@ fn test_autograd3() {
 
 #[test]
 fn test_autograd4() {
-    let mut a = Tensor::from([2.0f64, 4.0, 6.0]);
+    let mut a = Tensor::new([2.0f64, 4.0, 6.0]);
     let mut b = Tensor::scalar(3.0);
-    let mut c = Tensor::from([[2.0, 4.0, 6.0], [5.0, 7.0, 11.0]]);
+    let mut c = Tensor::new([[2.0, 4.0, 6.0], [5.0, 7.0, 11.0]]);
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -84,7 +84,7 @@ fn test_autograd4() {
     let d = &c + &a;
     d.backward();
 
-    assert_eq!(a.gradient().unwrap(), Tensor::from([2.0, 2.0, 2.0]));
+    assert_eq!(a.gradient().unwrap(), Tensor::new([2.0, 2.0, 2.0]));
     assert_eq!(b.gradient().unwrap(), Tensor::scalar(0.0));
     assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]));
 
@@ -94,7 +94,7 @@ fn test_autograd4() {
     c.zero_gradient();
     e.backward();
 
-    assert_eq!(a.gradient().unwrap(), Tensor::from([6.0, 6.0, 6.0]));
+    assert_eq!(a.gradient().unwrap(), Tensor::new([6.0, 6.0, 6.0]));
     assert_eq!(b.gradient().unwrap(), Tensor::scalar(59.0));
     assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]) * 3.0);
 
@@ -104,7 +104,7 @@ fn test_autograd4() {
     c.zero_gradient();
     f.backward();
 
-    assert_eq!(a.gradient().unwrap(), Tensor::from([8.0, 8.0, 8.0]));
+    assert_eq!(a.gradient().unwrap(), Tensor::new([8.0, 8.0, 8.0]));
     assert_eq!(b.gradient().unwrap(), Tensor::scalar(59.0));
     assert_eq!(c.gradient().unwrap(), Tensor::<f64>::ones([2, 3]) * 3.0);
 
@@ -114,16 +114,16 @@ fn test_autograd4() {
     c.zero_gradient();
     g.backward();
 
-    assert_eq!(a.gradient().unwrap(), Tensor::from([81.0, 141.0, 215.0]));
+    assert_eq!(a.gradient().unwrap(), Tensor::new([81.0, 141.0, 215.0]));
     assert_eq!(b.gradient().unwrap(), Tensor::scalar(683.0));
-    assert_eq!(c.gradient().unwrap(), Tensor::from([[26.0, 52.0, 78.0], [44.0, 70.0, 108.0]]));
+    assert_eq!(c.gradient().unwrap(), Tensor::new([[26.0, 52.0, 78.0], [44.0, 70.0, 108.0]]));
 }
 
 #[test]
 fn test_autograd5() {
-    let mut a = Tensor::from([1.0f32, 2.0, 3.0]);  // [3]
-    let mut b = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);  // [3, 3]
-    let mut c = Tensor::from([[2.0], [4.0], [6.0]]);  // [3, 1]
+    let mut a = Tensor::new([1.0f32, 2.0, 3.0]);  // [3]
+    let mut b = Tensor::new([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);  // [3, 3]
+    let mut c = Tensor::new([[2.0], [4.0], [6.0]]);  // [3, 1]
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -134,20 +134,20 @@ fn test_autograd5() {
     let z = -&x + &y - (&x * &x) + (&x * &y) / &a;
     z.backward();
 
-    assert_almost_eq!(a.gradient().unwrap(), NdArray::from([-5.6277f32, -3.5112, -23.9599]), 1e-4);
+    assert_almost_eq!(a.gradient().unwrap(), NdArray::new([-5.6277f32, -3.5112, -23.9599]), 1e-4);
 
-    assert_almost_eq!(b.gradient().unwrap(), NdArray::from([[ 0.3333, 0.8750, 32.2667],
+    assert_almost_eq!(b.gradient().unwrap(), NdArray::new([[ 0.3333, 0.8750, 32.2667],
                                                            [ 5.2f32, 1.7613, 8.5238],
                                                            [ 0.2751, 2.6019, 6.9520]]), 1e-4);
 
-    assert_almost_eq!(c.gradient().unwrap(), NdArray::from([[-17.84f32], [-24.5101], [-40.1665]]), 1e-4);
+    assert_almost_eq!(c.gradient().unwrap(), NdArray::new([[-17.84f32], [-24.5101], [-40.1665]]), 1e-4);
 }
 
 #[test]
 fn test_autograd6() {
-    let mut a = Tensor::from([1.0f32, 2.0, 3.0]);  // [3]
-    let mut b = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);  // [3, 3]
-    let mut c = Tensor::from([[2.0], [4.0], [6.0]]);  // [3, 1]
+    let mut a = Tensor::new([1.0f32, 2.0, 3.0]);  // [3]
+    let mut b = Tensor::new([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);  // [3, 3]
+    let mut c = Tensor::new([[2.0], [4.0], [6.0]]);  // [3, 1]
 
     a.set_requires_grad(true);
     b.set_requires_grad(true);
@@ -158,13 +158,13 @@ fn test_autograd6() {
     let z = -&x + &y - (&x * 5.0) + (&x * &y) / &a;
     z.backward();
 
-    assert_almost_eq!(a.gradient().unwrap(), NdArray::from([-13.2, -9.7, -9.0556]), 1e-4);
+    assert_almost_eq!(a.gradient().unwrap(), NdArray::new([-13.2, -9.7, -9.0556]), 1e-4);
 
-    assert_almost_eq!(b.gradient().unwrap(), NdArray::from([[-0.4375, -0.3125, -0.2708],
+    assert_almost_eq!(b.gradient().unwrap(), NdArray::new([[-0.4375, -0.3125, -0.2708],
                                                            [ -0.55, -0.35, -0.2833],
                                                            [ -0.6250, -0.375, -0.2917]]), 1e-4);
 
-    assert_almost_eq!(c.gradient().unwrap(), NdArray::from([[-17.0807], [-16.6142], [-16.4740]]), 1e-4);
+    assert_almost_eq!(c.gradient().unwrap(), NdArray::new([[-17.0807], [-16.6142], [-16.4740]]), 1e-4);
 }
 
 #[test]
@@ -299,11 +299,11 @@ fn test_autograd_deep_chain_mul_add() {
 
 #[test]
 fn test_autograd_matmul_ops() {
-    let mut vector1 = Tensor::from([1.0, 2.0, 3.0]);
-    let mut vector2 = Tensor::from([-1.0, 5.0, -9.0]);
+    let mut vector1 = Tensor::new([1.0, 2.0, 3.0]);
+    let mut vector2 = Tensor::new([-1.0, 5.0, -9.0]);
 
-    let mut matrix1 = Tensor::from([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);
-    let mut matrix2 = Tensor::from([[1.0, -5.0, 4.0], [-3.0, -5.5, 3.0], [-9.0, 2.0, 1.5]]);
+    let mut matrix1 = Tensor::new([[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]]);
+    let mut matrix2 = Tensor::new([[1.0, -5.0, 4.0], [-3.0, -5.5, 3.0], [-9.0, 2.0, 1.5]]);
 
     vector1.set_requires_grad(true);
     vector2.set_requires_grad(true);
@@ -326,8 +326,8 @@ fn test_autograd_matmul_ops() {
     vector1.zero_gradient();
     x.backward();
 
-    assert_eq!(matrix1.gradient().unwrap(), NdArray::from([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]));
-    assert_eq!(vector1.gradient().unwrap(), NdArray::from([-2.0, -1.5, 5.5]));
+    assert_eq!(matrix1.gradient().unwrap(), NdArray::new([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]));
+    assert_eq!(vector1.gradient().unwrap(), NdArray::new([-2.0, -1.5, 5.5]));
 
 
     // Matrix-Vector Product 1
@@ -337,8 +337,8 @@ fn test_autograd_matmul_ops() {
     vector2.zero_gradient();
     x.backward();
 
-    assert_eq!(matrix1.gradient().unwrap(), NdArray::from([[-1.0, 5.0, -9.0], [-1.0, 5.0, -9.0], [-1.0, 5.0, -9.0]]));
-    assert_eq!(vector2.gradient().unwrap(), NdArray::from([-2.0, -1.5, 5.5]));
+    assert_eq!(matrix1.gradient().unwrap(), NdArray::new([[-1.0, 5.0, -9.0], [-1.0, 5.0, -9.0], [-1.0, 5.0, -9.0]]));
+    assert_eq!(vector2.gradient().unwrap(), NdArray::new([-2.0, -1.5, 5.5]));
 
 
     // Matrix-Matrix Product
@@ -347,19 +347,19 @@ fn test_autograd_matmul_ops() {
     matrix1.zero_gradient();
     x.backward();
 
-    assert_eq!(matrix1.gradient().unwrap(), NdArray::from([[0.0, -5.5, -5.5], [0.0, -5.5, -5.5], [0.0, -5.5, -5.5]]));
-    assert_eq!(matrix2.gradient().unwrap(), NdArray::from([[-2.0, -2.0, -2.0], [-1.5, -1.5, -1.5], [5.5, 5.5, 5.5]]));
+    assert_eq!(matrix1.gradient().unwrap(), NdArray::new([[0.0, -5.5, -5.5], [0.0, -5.5, -5.5], [0.0, -5.5, -5.5]]));
+    assert_eq!(matrix2.gradient().unwrap(), NdArray::new([[-2.0, -2.0, -2.0], [-1.5, -1.5, -1.5], [5.5, 5.5, 5.5]]));
 }
 
 
 #[test]
 fn test_autograd_bmm_ops() {
-    let mut matrix1 = Tensor::from([
+    let mut matrix1 = Tensor::new([
         [[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]],
         [[-3.0, 3.0, 8.0], [6.0, -3.0, -1.0], [5.0, 1.5, -4.0]],
         [[4.0, 4.0, 7.0], [-4.0, 2.5, 6.5], [-8.0, 4.0, 9.0]]]);
 
-    let mut matrix2 = Tensor::from([
+    let mut matrix2 = Tensor::new([
         [[1.0, -5.0, 4.0], [-3.0, -5.5, 3.0], [-9.0, 2.0, 1.5]],
         [[4.0, 9.0, 5.5], [8.5, -1.5, 3.5], [3.0, -7.0, 2.0]],
         [[2.0, 1.0, -1.0], [0.0, 6.5, -9.5], [-7.0, -1.0, 4.5]]]);
@@ -374,13 +374,13 @@ fn test_autograd_bmm_ops() {
     x.backward();
 
     assert_eq!(matrix1.gradient().unwrap(),
-               NdArray::from([
+               NdArray::new([
                    [[0.0, -5.50, -5.50], [0.0, -5.50, -5.50], [0.0, -5.50, -5.50]],
                    [[18.50, 10.50, -2.0], [18.50, 10.50, -2.0], [18.50, 10.50, -2.0]],
                    [[2.0, -3.0, -3.50], [2.0, -3.0, -3.50], [2.0, -3.0, -3.50]]]));
 
     assert_eq!(matrix2.gradient().unwrap(),
-               NdArray::from([
+               NdArray::new([
                    [[-2.0, -2.0, -2.0], [-1.50, -1.50, -1.50], [5.50, 5.50, 5.50]],
                    [[8.0, 8.0, 8.0], [1.50, 1.50, 1.50], [3.0, 3.0, 3.0]],
                    [[-8.0, -8.0, -8.0], [10.50, 10.50, 10.50], [22.50, 22.50, 22.50]]]));
@@ -388,12 +388,12 @@ fn test_autograd_bmm_ops() {
 
 #[test]
 fn test_autograd_transpose_ops() {
-    let mut matrix1 = Tensor::from([
+    let mut matrix1 = Tensor::new([
         [[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]],
         [[-3.0, 3.0, 8.0], [6.0, -3.0, -1.0], [5.0, 1.5, -4.0]],
         [[4.0, 4.0, 7.0], [-4.0, 2.5, 6.5], [-8.0, 4.0, 9.0]]]);
 
-    let mut matrix2 = Tensor::from([
+    let mut matrix2 = Tensor::new([
         [[1.0, -5.0, 4.0], [-3.0, -5.5, 3.0], [-9.0, 2.0, 1.5]],
         [[4.0, 9.0, 5.5], [8.5, -1.5, 3.5], [3.0, -7.0, 2.0]],
         [[2.0, 1.0, -1.0], [0.0, 6.5, -9.5], [-7.0, -1.0, 4.5]]]);
@@ -403,20 +403,20 @@ fn test_autograd_transpose_ops() {
 
 
     let matrix3 = (&matrix1).transpose(1, 2);
-    
+
     println!("{:?}", matrix3);
-    
+
     let x = matrix3.bmm(&matrix2);
     x.backward();
 
     assert_eq!(matrix1.gradient().unwrap(),
-               NdArray::from([
+               NdArray::new([
                    [[0.0, 0.0, 0.0], [-5.50, -5.50, -5.50], [-5.50, -5.50, -5.50]],
                    [[18.50, 18.50, 18.50], [10.50, 10.50, 10.50], [-2.0, -2.0, -2.0]],
                    [[2.0, 2.0, 2.0], [-3.0, -3.0, -3.0], [-3.50, -3.50, -3.50]]]));
 
     assert_eq!(matrix2.gradient().unwrap(),
-               NdArray::from([
+               NdArray::new([
                    [[1.0, 1.0, 1.0], [-1.50, -1.50, -1.50], [2.50, 2.50, 2.50]],
                    [[8.0, 8.0, 8.0], [2.0, 2.0, 2.0], [2.50, 2.50, 2.50]],
                    [[15.0, 15.0, 15.0], [5.0, 5.0, 5.0], [5.0, 5.0, 5.0]]]));
@@ -424,8 +424,8 @@ fn test_autograd_transpose_ops() {
 
 #[test]
 fn test_autograd_reshape() {
-    let mut vector1 = Tensor::from([1.0, 2.0, 3.0, 4.0]);
-    let mut vector2 = Tensor::from([-1.0, 5.0, -9.0, 12.0]);
+    let mut vector1 = Tensor::new([1.0, 2.0, 3.0, 4.0]);
+    let mut vector2 = Tensor::new([-1.0, 5.0, -9.0, 12.0]);
     vector1.set_requires_grad(true);
     vector2.set_requires_grad(true);
 
@@ -437,13 +437,13 @@ fn test_autograd_reshape() {
     vector2.zero_gradient();
     result.backward();
 
-    assert_eq!(vector1.gradient().unwrap(), NdArray::from([4.0, 3.0, 4.0, 3.0]));
-    assert_eq!(vector2.gradient().unwrap(), NdArray::from([4.0, 4.0, 6.0, 6.0]));
+    assert_eq!(vector1.gradient().unwrap(), NdArray::new([4.0, 3.0, 4.0, 3.0]));
+    assert_eq!(vector2.gradient().unwrap(), NdArray::new([4.0, 4.0, 6.0, 6.0]));
 }
 
 fn test_autograd_view() {
-    let mut vector1 = Tensor::from([1.0, 2.0, 3.0, 4.0]);
-    let mut vector2 = Tensor::from([-1.0, 5.0, -9.0, 12.0]);
+    let mut vector1 = Tensor::new([1.0, 2.0, 3.0, 4.0]);
+    let mut vector2 = Tensor::new([-1.0, 5.0, -9.0, 12.0]);
     vector1.set_requires_grad(true);
     vector2.set_requires_grad(true);
 
@@ -457,8 +457,8 @@ fn test_autograd_view() {
 }
 
 fn test_autograd_squeeze() {
-    let mut vector1 = Tensor::from([[[1.0], [2.0], [3.0], [4.0]]]);
-    let mut vector2 = Tensor::from([[-1.0], [5.0], [-9.0], [12.0]]);
+    let mut vector1 = Tensor::new([[[1.0], [2.0], [3.0], [4.0]]]);
+    let mut vector2 = Tensor::new([[-1.0], [5.0], [-9.0], [12.0]]);
     vector1.set_requires_grad(true);
     vector2.set_requires_grad(true);
 
@@ -470,13 +470,13 @@ fn test_autograd_squeeze() {
     let result = mat1.matmul(&mat2);
 
     result.backward();
-    assert_eq!(vector1.gradient().unwrap(), NdArray::from([[[4.0], [3.0], [4.0], [3.0]]]));
-    assert_eq!(vector2.gradient().unwrap(), NdArray::from([[4.0], [4.0], [6.0], [6.0]]));
+    assert_eq!(vector1.gradient().unwrap(), NdArray::new([[[4.0], [3.0], [4.0], [3.0]]]));
+    assert_eq!(vector2.gradient().unwrap(), NdArray::new([[4.0], [4.0], [6.0], [6.0]]));
 }
 
 fn test_autograd_moved_reshape() {
-    let mut vector1 = Tensor::from([1.0, 2.0, 3.0, 4.0]);
-    let mut vector2 = Tensor::from([-1.0, 5.0, -9.0, 12.0]);
+    let mut vector1 = Tensor::new([1.0, 2.0, 3.0, 4.0]);
+    let mut vector2 = Tensor::new([-1.0, 5.0, -9.0, 12.0]);
 
     vector1.set_requires_grad(true);
     vector2.set_requires_grad(true);
@@ -487,6 +487,6 @@ fn test_autograd_moved_reshape() {
     let result = mat1.matmul(&mat2);
 
     result.backward();
-    assert_eq!(mat1.gradient().unwrap(), NdArray::from([[4.0, 3.0], [4.0, 3.0]]));
-    assert_eq!(mat2.gradient().unwrap(), NdArray::from([[-2.0, -3.0], [27.0, 26.0]]));
+    assert_eq!(mat1.gradient().unwrap(), NdArray::new([[4.0, 3.0], [4.0, 3.0]]));
+    assert_eq!(mat2.gradient().unwrap(), NdArray::new([[-2.0, -3.0], [27.0, 26.0]]));
 }

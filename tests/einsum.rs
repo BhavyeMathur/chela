@@ -5,56 +5,56 @@ use rand_distr::num_traits::NumCast;
 #[test]
 #[should_panic]
 fn test_einsum_non_ascii_input() {
-    let a = NdArray::from([[1, 2], [0, 0]]);
-    let b = NdArray::from([[3, 4], [5, 5]]);
+    let a = NdArray::new([[1, 2], [0, 0]]);
+    let b = NdArray::new([[3, 4], [5, 5]]);
     let _ = einsum([&a, &b], (["±i", "i-"], "i"));
 }
 
 #[test]
 #[should_panic]
 fn test_einsum_non_ascii_output() {
-    let a = NdArray::from([[1, 2], [0, 0]]);
-    let b = NdArray::from([[3, 4], [5, 5]]);
+    let a = NdArray::new([[1, 2], [0, 0]]);
+    let b = NdArray::new([[3, 4], [5, 5]]);
     let _ = einsum([&a, &b], (["ij", "jk"], "i±"));
 }
 
 #[test]
 #[should_panic]
 fn test_einsum_non_letters() {
-    let a = NdArray::from([[1, 2], [0, 0]]);
-    let b = NdArray::from([[3, 4], [5, 5]]);
+    let a = NdArray::new([[1, 2], [0, 0]]);
+    let b = NdArray::new([[3, 4], [5, 5]]);
     let _ = einsum([&a, &b], (["01", "12"], "02"));
 }
 
 #[test]
 #[should_panic]
 fn test_einsum_invalid_input_labels() {
-    let a = NdArray::from([[1, 2], [0, 0]]);
-    let b = NdArray::from([[3, 4], [5, 5]]);
+    let a = NdArray::new([[1, 2], [0, 0]]);
+    let b = NdArray::new([[3, 4], [5, 5]]);
     let _ = einsum([&a, &b], (["i", "jk"], "ik"));
 }
 
 #[test]
 #[should_panic]
 fn test_einsum_invalid_output_labels() {
-    let a = NdArray::from([[1, 2], [0, 0]]);
-    let b = NdArray::from([[3, 4], [5, 5]]);
+    let a = NdArray::new([[1, 2], [0, 0]]);
+    let b = NdArray::new([[3, 4], [5, 5]]);
     let _ = einsum([&a, &b], (["i", "jk"], "02"));
 }
 
 #[test]
 #[should_panic]
 fn test_einsum_dimension_mismatch() {
-    let a = NdArray::from([[1, 2]]);
-    let b = NdArray::from([[3, 4], [5, 6], [7, 8]]);
+    let a = NdArray::new([[1, 2]]);
+    let b = NdArray::new([[3, 4], [5, 6], [7, 8]]);
     let _ = einsum([&a, &b], (["ij", "jk"], "ik"));
 }
 
 #[test]
 #[should_panic]
 fn test_einsum_invalid_index() {
-    let a = NdArray::from([[1, 2]]);
-    let b = NdArray::from([[3, 4], [5, 6], [7, 8]]);
+    let a = NdArray::new([[1, 2]]);
+    let b = NdArray::new([[3, 4], [5, 6], [7, 8]]);
     let _ = einsum([&a, &b], (["ij", "kl"], "m"));
 }
 
@@ -168,10 +168,10 @@ test_for_common_numeric_dtypes!(
 
 test_for_common_numeric_dtypes!(
     test_einsum_matmul, {
-        let a = NdArray::from([[1, 2], [3, 4]]).astype::<T>();
-        let b = NdArray::from([[5, 6], [7, 8]]).astype::<T>();
+        let a = NdArray::new([[1, 2], [3, 4]]).astype::<T>();
+        let b = NdArray::new([[5, 6], [7, 8]]).astype::<T>();
 
-        let expected = NdArray::from([[19, 22], [43, 50]]).astype::<T>();
+        let expected = NdArray::new([[19, 22], [43, 50]]).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "jk"], "ik"));
         assert_almost_eq!(result, expected);
 
@@ -193,7 +193,7 @@ test_for_common_numeric_dtypes!(
             }
         }
 
-        let expected = NdArray::from(expected_data);
+        let expected = NdArray::new(expected_data);
         let expected = expected.reshape([n, n]);
 
         let result = chela::einsum(&[&a, &b], (&["ij", "jk"], "ik"));
@@ -217,7 +217,7 @@ test_for_common_numeric_dtypes!(
                 }
             }
 
-            NdArray::from(out)
+            NdArray::new(out)
         };
 
         let result = chela::einsum(&[&a, &b], (&["ij", "j"], "i"));
@@ -227,10 +227,10 @@ test_for_common_numeric_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_einsum_pointwise_multiplication, {
-        let a = NdArray::from([[1, 2, 3], [0, 1, 2], [4, 5, 6]]).astype::<T>();
-        let b = NdArray::from([[5, 6, 7], [10, 20, 30], [3, 6, 9]]).astype::<T>();
+        let a = NdArray::new([[1, 2, 3], [0, 1, 2], [4, 5, 6]]).astype::<T>();
+        let b = NdArray::new([[5, 6, 7], [10, 20, 30], [3, 6, 9]]).astype::<T>();
 
-        let expected = NdArray::from([[5, 12, 21], [0, 20, 60], [12, 30, 54]]).astype::<T>();
+        let expected = NdArray::new([[5, 12, 21], [0, 20, 60], [12, 30, 54]]).astype::<T>();
         let result = chela::einsum([&a, &b], (&["ij", "ij"], "ij"));
         assert_almost_eq!(result, expected);
 
@@ -241,7 +241,7 @@ test_for_all_numeric_dtypes!(
         let b = b.reshape([2, 10]);
 
         let expected_data: Vec<T> = a.flatiter().zip(b.flatiter()).map(|(x, y)| x * y).collect();
-        let expected = NdArray::from(expected_data);
+        let expected = NdArray::new(expected_data);
         let expected = expected.reshape([2, 10]);
 
         let result = chela::einsum(&[&a, &b], (["ij", "ij"], "ij"));
@@ -267,7 +267,7 @@ test_for_common_numeric_dtypes!(
                 }
             }
 
-            NdArray::from(out)
+            NdArray::new(out)
         };
 
         let result = chela::einsum(&[&a, &b], (["ij", "ki"], "j"));
@@ -293,7 +293,7 @@ test_for_common_numeric_dtypes!(
                 }
             }
 
-            NdArray::from(out)
+            NdArray::new(out)
         };
 
         let result = chela::einsum(&[&a, &b], (["ij", "ki"], "i"));
@@ -303,20 +303,20 @@ test_for_common_numeric_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_einsum_sum_along_axes, {
-        let a = NdArray::from([[1, 2], [0, 1]]).astype::<T>();
-        let b = NdArray::from([[5, 6], [10, 20]]).astype::<T>();
+        let a = NdArray::new([[1, 2], [0, 1]]).astype::<T>();
+        let b = NdArray::new([[5, 6], [10, 20]]).astype::<T>();
 
-        let expected = NdArray::from([71, 30]).astype::<T>();
+        let expected = NdArray::new([71, 30]).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "jk"], "i"));
         assert_almost_eq!(result, expected);
 
-        let expected = NdArray::from([11, 90]).astype::<T>();
+        let expected = NdArray::new([11, 90]).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "jk"], "j"));
         assert_almost_eq!(result, expected);
 
-        let a = NdArray::from([[1, 2, 3], [4, 5, 6]]).astype::<T>();
+        let a = NdArray::new([[1, 2, 3], [4, 5, 6]]).astype::<T>();
         let result = einsum([&a], (["ij"], "i"));
-        let expected = NdArray::from([6, 15]).astype::<T>();
+        let expected = NdArray::new([6, 15]).astype::<T>();
         assert_almost_eq!(result, expected);
     }
 );
@@ -340,7 +340,7 @@ test_for_common_numeric_dtypes!(
                 }
             }
 
-            NdArray::from(out)
+            NdArray::new(out)
         };
 
         let result = chela::einsum([&a, &b], (["ij", "jk"], "i"));
@@ -350,8 +350,8 @@ test_for_common_numeric_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_einsum_sum_product, {
-        let a = NdArray::from([[1, 2], [0, 1]]).astype::<T>();
-        let b = NdArray::from([[5, 6], [10, 20]]).astype::<T>();
+        let a = NdArray::new([[1, 2], [0, 1]]).astype::<T>();
+        let b = NdArray::new([[5, 6], [10, 20]]).astype::<T>();
 
         let expected = NdArray::scalar(63).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "ik"], ""));
@@ -547,14 +547,14 @@ test_for_float_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_einsum_2operands_to_3d, {
-        let a = NdArray::from([[1, 2], [0, 1]]).astype::<T>();
-        let b = NdArray::from([[5, 6], [10, 20]]).astype::<T>();
+        let a = NdArray::new([[1, 2], [0, 1]]).astype::<T>();
+        let b = NdArray::new([[5, 6], [10, 20]]).astype::<T>();
 
-        let expected = NdArray::from([[[5, 10], [12, 40]], [[0, 0], [6, 20]]]).astype::<T>();
+        let expected = NdArray::new([[[5, 10], [12, 40]], [[0, 0], [6, 20]]]).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "kj"], "ijk"));
         assert_almost_eq!(result, expected);
 
-        let expected = NdArray::from([[[5, 6], [10, 12]], [[0, 0], [10, 20]]]).astype::<T>();
+        let expected = NdArray::new([[[5, 6], [10, 12]], [[0, 0], [10, 20]]]).astype::<T>();
         let result = chela::einsum([&a, &b], (["ij", "ik"], "ijk"));
         assert_almost_eq!(result, expected);
     }
@@ -562,8 +562,8 @@ test_for_all_numeric_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_einsum_inner_product, {
-        let a = NdArray::from([1, 2, 3]).astype::<T>();
-        let b = NdArray::from([4, 5, 6]).astype::<T>();
+        let a = NdArray::new([1, 2, 3]).astype::<T>();
+        let b = NdArray::new([4, 5, 6]).astype::<T>();
 
         let expected = NdArray::scalar(32).astype::<T>();
         let result = einsum([&a, &b], (["i", "i"], ""));
@@ -573,10 +573,10 @@ test_for_all_numeric_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_einsum_outer_product, {
-        let a = NdArray::from([1, 2]).astype::<T>();
-        let b = NdArray::from([3, 4, 5]).astype::<T>();
+        let a = NdArray::new([1, 2]).astype::<T>();
+        let b = NdArray::new([3, 4, 5]).astype::<T>();
 
-        let expected = NdArray::from([[3, 4, 5], [6, 8, 10]]).astype::<T>();
+        let expected = NdArray::new([[3, 4, 5], [6, 8, 10]]).astype::<T>();
         let result = einsum([&a, &b], (["i", "j"], "ij"));
         assert_almost_eq!(result, expected);
     }
@@ -584,10 +584,10 @@ test_for_all_numeric_dtypes!(
 
 test_for_all_numeric_dtypes!(
     test_einsum_matrix_outer_product, {
-        let a = NdArray::from([[1, 2], [3, 4]]).astype::<T>();
-        let b = NdArray::from([[5, 6], [7, 8]]).astype::<T>();
+        let a = NdArray::new([[1, 2], [3, 4]]).astype::<T>();
+        let b = NdArray::new([[5, 6], [7, 8]]).astype::<T>();
 
-        let expected = NdArray::from([
+        let expected = NdArray::new([
             [[[5, 6], [7, 8]], [[10, 12], [14, 16]]],
             [[[15, 18], [21, 24]], [[20, 24], [28, 32]]]
         ]).astype::<T>();
@@ -600,9 +600,9 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_three_operands,
     {
-        let a = NdArray::from([[1, 2], [3, 4], [5, 1]]).astype::<T>();
-        let b = NdArray::from([[5, 6, 2, 2], [7, 8, 1, 0]]).astype::<T>();
-        let c = NdArray::from([[1, 0], [0, 1], [0, 2], [2, 0]]).astype::<T>();
+        let a = NdArray::new([[1, 2], [3, 4], [5, 1]]).astype::<T>();
+        let b = NdArray::new([[5, 6, 2, 2], [7, 8, 1, 0]]).astype::<T>();
+        let c = NdArray::new([[1, 0], [0, 1], [0, 2], [2, 0]]).astype::<T>();
 
         let expected = einsum([&einsum([&a, &b], (["ij", "jk"], "ik")), &c], (["ik", "kl"], "il"));
         let result = einsum([&a, &b, &c], (["ij", "jk", "kl"], "il"));
@@ -638,10 +638,10 @@ test_for_common_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_scalar_times_tensor,
     {
-        let a = NdArray::from([[1, 2], [3, 4]]).astype::<T>();
+        let a = NdArray::new([[1, 2], [3, 4]]).astype::<T>();
         let b = NdArray::scalar(10).astype::<T>();
 
-        let expected = NdArray::from([[10, 20], [30, 40]]).astype::<T>();
+        let expected = NdArray::new([[10, 20], [30, 40]]).astype::<T>();
         let result = einsum([&a, &b], (["ij", ""], "ij"));
         assert_almost_eq!(result, expected);
     }
@@ -650,8 +650,8 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_transpose,
     {
-        let a = NdArray::from([[1, 2, 3], [4, 5, 6]]).astype::<T>();
-        let expected = NdArray::from([[1, 4], [2, 5], [3, 6]]).astype::<T>();
+        let a = NdArray::new([[1, 2, 3], [4, 5, 6]]).astype::<T>();
+        let expected = NdArray::new([[1, 4], [2, 5], [3, 6]]).astype::<T>();
 
         let result = einsum([&a], (["ij"], "ji"));
         assert_almost_eq!(result, expected);
@@ -666,15 +666,15 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_broadcasting_vector_matrix,
     {
-        let a = NdArray::from([1, 2]).astype::<T>();
-        let b = NdArray::from([[3, 4, 5], [6, 7, 8]]).astype::<T>();
+        let a = NdArray::new([1, 2]).astype::<T>();
+        let b = NdArray::new([[3, 4, 5], [6, 7, 8]]).astype::<T>();
         let result = einsum([&a, &b], (["i", "ij"], "ij"));
-        let expected = NdArray::from([[3, 4, 5], [12, 14, 16]]).astype::<T>();
+        let expected = NdArray::new([[3, 4, 5], [12, 14, 16]]).astype::<T>();
         assert_almost_eq!(result, expected);
 
-        let b = NdArray::from([[3, 4], [5, 6]]).astype::<T>();
+        let b = NdArray::new([[3, 4], [5, 6]]).astype::<T>();
         let result = einsum([&a, &b], (["i", "ij"], "ij"));
-        let expected = NdArray::from([[3, 4], [10, 12]]).astype::<T>();
+        let expected = NdArray::new([[3, 4], [10, 12]]).astype::<T>();
         assert_almost_eq!(result, expected);
     }
 );
@@ -682,7 +682,7 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_diagonal_extraction,
     {
-        let a = NdArray::from([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).astype::<T>();
+        let a = NdArray::new([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).astype::<T>();
         let expected = a.diagonal();
 
         let result = einsum([&a], (["ii"], "i"));
@@ -696,10 +696,10 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_tensor_contraction,
     {
-        let a = NdArray::from([[[1, 2], [3, 4]]]).astype::<T>();
-        let b = NdArray::from([[5, 6], [7, 8]]).astype::<T>();
+        let a = NdArray::new([[[1, 2], [3, 4]]]).astype::<T>();
+        let b = NdArray::new([[5, 6], [7, 8]]).astype::<T>();
         let result = einsum([&a, &b], (["ijk", "kl"], "ijl"));
-        let expected = NdArray::from([[[19, 22], [43, 50]]]).astype::<T>();
+        let expected = NdArray::new([[[19, 22], [43, 50]]]).astype::<T>();
         assert_almost_eq!(result, expected);
     }
 );
@@ -707,7 +707,7 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_all_sum,
     {
-        let a = NdArray::from([[1, 2], [3, 4]]).astype::<T>();
+        let a = NdArray::new([[1, 2], [3, 4]]).astype::<T>();
         
         let expected = NdArray::scalar(10).astype::<T>();
         let result = einsum([&a], (["ij"], ""));
@@ -718,11 +718,11 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_identity,
     {
-        let a = NdArray::from([[9, 8], [7, 6]]).astype::<T>();
+        let a = NdArray::new([[9, 8], [7, 6]]).astype::<T>();
         let result = einsum([&a], (["ij"], "ij"));
         assert_almost_eq!(result, a);
 
-        let a = NdArray::from([[0, 0], [0, 0]]).astype::<T>();
+        let a = NdArray::new([[0, 0], [0, 0]]).astype::<T>();
         let result = einsum([&a], (["ij"], "ij"));
         assert_almost_eq!(result, a);
 
@@ -734,10 +734,10 @@ test_for_all_numeric_dtypes!(
 test_for_all_numeric_dtypes!(
     test_einsum_batch_matmul,
     {
-        let a = NdArray::from([[[1, 2], [3, 4]]]).astype::<T>();
-        let b = NdArray::from([[[5, 6], [7, 8]]]).astype::<T>();
+        let a = NdArray::new([[[1, 2], [3, 4]]]).astype::<T>();
+        let b = NdArray::new([[[5, 6], [7, 8]]]).astype::<T>();
         let result = einsum([&a, &b], (["bij", "bjk"], "bik"));
-        let expected = NdArray::from([[[19, 22], [43, 50]]]).astype::<T>();
+        let expected = NdArray::new([[[19, 22], [43, 50]]]).astype::<T>();
         assert_almost_eq!(result, expected);
     }
 );
@@ -771,7 +771,7 @@ test_for_common_numeric_dtypes!(
                             }
                         }
 
-                        let expected = NdArray::from(expected_data)
+                        let expected = NdArray::new(expected_data)
                             .reshape([b, m, n])
                             .astype::<T>();
 

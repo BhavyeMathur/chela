@@ -1,6 +1,6 @@
 use crate::gradient_function::GradientFunction;
 use crate::mul_backwards::{MulBackwards, MulScalarBackwards};
-use crate::{FloatDataType, NdArray, StridedMemory, Tensor};
+use crate::{Constructors, FloatDataType, NdArray, StridedMemory, Tensor};
 use std::cell::RefCell;
 use std::rc::Rc;
 
