@@ -63,12 +63,12 @@ impl ReduceMin for f32 {
         use crate::ops::simd_reduce_ops::SIMDReduceOps;
         Self::simd_min_contiguous(ptr, count)
     }
-    
+
     #[cfg(apple_vdsp)]
     unsafe fn min_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
         use std::ptr::addr_of_mut;
         use crate::acceleration::vdsp::vDSP_minv;
-    
+
         let mut output = Self::max_value();
         unsafe { vDSP_minv(ptr, stride as isize, addr_of_mut!(output), count as isize); }
         output
@@ -87,12 +87,12 @@ impl ReduceMin for f64 {
         use crate::ops::simd_reduce_ops::SIMDReduceOps;
         Self::simd_min_contiguous(ptr, count)
     }
-    
+
     #[cfg(apple_vdsp)]
     unsafe fn min_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
         use std::ptr::addr_of_mut;
         use crate::acceleration::vdsp::vDSP_minvD;
-    
+
         let mut output = Self::max_value();
         unsafe { vDSP_minvD(ptr, stride as isize, addr_of_mut!(output), count as isize); }
         output

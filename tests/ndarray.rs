@@ -490,12 +490,12 @@ fn test_fill_slice() {
     let correct = NdArray::new([[0, 5, 0, 0, 0], [0, 5, 0, 0, 0], [0, 5, 0, 0, 0]]);
     a.slice(s![.., 1]).fill(5);
     assert_eq!(a, correct);
-
+    
     let a: NdArray<u32> = NdArray::zeros([3, 5]);
     let correct: NdArray<u32> = NdArray::new([[0, 5, 5, 5, 0], [0, 5, 5, 5, 0], [0, 5, 5, 5, 0]]);
     a.slice(s![.., 1..4]).fill(5);
     assert_eq!(a, correct);
-
+    
     let a: NdArray<bool> = NdArray::zeros([3, 5]);
     let correct: NdArray<bool> = NdArray::new(
         [[false, false, false, false, false],

@@ -63,7 +63,7 @@ impl ReduceMinMagnitude for f32 {
     unsafe fn min_magnitude_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
         use std::ptr::addr_of_mut;
         use crate::acceleration::vdsp::vDSP_minmgv;
-    
+
         let mut output = Self::max_value();
         unsafe { vDSP_minmgv(ptr, stride as isize, addr_of_mut!(output), count as isize); }
         output
@@ -75,7 +75,7 @@ impl ReduceMinMagnitude for f64 {
     unsafe fn min_magnitude_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
         use std::ptr::addr_of_mut;
         use crate::acceleration::vdsp::vDSP_minmgvD;
-    
+
         let mut output = Self::max_value();
         unsafe { vDSP_minmgvD(ptr, stride as isize, addr_of_mut!(output), count as isize); }
         output

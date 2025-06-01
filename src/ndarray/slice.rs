@@ -39,7 +39,7 @@ fn calculate_strided_buffer_length(shape: &[usize], stride: &[usize]) -> usize {
 
 
 impl<'a, T: RawDataType> NdArray<'a, T> {
-    pub fn slice_along<S: Indexer>(&self, axis: Axis, index: S) -> NdArray<'a, T>
+    pub fn slice_along<S: Indexer>(&'a self, axis: Axis, index: S) -> NdArray<'a, T>
     {
         let axis = axis.as_absolute(self.ndims());
 
@@ -74,7 +74,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         }
     }
 
-    pub fn slice<S, I>(&self, index: I) -> NdArray<'a, T>
+    pub fn slice<S, I>(&'a self, index: I) -> NdArray<'a, T>
     where
         S: Indexer,
         I: IntoIterator<Item=S>,
@@ -110,7 +110,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         NdArray {
             ptr: unsafe { self.ptr.add(offset) },
             len,
-            capacity: len,
+            capacity: 0,
 
             shape: new_shape,
             stride: new_stride,

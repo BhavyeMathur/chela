@@ -39,6 +39,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// assert_eq!(data, &[50, 60, -5, -10]);
     /// ```
     pub fn data_slice(&self) -> &'a [T] {
+        assert!(self.is_contiguous(), "cannot get data slice of non-contiguous tensor");
         unsafe { std::slice::from_raw_parts(self.ptr(), self.len) }
     }
 
@@ -59,6 +60,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
         if !self.flags.contains(NdArrayFlags::Owned) {
             panic!("cannot return data vector of non-owned tensor");
         }
+        assert!(self.is_contiguous(), "cannot get data vector of non-contiguous tensor");
 
         // ensure the vector's data is not dropped when self goes out of scope and is destroyed
         self.flags -= NdArrayFlags::Owned;

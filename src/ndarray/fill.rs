@@ -55,7 +55,7 @@ impl<T: RawDataType> NdArray<'_, T> {
     /// ```
     pub fn fill(&mut self, value: T) {
         if let Some(stride) = self.has_uniform_stride() {
-            return unsafe { fill_strided(self.mut_ptr(), value, stride, self.len); };
+            return unsafe { fill_strided(self.mut_ptr(), value, stride, self.size()); };
         }
 
         let (shape, stride) = collapse_to_uniform_stride(&self.shape, &self.stride);
