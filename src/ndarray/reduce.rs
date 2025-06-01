@@ -5,6 +5,8 @@ use crate::util::to_vec::ToVec;
 use crate::{AxisType, Constructors, FloatDataType, NdArray, StridedMemory};
 use num::NumCast;
 use std::collections::VecDeque;
+use crate::ops::partial_ord::*;
+use crate::ops::reduce_min::ReduceMin;
 use crate::ops::reduce_product::ReduceProduct;
 use crate::ops::reduce_sum::ReduceSum;
 
@@ -124,20 +126,21 @@ impl<T: NumericDataType> NdArray<'_, T> {
         self.reduce_along(|val, acc| acc * val, axes, T::one())
     }
 
-    pub fn max(&self) -> NdArray<'static, T> {
-        self.reduce(partial_max, T::min_value())
-    }
-
     pub fn min(&self) -> NdArray<'static, T> {
-        self.reduce(partial_min, T::max_value())
-    }
-
-    pub fn max_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
-        self.reduce_along(partial_max, axes, T::min_value())
+        let output = unsafe { <T as ReduceMin>::min(self.ptr(), self.shape(), self.stride()) };
+        NdArray::scalar(output)
     }
 
     pub fn min_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
         self.reduce_along(partial_min, axes, T::max_value())
+    }
+
+    pub fn max(&self) -> NdArray<'static, T> {
+        self.reduce(partial_max, T::min_value())
+    }
+
+    pub fn max_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
+        self.reduce_along(partial_max, axes, T::min_value())
     }
 
     pub fn max_magnitude(&self) -> NdArray<'static, T> {
@@ -234,22 +237,4 @@ mod tests {
         assert_eq!(new_shape, correct_shape);
         assert_eq!(new_stride, correct_stride);
     }
-}
-
-fn partial_max<T: NumericDataType>(a: T, b: T) -> T {
-    if a.partial_cmp(&b) == Some(std::cmp::Ordering::Greater) { a } else { b }
-}
-
-fn partial_min<T: NumericDataType>(a: T, b: T) -> T {
-    if a.partial_cmp(&b) == Some(std::cmp::Ordering::Less) { a } else { b }
-}
-
-fn partial_max_magnitude<T: NumericDataType>(val: T, acc: T) -> T {
-    let val = val.abs();
-    if acc.partial_cmp(&val) == Some(std::cmp::Ordering::Greater) { acc } else { val }
-}
-
-fn partial_min_magnitude<T: NumericDataType>(val: T, acc: T) -> T {
-    let val = val.abs();
-    if acc.partial_cmp(&val) == Some(std::cmp::Ordering::Less) { acc } else { val }
 }

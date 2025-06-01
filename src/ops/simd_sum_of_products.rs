@@ -15,7 +15,7 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
                                           mut src: *const Self,
                                           mut dst: *mut Self,
                                           mut count: usize) {
-        let scalarx = Self::simd_dup(scalar);
+        let scalarx = Self::simd_from_constant(scalar);
 
         while count >= 4 * Self::LANES {
             let a = Self::simd_load(src.add(0 * Self::LANES));
@@ -76,7 +76,7 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
                                        mut src: *const Self,
                                        dst: *mut Self,
                                        mut count: usize) {
-        let mut sum = Self::simd_dup(Self::zero());
+        let mut sum = Self::simd_from_constant(Self::zero());
 
         while count >= 4 * Self::LANES {
             let a = Self::simd_load(src.add(0 * Self::LANES));
@@ -100,7 +100,7 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
             src = src.add(Self::LANES);
         }
 
-        let mut sum = Self::simd_sum(sum);
+        let mut sum = Self::simd_horizontal_sum(sum);
         for i in 0..count {
             sum += *src.add(i);
         }
@@ -121,7 +121,7 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
                                mut src1: *const Self,
                                dst: *mut Self,
                                mut count: usize) {
-        let mut sum = Self::simd_dup(Self::zero());
+        let mut sum = Self::simd_from_constant(Self::zero());
 
         while count >= 4 * Self::LANES {
             let a0 = Self::simd_load(src0.add(0 * Self::LANES));
@@ -162,7 +162,7 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
             src1 = src1.add(Self::LANES);
         }
 
-        let mut sum = Self::simd_sum(sum);
+        let mut sum = Self::simd_horizontal_sum(sum);
         for _ in 0..count {
             sum = (*src0).mul_add(*src1, sum);
             src0 = src0.add(1);

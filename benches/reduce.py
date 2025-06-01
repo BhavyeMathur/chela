@@ -65,7 +65,7 @@ class TensorReduce3(TensorReduceTimingSuite):
 
 class TensorReduce10(TensorReduceTimingSuite):
     ID = 10
-    name = "Sum Non-Contiguous"
+    name = "Sum Non-Contig"
 
     def __init__(self):
         super().__init__((N, 2), "sum")
@@ -75,7 +75,7 @@ class TensorReduce10(TensorReduceTimingSuite):
 
 class TensorReduce11(TensorReduceTimingSuite):
     ID = 11
-    name = "Prod Non-Contiguous"
+    name = "Prod Non-Contig"
 
     def __init__(self):
         super().__init__((N, 2), "prod")
@@ -85,7 +85,7 @@ class TensorReduce11(TensorReduceTimingSuite):
 
 class TensorReduce12(TensorReduceTimingSuite):
     ID = 12
-    name = "Min Non-Contiguous"
+    name = "Min Non-Contig"
 
     def __init__(self):
         super().__init__((N, 2), "min")
@@ -95,7 +95,7 @@ class TensorReduce12(TensorReduceTimingSuite):
 
 class TensorReduce13(TensorReduceTimingSuite):
     ID = 13
-    name = "Max Non-Contiguous"
+    name = "Max Non-Contig"
 
     def __init__(self):
         super().__init__((N, 2), "max")
@@ -105,7 +105,7 @@ class TensorReduce13(TensorReduceTimingSuite):
 
 class TensorReduce20(TensorReduceTimingSuite):
     ID = 20
-    name = "Sum Non-Uniform"
+    name = "Sum Non-Unif"
 
     def __init__(self):
         super().__init__((N, 3), "sum")
@@ -115,7 +115,7 @@ class TensorReduce20(TensorReduceTimingSuite):
 
 class TensorReduce21(TensorReduceTimingSuite):
     ID = 21
-    name = "Prod Non-Uniform"
+    name = "Prod Non-Unif"
 
     def __init__(self):
         super().__init__((N, 3), "prod")
@@ -125,7 +125,7 @@ class TensorReduce21(TensorReduceTimingSuite):
 
 class TensorReduce22(TensorReduceTimingSuite):
     ID = 22
-    name = "Min Non-Uniform"
+    name = "Min Non-Unif"
 
     def __init__(self):
         super().__init__((N, 3), "min")
