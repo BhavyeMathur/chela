@@ -133,6 +133,16 @@ class TensorReduce22(TensorReduceTimingSuite):
         self.tensor = self.tensor[:, 0:2]
 
 
+class TensorReduce23(TensorReduceTimingSuite):
+    ID = 23
+    name = "Max Non-Unif"
+
+    def __init__(self):
+        super().__init__((N, 3), "max")
+        self.ndarray = self.ndarray[:, 0:2]
+        self.tensor = self.tensor[:, 0:2]
+
+
 if __name__ == "__main__":
     results = profile_all([
         TensorReduce0,
@@ -147,7 +157,8 @@ if __name__ == "__main__":
         TensorReduce12,
         TensorReduce22,
 
-        # TensorReduce3,
-        # TensorReduce13,
+        TensorReduce3,
+        TensorReduce13,
+        TensorReduce23,
     ], n=10)
     plot_barplot(results, "Tensor Reduction Benchmark")

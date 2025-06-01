@@ -1,14 +1,15 @@
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
+use crate::ops::partial_ord::*;
+use crate::ops::reduce_max::ReduceMax;
+use crate::ops::reduce_min::ReduceMin;
+use crate::ops::reduce_product::ReduceProduct;
+use crate::ops::reduce_sum::ReduceSum;
 use crate::util::to_vec::ToVec;
 use crate::{AxisType, Constructors, FloatDataType, NdArray, StridedMemory};
 use num::NumCast;
 use std::collections::VecDeque;
-use crate::ops::partial_ord::*;
-use crate::ops::reduce_min::ReduceMin;
-use crate::ops::reduce_product::ReduceProduct;
-use crate::ops::reduce_sum::ReduceSum;
 
 /// Returns a tuple `(output_shape, map_stride)`
 ///
@@ -136,7 +137,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     }
 
     pub fn max(&self) -> NdArray<'static, T> {
-        self.reduce(partial_max, T::min_value())
+        let output = unsafe { <T as ReduceMax>::max(self.ptr(), self.shape(), self.stride()) };
+        NdArray::scalar(output)
     }
 
     pub fn max_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {

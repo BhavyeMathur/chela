@@ -176,7 +176,7 @@ pub(crate) trait SIMDReduceOps: SIMD {
 
     #[cfg(neon_simd)]
     unsafe fn simd_max_uniform(mut ptr: *const Self, mut count: usize, stride: usize) -> Self {
-        let mut acc = Self::simd_from_constant(Self::max_value());
+        let mut acc = Self::simd_from_constant(Self::min_value());
 
         while count >= Self::LANES {
             let vec = Self::simd_vec_from_stride(ptr, stride);
@@ -197,7 +197,7 @@ pub(crate) trait SIMDReduceOps: SIMD {
 
     #[cfg(neon_simd)]
     unsafe fn simd_max_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
-        let mut acc = Self::simd_from_constant(Self::max_value());
+        let mut acc = Self::simd_from_constant(Self::min_value());
 
         while count >= 4 * Self::LANES {
             let a = Self::simd_load(ptr.add(0 * Self::LANES));
