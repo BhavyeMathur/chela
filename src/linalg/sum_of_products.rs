@@ -1,13 +1,11 @@
 #![allow(unused_mut)]
 #![allow(unused_variables)]
 
+use crate::accelerate::simd::SIMD;
 use crate::dtype::{IntegerDataType, NumericDataType};
 use std::hint::assert_unchecked;
 
 use paste::paste;
-
-#[cfg(neon_simd)]
-use std::arch::aarch64::*;
 
 pub(super) fn get_sum_of_products_function<const N: usize, T: SumOfProductsType>(strides: &[usize; N])
                                                                                  -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
@@ -250,57 +248,28 @@ pub(crate) trait SumOfProductsType: NumericDataType {
 
 impl<T: IntegerDataType> SumOfProductsType for T {}
 
-macro_rules! simd_kernel_for_dtype {
-    ($dtype:ty, $nlanes:literal,
-    $ptrs:ident, $strides:ident, $count:ident, $dst:ident, $lanes:ident,
+macro_rules! simd_sum_of_products_kernels {
+    ($ptrs:ident, $strides:ident, $count:ident, $dst:ident, $($func_name:ident, { $($body:tt)* };)+) => {
+        paste! {$(
+            #[cfg(neon_simd)]
+            #[inline(always)]
+            #[allow(clippy::erasing_op)]
+            #[allow(clippy::identity_op)]
+            unsafe fn $func_name<const N: usize>($ptrs: &[*mut Self; N], $strides: &[usize; N], mut $count: usize) {
+                assert_unchecked($count > 0);
+                let mut $dst = $ptrs[N - 1];
 
-    $simd_load:ident, $vload:expr,
-    $simd_store:ident, $vstore:expr,
-    $simd_add:ident, $vadd:expr,
-    $simd_mul:ident, $vmul:expr,
-    $simd_muladd:ident, $vmuladd:expr,
-    $simd_sum:ident, $vaddv:expr,
-    $simd_dup:ident, $vdup:expr,
-
-    $($func_name:ident, { $($body:tt)* };)+) => { paste! {
-
-                $(
-                #[inline(always)]
-                #[allow(clippy::erasing_op)]
-                #[allow(clippy::identity_op)]
-                unsafe fn $func_name<const N: usize>($ptrs: &[*mut Self; N], $strides: &[usize; N], mut $count: usize) {
-                    assert_unchecked($count > 0);
-
-                    const $lanes: usize = $nlanes;
-                    let $simd_load = $vload;
-                    let $simd_store = $vstore;
-                    let $simd_add = $vadd;
-                    let $simd_mul = $vmul;
-                    let $simd_muladd = $vmuladd;
-                    let $simd_sum = $vaddv;
-                    let $simd_dup = $vdup;
-
-                    let mut $dst = $ptrs[N - 1];
-
-                    $($body)*
-                }
-                )+
-
-        }
+                $($body)*
+            }
+        )+}
     }
 }
 
-macro_rules! simd_kernel {
-    ($ptrs:ident, $strides:ident, $count:ident, $dst:ident,
-    $lanes:ident, $simd_load:ident, $simd_store:ident, $simd_add:ident, $simd_mul:ident, $simd_muladd:ident, $simd_sum:ident, $simd_dup:ident,
-    $($func_name:ident, { $($body:tt)* },)+) => {
+macro_rules! accelerated_sum_of_products {
+    ($ptrs:ident, $strides:ident, $count:ident, $dst:ident, $($func_name:ident, { $($body:tt)* },)+) => {
 
         impl SumOfProductsType for f32 {
-            #[cfg(neon_simd)]
-            simd_kernel_for_dtype!(f32, 4, $ptrs, $strides, $count, $dst, $lanes,
-                                    $simd_load, vld1q_f32, $simd_store, vst1q_f32, $simd_add, vaddq_f32, $simd_mul, vmulq_f32,
-                                    $simd_muladd, vfmaq_f32, $simd_sum, vaddvq_f32, $simd_dup, vdupq_n_f32,
-                                    $($func_name, { $($body)* };)+);
+            simd_sum_of_products_kernels!($ptrs, $strides, $count, $dst, $($func_name, { $($body)* };)+);
 
             #[cfg(apple_vdsp)]
             #[inline(always)]
@@ -318,11 +287,7 @@ macro_rules! simd_kernel {
         }
 
         impl SumOfProductsType for f64 {
-            #[cfg(neon_simd)]
-            simd_kernel_for_dtype!(f64, 2, $ptrs, $strides, $count, $dst, $lanes,
-                                    $simd_load, vld1q_f64, $simd_store, vst1q_f64, $simd_add, vaddq_f64, $simd_mul, vmulq_f64,
-                                    $simd_muladd, vfmaq_f64, $simd_sum, vaddvq_f64, $simd_dup, vdupq_n_f64,
-                                    $($func_name, { $($body)* };)+);
+            simd_sum_of_products_kernels!($ptrs, $strides, $count, $dst, $($func_name, { $($body)* };)+);
 
             #[cfg(apple_vdsp)]
             #[inline(always)]
@@ -341,48 +306,48 @@ macro_rules! simd_kernel {
     };
 }
 
-simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, simd_mul, simd_muladd, simd_sum, simd_dup,
+accelerated_sum_of_products!(ptrs, strides, count, dst,
     sum_of_products_muladd, {
         let value0 = *ptrs[0];
-        let value0x = simd_dup(value0);
+        let value0x = Self::simd_dup(value0);
         let mut data1 = ptrs[1];
 
-        while count >= 4 * LANES {
-            let a = simd_load(data1.add(0 * LANES));
-            let b = simd_load(data1.add(1 * LANES));
-            let c = simd_load(data1.add(2 * LANES));
-            let d = simd_load(data1.add(3 * LANES));
+        while count >= 4 * Self::LANES {
+            let a = Self::simd_load(data1.add(0 * Self::LANES));
+            let b = Self::simd_load(data1.add(1 * Self::LANES));
+            let c = Self::simd_load(data1.add(2 * Self::LANES));
+            let d = Self::simd_load(data1.add(3 * Self::LANES));
 
-            let a_dst = simd_load(dst.add(0 * LANES));
-            let b_dst = simd_load(dst.add(1 * LANES));
-            let c_dst = simd_load(dst.add(2 * LANES));
-            let d_dst = simd_load(dst.add(3 * LANES));
+            let a_dst = Self::simd_load(dst.add(0 * Self::LANES));
+            let b_dst = Self::simd_load(dst.add(1 * Self::LANES));
+            let c_dst = Self::simd_load(dst.add(2 * Self::LANES));
+            let d_dst = Self::simd_load(dst.add(3 * Self::LANES));
 
-            let a_out = simd_muladd(a_dst, value0x, a);
-            let b_out = simd_muladd(b_dst, value0x, b);
-            let c_out = simd_muladd(c_dst, value0x, c);
-            let d_out = simd_muladd(d_dst, value0x, d);
+            let a_out = Self::simd_muladd(a_dst, value0x, a);
+            let b_out = Self::simd_muladd(b_dst, value0x, b);
+            let c_out = Self::simd_muladd(c_dst, value0x, c);
+            let d_out = Self::simd_muladd(d_dst, value0x, d);
 
-            simd_store(dst.add(0 * LANES), a_out);
-            simd_store(dst.add(1 * LANES), b_out);
-            simd_store(dst.add(2 * LANES), c_out);
-            simd_store(dst.add(3 * LANES), d_out);
+            Self::simd_store(dst.add(0 * Self::LANES), a_out);
+            Self::simd_store(dst.add(1 * Self::LANES), b_out);
+            Self::simd_store(dst.add(2 * Self::LANES), c_out);
+            Self::simd_store(dst.add(3 * Self::LANES), d_out);
 
-            count -= 4 * LANES;
-            dst = dst.add(4 * LANES);
-            data1 = data1.add(4 * LANES);
+            count -= 4 * Self::LANES;
+            dst = dst.add(4 * Self::LANES);
+            data1 = data1.add(4 * Self::LANES);
         }
 
-        while count >= LANES {
-            let a = simd_load(data1);
-            let a_dst = simd_load(dst);
-            let a_out = simd_muladd(a_dst, value0x, a);
+        while count >= Self::LANES {
+            let a = Self::simd_load(data1);
+            let a_dst = Self::simd_load(dst);
+            let a_out = Self::simd_muladd(a_dst, value0x, a);
 
-            simd_store(dst, a_out);
+            Self::simd_store(dst, a_out);
 
-            count -= LANES;
-            dst = dst.add(LANES);
-            data1 = data1.add(LANES);
+            count -= Self::LANES;
+            dst = dst.add(Self::LANES);
+            data1 = data1.add(Self::LANES);
         }
 
         for _ in 0..count {
@@ -396,31 +361,31 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
         let value0 = *ptrs[0];
         let mut data1 = ptrs[1];
 
-        let mut sum = simd_dup(Self::default());
+        let mut sum = Self::simd_dup(Self::default());
 
-        while count >= 4 * LANES {
-            let a = simd_load(data1.add(0 * LANES));
-            let b = simd_load(data1.add(1 * LANES));
-            let c = simd_load(data1.add(2 * LANES));
-            let d = simd_load(data1.add(3 * LANES));
+        while count >= 4 * Self::LANES {
+            let a = Self::simd_load(data1.add(0 * Self::LANES));
+            let b = Self::simd_load(data1.add(1 * Self::LANES));
+            let c = Self::simd_load(data1.add(2 * Self::LANES));
+            let d = Self::simd_load(data1.add(3 * Self::LANES));
 
-            let ab = simd_add(a, b);
-            let cd = simd_add(c, d);
-            sum = simd_add(sum, simd_add(ab, cd));
+            let ab = Self::simd_add(a, b);
+            let cd = Self::simd_add(c, d);
+            sum = Self::simd_add(sum, Self::simd_add(ab, cd));
 
-            count -= 4 * LANES;
-            data1 = data1.add(4 * LANES);
+            count -= 4 * Self::LANES;
+            data1 = data1.add(4 * Self::LANES);
         }
 
-        while count >= LANES {
-            let a = simd_load(data1);
-            sum = simd_add(sum, a);
+        while count >= Self::LANES {
+            let a = Self::simd_load(data1);
+            sum = Self::simd_add(sum, a);
 
-            count -= LANES;
-            data1 = data1.add(LANES);
+            count -= Self::LANES;
+            data1 = data1.add(Self::LANES);
         }
 
-        let mut sum = simd_sum(sum);
+        let mut sum = Self::simd_sum(sum);
         for i in 0..count {
             sum += *data1.add(i);
         }
@@ -431,48 +396,48 @@ simd_kernel!(ptrs, strides, count, dst, LANES, simd_load, simd_store, simd_add, 
     sum_of_products_in_strides_1_1_out_stride_0, {
         let mut data0 = ptrs[0];
         let mut data1 = ptrs[1];
-        let mut sum = simd_dup(Self::default());
+        let mut sum = Self::simd_dup(Self::default());
 
-        while count >= 4 * LANES {
-            let a0 = simd_load(data0.add(0 * LANES));
-            let b0 = simd_load(data1.add(0 * LANES));
+        while count >= 4 * Self::LANES {
+            let a0 = Self::simd_load(data0.add(0 * Self::LANES));
+            let b0 = Self::simd_load(data1.add(0 * Self::LANES));
 
-            let a1 = simd_load(data0.add(1 * LANES));
-            let b1 = simd_load(data1.add(1 * LANES));
+            let a1 = Self::simd_load(data0.add(1 * Self::LANES));
+            let b1 = Self::simd_load(data1.add(1 * Self::LANES));
 
-            let a2 = simd_load(data0.add(2 * LANES));
-            let b2 = simd_load(data1.add(2 * LANES));
+            let a2 = Self::simd_load(data0.add(2 * Self::LANES));
+            let b2 = Self::simd_load(data1.add(2 * Self::LANES));
 
-            let a3 = simd_load(data0.add(3 * LANES));
-            let b3 = simd_load(data1.add(3 * LANES));
+            let a3 = Self::simd_load(data0.add(3 * Self::LANES));
+            let b3 = Self::simd_load(data1.add(3 * Self::LANES));
 
-            let ab0 = simd_mul(a0, b0);
-            let ab1 = simd_mul(a1, b1);
-            let ab2 = simd_mul(a2, b2);
-            let ab3 = simd_mul(a3, b3);
+            let ab0 = Self::simd_mul(a0, b0);
+            let ab1 = Self::simd_mul(a1, b1);
+            let ab2 = Self::simd_mul(a2, b2);
+            let ab3 = Self::simd_mul(a3, b3);
 
-            let ab01 = simd_add(ab0, ab1);
-            let ab23 = simd_add(ab2, ab3);
-            let ab0123 = simd_add(ab01, ab23);
+            let ab01 = Self::simd_add(ab0, ab1);
+            let ab23 = Self::simd_add(ab2, ab3);
+            let ab0123 = Self::simd_add(ab01, ab23);
             
-            sum = simd_add(sum, ab0123);
+            sum = Self::simd_add(sum, ab0123);
 
-            count -= 4 * LANES;
-            data0 = data0.add(4 * LANES);
-            data1 = data1.add(4 * LANES);
+            count -= 4 * Self::LANES;
+            data0 = data0.add(4 * Self::LANES);
+            data1 = data1.add(4 * Self::LANES);
         }
 
-        while count >= LANES {
-            let a = simd_load(data0);
-            let b = simd_load(data1);
-            sum = simd_muladd(sum, a, b);
+        while count >= Self::LANES {
+            let a = Self::simd_load(data0);
+            let b = Self::simd_load(data1);
+            sum = Self::simd_muladd(sum, a, b);
         
-            count -= LANES;
-            data0 = data0.add(LANES);
-            data1 = data1.add(LANES);
+            count -= Self::LANES;
+            data0 = data0.add(Self::LANES);
+            data1 = data1.add(Self::LANES);
         }
 
-        let mut sum = simd_sum(sum);
+        let mut sum = Self::simd_sum(sum);
         for i in 0..count {
             sum = (*data0).mul_add(*data1, sum);
             data0 = data0.add(1);
