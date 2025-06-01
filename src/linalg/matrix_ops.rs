@@ -4,6 +4,7 @@ use crate::linalg::sum_of_products::SumOfProductsType;
 use crate::{Axis, IntegerDataType, NumericDataType, RawDataType, NdArray, StridedMemory, Constructors};
 use std::cmp::min;
 
+
 impl<'a, T: MatrixOps> NdArray<'a, T> {
     /// Calculates the matrix product of two ndarrays.
     ///

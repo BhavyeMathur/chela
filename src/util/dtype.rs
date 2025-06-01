@@ -7,6 +7,7 @@ use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 use crate::linalg::matrix_ops::MatrixOps;
+use crate::linalg::Reduce;
 
 pub trait RawDataType: Clone + Copy + PartialEq + Display + Default + Debug + Send + Sync + BinaryOps<Self> + 'static {}
 
@@ -30,7 +31,7 @@ impl RawDataType for f64 {}
 impl RawDataType for bool {}
 
 pub trait NumericDataType: RawDataType + ToPrimitive + PartialOrd + Bounded + Zero + One + NumCast
-+ Sum + Product + AddAssign + SubAssign + MulAssign + From<bool>
++ Sum + Product + AddAssign + SubAssign + MulAssign + From<bool> + Reduce
 + Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self> + Div<Output=Self> + MulAdd<Output=Self> {
     type AsFloatType: FloatDataType;
 

@@ -16,7 +16,7 @@ pub struct FlatIndexGenerator
 }
 
 impl FlatIndexGenerator {
-    pub(in crate::ndarray) fn from(shape: &[usize], stride: &[usize]) -> Self {
+    pub(crate) fn from(shape: &[usize], stride: &[usize]) -> Self {
         let (shape, stride) = collapse_to_uniform_stride(shape, stride);
         let ndims = shape.len();
         let size = shape.iter().product();

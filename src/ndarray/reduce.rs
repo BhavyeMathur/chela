@@ -1,6 +1,7 @@
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
+use crate::linalg::Reduce;
 use crate::util::to_vec::ToVec;
 use crate::{AxisType, Constructors, FloatDataType, NdArray, StridedMemory};
 use num::NumCast;
@@ -56,7 +57,7 @@ impl<T: RawDataType> NdArray<'_, T> {
     ///   For example, when the reduction operation is addition, `|src, acc| src + acc`
     /// - `default`: The initial value used as the accumulator for the reduction.
     /// - `stride`: The number of `T` elements in memory between consecutive elements of `self`
-    unsafe fn reduce_uniform_stride<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T, stride: usize) -> NdArray<'b, T> {
+    unsafe fn reduce_uniform_stride(&self, func: impl Fn(T, T) -> T, default: T, stride: usize) -> NdArray<'static, T> {
         let mut output = default;
 
         let mut src = self.ptr();
@@ -67,10 +68,8 @@ impl<T: RawDataType> NdArray<'_, T> {
 
         NdArray::scalar(output)
     }
-}
 
-impl<T: RawDataType> NdArray<'_, T> {
-    pub fn reduce_along<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> NdArray<'b, T> {
+    fn reduce_along(&self, func: impl Fn(T, T) -> T, axes: impl ToVec<isize>, default: T) -> NdArray<'static, T> {
         let (out_shape, map_stride) = reduced_shape_and_stride(&axes.to_vec(), &self.shape);
         let (map_shape, map_stride) = collapse_to_uniform_stride(&self.shape, &map_stride);
 
@@ -90,7 +89,7 @@ impl<T: RawDataType> NdArray<'_, T> {
         unsafe { NdArray::from_contiguous_owned_buffer(out_shape, output) }
     }
 
-    pub fn reduce<'a, 'b>(&'a self, func: impl Fn(T, T) -> T, default: T) -> NdArray<'b, T> {
+    fn reduce(&self, func: impl Fn(T, T) -> T, default: T) -> NdArray<'static, T> {
         if let Some(stride) = self.has_uniform_stride() {
             return unsafe { self.reduce_uniform_stride(func, default, stride) };
         }
@@ -106,192 +105,73 @@ impl<T: RawDataType> NdArray<'_, T> {
 }
 
 impl<T: NumericDataType> NdArray<'_, T> {
-    pub fn sum<'a, 'b>(&'a self) -> NdArray<'b, T> {
-        self.reduce(|val, acc| acc + val, T::zero())
+    pub fn sum(&self) -> NdArray<'static, T> {
+        let output = unsafe { <T as Reduce>::sum(self.ptr(), self.shape(), self.stride()) };
+        NdArray::scalar(output)
     }
 
-    pub fn sum_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
+    pub fn sum_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
         self.reduce_along(|val, acc| acc + val, axes, T::zero())
     }
 
-    pub fn product<'a, 'b>(&'a self) -> NdArray<'b, T> {
+    pub fn product(&self) -> NdArray<'static, T> {
         self.reduce(|val, acc| acc * val, T::one())
     }
 
-    pub fn product_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
+    pub fn product_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
         self.reduce_along(|val, acc| acc * val, axes, T::one())
     }
 
-    pub fn max<'a, 'b>(&'a self) -> NdArray<'b, T> {
+    pub fn max(&self) -> NdArray<'static, T> {
         self.reduce(partial_max, T::min_value())
     }
 
-    pub fn min<'a, 'b>(&'a self) -> NdArray<'b, T> {
+    pub fn min(&self) -> NdArray<'static, T> {
         self.reduce(partial_min, T::max_value())
     }
 
-    pub fn max_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
+    pub fn max_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
         self.reduce_along(partial_max, axes, T::min_value())
     }
 
-    pub fn min_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
+    pub fn min_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
         self.reduce_along(partial_min, axes, T::max_value())
     }
 
-    pub fn max_magnitude<'a, 'b>(&'a self) -> NdArray<'b, T> {
+    pub fn max_magnitude(&self) -> NdArray<'static, T> {
         self.reduce(partial_max_magnitude, T::zero())
     }
 
-    pub fn min_magnitude<'a, 'b>(&'a self) -> NdArray<'b, T> {
+    pub fn min_magnitude(&self) -> NdArray<'static, T> {
         self.reduce(partial_min_magnitude, T::zero())
     }
 
-    pub fn max_magnitude_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
+    pub fn max_magnitude_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
         self.reduce_along(partial_max_magnitude, axes, T::zero())
     }
 
-    pub fn min_magnitude_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
+    pub fn min_magnitude_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
         self.reduce_along(partial_min_magnitude, axes, T::zero())
     }
-}
 
-// #[cfg(not(apple_vdsp))]
-// impl NdArrayNumericReduce<f32> for NdArray<'_, f32> {}
-//
-// #[cfg(not(apple_vdsp))]
-// impl NdArrayNumericReduce<f64> for NdArray<'_, f64> {}
-// TODO
-// 
-// #[cfg(apple_vdsp)]
-// impl NdArrayNumericReduce<f32> for NdArray<'_, f32> {
-//     fn sum<'a, 'b>(&'a self) -> NdArray<'b, f32> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(|val, acc| acc + val, 0.0) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_sve(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-//
-//     fn max<'a, 'b>(&'a self) -> NdArray<'b, f32> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(partial_max, f32::min_value()) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_maxv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-//
-//     fn min<'a, 'b>(&'a self) -> NdArray<'b, f32> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(partial_min, f32::max_value()) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_minv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-//
-//     fn max_magnitude<'a, 'b>(&'a self) -> NdArray<'b, f32> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(partial_max_magnitude, 0.0) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_maxmgv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-//
-//     fn min_magnitude<'a, 'b>(&'a self) -> NdArray<'b, f32> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(partial_min_magnitude, 0.0) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_minmgv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-// }
-//
-// #[cfg(apple_vdsp)]
-// impl NdArrayNumericReduce<f64> for NdArray<'_, f64> {
-//     fn sum<'a, 'b>(&'a self) -> NdArray<'b, f64> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(|val, acc| acc + val, 0.0) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_sveD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-//
-//     fn max<'a, 'b>(&'a self) -> NdArray<'b, f64> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(partial_max, f64::min_value()) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_maxvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-//
-//     fn min<'a, 'b>(&'a self) -> NdArray<'b, f64> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(partial_min, f64::max_value()) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_minvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-//
-//     fn max_magnitude<'a, 'b>(&'a self) -> NdArray<'b, f64> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(partial_max_magnitude, 0.0) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_maxmgvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-//
-//     fn min_magnitude<'a, 'b>(&'a self) -> NdArray<'b, f64> {
-//         match self.has_uniform_stride() {
-//             None => { self.reduce(partial_min_magnitude, 0.0) }
-//             Some(stride) => {
-//                 let mut output = 0.0;
-//                 unsafe { vDSP_minmgvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
-//                 NdArray::scalar_requires_grad(output, self.requires_grad())
-//             }
-//         }
-//     }
-// }
-
-
-impl<T: FloatDataType> NdArray<'_, T> {
-    pub fn mean<'a, 'b>(&'a self) -> NdArray<'b, T> {
+    pub fn mean(&self) -> NdArray<'static, T>
+    where
+        T: FloatDataType
+    {
         let n: T = NumCast::from(self.size()).unwrap();
         self.sum() / n
     }
 
-    pub fn mean_along<'a, 'b>(&'a self, axes: impl ToVec<isize>) -> NdArray<'b, T> {
+    pub fn mean_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T>
+    where
+        T: FloatDataType
+    {
         let axes = axes.to_vec();
 
         let mut n = 1;
         for &axis in axes.iter() {
             assert!(axis >= 0, "negative axes are not currently supported");
-            n *= self.shape[axis as usize];
+            n *= self.shape()[axis as usize];
         }
 
         let n: T = NumCast::from(n).unwrap();
@@ -299,9 +179,115 @@ impl<T: FloatDataType> NdArray<'_, T> {
     }
 }
 
+// #[cfg(apple_vdsp)]
+// impl NumericReduce<f32> for NdArray<'_, f32> {
+// 
+//     fn max(&self) -> NdArray<'static, f32> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(partial_max, f32::min_value()) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_maxv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// 
+//     fn min(&self) -> NdArray<'static, f32> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(partial_min, f32::max_value()) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_minv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// 
+//     fn max_magnitude(&self) -> NdArray<'static, f32> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(partial_max_magnitude, 0.0) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_maxmgv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// 
+//     fn min_magnitude(&self) -> NdArray<'static, f32> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(partial_min_magnitude, 0.0) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_minmgv(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// }
+
+// #[cfg(apple_vdsp)]
+// impl NumericReduce<f64> for NdArray<'_, f64> {
+//     fn sum(&self) -> NdArray<'static, f64> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(|val, acc| acc + val, 0.0) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_sveD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// 
+//     fn max(&self) -> NdArray<'static, f64> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(partial_max, f64::min_value()) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_maxvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// 
+//     fn min(&self) -> NdArray<'static, f64> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(partial_min, f64::max_value()) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_minvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// 
+//     fn max_magnitude(&self) -> NdArray<'static, f64> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(partial_max_magnitude, 0.0) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_maxmgvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// 
+//     fn min_magnitude(&self) -> NdArray<'static, f64> {
+//         match self.has_uniform_stride() {
+//             None => { self.reduce(partial_min_magnitude, 0.0) }
+//             Some(stride) => {
+//                 let mut output = 0.0;
+//                 unsafe { vDSP_minmgvD(self.ptr(), stride as isize, std::ptr::addr_of_mut!(output), self.size() as isize); }
+//                 NdArray::scalar(output)
+//             }
+//         }
+//     }
+// }
+
 #[cfg(test)]
 mod tests {
-    use crate::reduce::reduced_shape_and_stride;
+    use super::reduced_shape_and_stride;
 
     #[test]
     fn test_reduce_shape_and_stride() {

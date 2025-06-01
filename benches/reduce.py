@@ -65,7 +65,7 @@ class TensorReduce3(TensorReduceTimingSuite):
 
 class TensorReduce10(TensorReduceTimingSuite):
     ID = 10
-    name = "Sum Slice"
+    name = "Sum Non-Contiguous"
 
     def __init__(self):
         super().__init__((N, 2), "sum")
@@ -75,7 +75,7 @@ class TensorReduce10(TensorReduceTimingSuite):
 
 class TensorReduce11(TensorReduceTimingSuite):
     ID = 11
-    name = "Product Slice"
+    name = "Product Non-Contiguous"
 
     def __init__(self):
         super().__init__((N, 2), "prod")
@@ -85,7 +85,7 @@ class TensorReduce11(TensorReduceTimingSuite):
 
 class TensorReduce12(TensorReduceTimingSuite):
     ID = 12
-    name = "Min Slice"
+    name = "Min Non-Contiguous"
 
     def __init__(self):
         super().__init__((N, 2), "min")
@@ -95,7 +95,7 @@ class TensorReduce12(TensorReduceTimingSuite):
 
 class TensorReduce13(TensorReduceTimingSuite):
     ID = 13
-    name = "Max Slice"
+    name = "Max Non-Contiguous"
 
     def __init__(self):
         super().__init__((N, 2), "max")
@@ -103,18 +103,29 @@ class TensorReduce13(TensorReduceTimingSuite):
         self.tensor = self.tensor[:, 0]
 
 
+class TensorReduce20(TensorReduceTimingSuite):
+    ID = 20
+    name = "Sum Non-Uniform"
+
+    def __init__(self):
+        super().__init__((N, 3), "sum")
+        self.ndarray = self.ndarray[:, 0:2]
+        self.tensor = self.tensor[:, 0:2]
+
+
 if __name__ == "__main__":
     results = profile_all([
         TensorReduce0,
         TensorReduce10,
+        TensorReduce20,
 
-        TensorReduce1,
-        TensorReduce11,
-
-        TensorReduce2,
-        TensorReduce12,
-
-        TensorReduce3,
-        TensorReduce13,
+        # TensorReduce1,
+        # TensorReduce11,
+        #
+        # TensorReduce2,
+        # TensorReduce12,
+        #
+        # TensorReduce3,
+        # TensorReduce13,
     ], n=10)
     plot_barplot(results, "Tensor Reduction Benchmark")

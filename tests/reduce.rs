@@ -1,4 +1,6 @@
 use chela::*;
+use num::NumCast;
+use paste::paste;
 
 #[test]
 #[should_panic]
@@ -7,172 +9,77 @@ fn test_reduce_panic() {
     tensor.sum_along([0, 0]);
 }
 
-#[test]
-fn test_reduce_sum_f32() {
-    let tensor = NdArray::new([[1f32, 1.0], [2.0, 2.0], [3.0, 3.0]]);
 
-    let correct = NdArray::new([2f32, 4.0, 6.0]);
-    let output = tensor.sum_along(1);
-    assert_eq!(output, correct);
+test_for_all_numeric_dtypes!(
+    test_sum, {
+        let tensor = NdArray::new([[1, 1], [2, 2], [3, 3]]).astype::<T>();
 
-    let output = tensor.sum_along(Axis(1));
-    assert_eq!(output, correct);
+        let correct = NdArray::new([2, 4, 6]).astype::<T>();
+        let output = tensor.sum_along(1);
+        assert_eq!(output, correct);
 
-    let correct = tensor.clone();
-    let output = tensor.sum_along([]);
-    assert_eq!(output, correct);
+        let output = tensor.sum_along(Axis(1));
+        assert_eq!(output, correct);
 
-    let correct = NdArray::scalar(12.0);
-    let output = tensor.sum();
-    assert_eq!(output, correct);
-}
+        let correct = tensor.clone();
+        let output = tensor.sum_along([]);
+        assert_eq!(output, correct);
 
-#[test]
-fn test_reduce_sum_slice_u128() {
-    let tensor = NdArray::new([
-        [[1u128, 5, 3], [2, 9, 4]],
-        [[2, 6, 4], [3, 8, 3]],
-        [[3, 7, 5], [4, 7, 2]],
-        [[4, 8, 6], [5, 6, 1]]
-    ]);
-    let slice = tensor.slice(s![1..3, .., 0..=1]);
+        let correct = NdArray::scalar(12).astype::<T>();
+        let output = tensor.sum();
+        assert_eq!(output, correct);
+    }
+);
 
-    let correct = NdArray::new([12u128, 28]);
-    let output = slice.sum_along([0, 1]);
-    assert_eq!(output, correct);
+test_for_common_numeric_dtypes!(
+    test_sum2, {
+        let two: T = NumCast::from(2).unwrap();
 
-    let correct = NdArray::scalar(40u128);
-    let output = slice.sum();
-    assert_eq!(output, correct);
+        for n in 1..23 {
+            let tensor = NdArray::arange(0, n).astype::<T>();
 
-    // uniform stride but non-contiguous
-    let slice = tensor.slice(s![.., .., 0]);
+            let correct = NdArray::scalar(n * n - n).astype::<T>();
+            let output = tensor.sum() * two;
+            assert_eq!(output, correct);
+        }
+    }
+);
 
-    let correct = NdArray::scalar(24u128);
-    let output = slice.sum();
-    assert_eq!(output, correct);
+test_for_common_numeric_dtypes!(
+    test_sum_slice, {
+        let tensor = NdArray::new([
+            [[1, 5, 3], [2, 9, 4]],
+            [[2, 6, 4], [3, 8, 3]],
+            [[3, 7, 5], [4, 7, 2]],
+            [[4, 8, 6], [5, 6, 1]]
+        ]).astype::<T>();
 
-    let correct = NdArray::new([3u128, 5, 7, 9]);
-    let output = slice.sum_along([1]);
-    assert_eq!(output, correct);
+        let slice = tensor.slice(s![1..3, .., 0..=1]);
 
-    let correct = NdArray::new([10u128, 14]);
-    let output = slice.sum_along([0]);
-    assert_eq!(output, correct);
-}
+        let correct = NdArray::new([12, 28]).astype::<T>();
+        let output = slice.sum_along([0, 1]);
+        assert_eq!(output, correct);
 
-#[test]
-fn test_reduce_sum_slice_f32() {
-    let tensor = NdArray::new([
-        [[1f32, 5.0, 3.0], [2.0, 9.0, 4.0]],
-        [[2.0, 6.0, 4.0], [3.0, 8.0, 3.0]],
-        [[3.0, 7.0, 5.0], [4.0, 7.0, 2.0]],
-        [[4.0, 8.0, 6.0], [5.0, 6.0, 1.0]]
-    ]);
-    // non-uniform stride, non-contiguous
-    let slice = tensor.slice(s![1..3, .., 0..=1]);
+        let correct = NdArray::scalar(40).astype::<T>();
+        let output = slice.sum();
+        assert_eq!(output, correct);
 
-    let correct = NdArray::new([12f32, 28.0]);
-    let output = slice.sum_along([0, 1]);
-    assert_eq!(output, correct);
+        // uniform stride but non-contiguous
+        let slice = tensor.slice(s![.., .., 0]);
 
-    let correct = NdArray::scalar(40.0);
-    let output = slice.sum();
-    assert_eq!(output, correct);
+        let correct = NdArray::scalar(24).astype::<T>();
+        let output = slice.sum();
+        assert_eq!(output, correct);
 
-    // uniform stride but non-contiguous
-    let slice = tensor.slice(s![.., .., 0]);
+        let correct = NdArray::new([3, 5, 7, 9]).astype::<T>();
+        let output = slice.sum_along([1]);
+        assert_eq!(output, correct);
 
-    let correct = NdArray::scalar(24.0);
-    let output = slice.sum();
-    assert_eq!(output, correct);
-
-    let correct = NdArray::new([3f32, 5.0, 7.0, 9.0]);
-    let output = slice.sum_along([1]);
-    assert_eq!(output, correct);
-
-    let correct = NdArray::new([10f32, 14.0]);
-    let output = slice.sum_along([0]);
-    assert_eq!(output, correct);
-}
-
-#[test]
-fn test_reduce_sum_slice_f64() {
-    let tensor = NdArray::new([
-        [[1f64, 5.0, 3.0], [2.0, 9.0, 4.0]],
-        [[2.0, 6.0, 4.0], [3.0, 8.0, 3.0]],
-        [[3.0, 7.0, 5.0], [4.0, 7.0, 2.0]],
-        [[4.0, 8.0, 6.0], [5.0, 6.0, 1.0]]
-    ]);
-    let slice = tensor.slice(s![1..3, .., 0..=1]);
-    assert!(!slice.is_contiguous());
-    assert!(slice.has_uniform_stride().is_none());
-
-    let correct = NdArray::new([12f64, 28.0]);
-    let output = slice.sum_along([0, 1]);
-    assert_eq!(output, correct);
-
-    let correct = NdArray::scalar(40.0);
-    let output = slice.sum();
-    assert_eq!(output, correct);
-
-    // uniform stride but non-contiguous
-    let slice = tensor.slice(s![.., .., 0]);
-    assert!(!slice.is_contiguous());
-    assert!(slice.has_uniform_stride().is_some());
-
-    let correct = NdArray::scalar(24.0);
-    let output = slice.sum();
-    assert_eq!(output, correct);
-
-    let correct = NdArray::new([3f64, 5.0, 7.0, 9.0]);
-    let output = slice.sum_along([1]);
-    assert_eq!(output, correct);
-
-    let correct = NdArray::new([10f64, 14.0]);
-    let output = slice.sum_along([0]);
-    assert_eq!(output, correct);
-}
-
-#[test]
-fn test_reduce_sum_f64() {
-    let tensor = NdArray::new([[1f64, 1.0], [2.0, 2.0], [3.0, 3.0]]);
-
-    let correct = NdArray::new([2f64, 4.0, 6.0]);
-    let output = tensor.sum_along(1);
-    assert_eq!(output, correct);
-
-    let output = tensor.sum_along(Axis(1));
-    assert_eq!(output, correct);
-
-    let correct = tensor.clone();
-    let output = tensor.sum_along([]);
-    assert_eq!(output, correct);
-
-    let correct = NdArray::scalar(12.0);
-    let output = tensor.sum();
-    assert_eq!(output, correct);
-}
-
-#[test]
-fn test_reduce_sum_i32() {
-    let tensor = NdArray::new([[1i32, 1], [2, 2], [3, 3]]);
-
-    let correct = NdArray::new([2, 4, 6]);
-    let output = tensor.sum_along(1);
-    assert_eq!(output, correct);
-
-    let output = tensor.sum_along(Axis(1));
-    assert_eq!(output, correct);
-
-    let correct = tensor.clone();
-    let output = tensor.sum_along([]);
-    assert_eq!(output, correct);
-
-    let correct = NdArray::scalar(12);
-    let output = tensor.sum();
-    assert_eq!(output, correct);
-}
+        let correct = NdArray::new([10, 14]).astype::<T>();
+        let output = slice.sum_along([0]);
+        assert_eq!(output, correct);
+    }
+);
 
 #[test]
 fn test_reduce_multiply() {

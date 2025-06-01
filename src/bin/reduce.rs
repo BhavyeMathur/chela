@@ -77,6 +77,15 @@ fn reduce13() -> u128 {
     start.elapsed().as_nanos()
 }
 
+fn reduce20() -> u128 {
+    let tensor = NdArray::<f32>::rand([N, 3]).astype::<T>();
+    let tensor = tensor.slice_along(Axis(1), 0..2);
+
+    let start = ProcessTime::now();
+    _ = tensor.sum();
+    start.elapsed().as_nanos()
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let id = args[1].parse::<usize>().unwrap();
@@ -91,6 +100,8 @@ fn main() {
         else if id == 11 { reduce11() }
         else if id == 12 { reduce12() }
         else if id == 13 { reduce13() }
+
+        else if id == 20 { reduce20() }
 
         else { panic!("invalid ID") };
 
