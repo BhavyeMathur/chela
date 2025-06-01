@@ -11,7 +11,7 @@ use std::ops::{Add, AddAssign};
 use std::ptr::addr_of_mut;
 
 #[cfg(apple_vdsp)]
-use crate::accelerate::vdsp::*;
+use crate::acceleration::vdsp::*;
 
 
 pub(crate) trait Reduce: Zero + One + Copy + Add<Output=Self> + AddAssign {
@@ -70,7 +70,7 @@ impl<T: IntegerDataType> Reduce for T {}
 impl Reduce for f32 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn sum_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
-        use crate::accelerate::simd::SIMD;
+        use crate::acceleration::simd::SIMD;
         Self::simd_sum_contiguous(ptr, count)
     }
 
@@ -85,7 +85,7 @@ impl Reduce for f32 {
 impl Reduce for f64 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn sum_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
-        use crate::accelerate::simd::SIMD;
+        use crate::acceleration::simd::SIMD;
         Self::simd_sum_contiguous(ptr, count)
     }
     

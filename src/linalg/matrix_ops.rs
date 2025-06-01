@@ -425,7 +425,7 @@ impl MatrixOps for f32 {
                                         rhs: &NdArray<'a, Self>,
                                         result_stride: &[usize],
                                         result: *mut Self) {
-        use crate::accelerate::cblas::{cblas_sgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+        use crate::acceleration::cblas::{cblas_sgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
 
         // BLAS does not support matrices that don't have contiguous rows
         if lhs.stride()[1] != 1 || rhs.stride()[1] != 1 {
@@ -448,7 +448,7 @@ impl MatrixOps for f32 {
     #[cfg(all(blas, not(neon_simd)))]
     unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &NdArray<'a, Self>,
                                                 vector: &NdArray<'b, Self>) -> NdArray<'r, Self> {
-        use crate::accelerate::cblas::{cblas_sgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+        use crate::acceleration::cblas::{cblas_sgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
         use crate::einsum;
 
         // BLAS does not support matrices that don't have contiguous rows
@@ -480,7 +480,7 @@ impl MatrixOps for f64 {
                                         rhs: &NdArray<'a, Self>,
                                         result_stride: &[usize],
                                         result: *mut Self) {
-        use crate::accelerate::cblas::{cblas_dgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+        use crate::acceleration::cblas::{cblas_dgemm, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
 
         // BLAS does not support matrices that don't have contiguous rows
         if lhs.stride()[1] != 1 || rhs.stride()[1] != 1 {
@@ -503,7 +503,7 @@ impl MatrixOps for f64 {
     #[cfg(all(blas, not(neon_simd)))]
     unsafe fn matrix_vector_product<'a, 'b, 'r>(matrix: &NdArray<'a, Self>,
                                                 vector: &NdArray<'b, Self>) -> NdArray<'r, Self> {
-        use crate::accelerate::cblas::{cblas_dgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
+        use crate::acceleration::cblas::{cblas_dgemv, CBLAS_NO_TRANS, CBLAS_ROW_MAJOR};
         use crate::einsum;
 
         // BLAS does not support matrices that don't have contiguous rows

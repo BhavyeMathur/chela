@@ -6,7 +6,7 @@
 
 
 #[cfg(apple_accelerate)]
-mod accelerate;
+mod acceleration;
 
 pub mod ndarray;
 pub use ndarray::*;
@@ -24,4 +24,6 @@ pub mod util;
 pub use util::*;
 
 pub mod autograd;
+pub mod ops;
+
 pub use autograd::*;
