@@ -9,6 +9,9 @@ pub(crate) mod haslength;
 pub(crate) mod to_vec;
 pub(crate) mod functions;
 
+pub mod absolute;
+pub mod partial_ord;
+
 pub mod dtype;
 pub use dtype::*;
 

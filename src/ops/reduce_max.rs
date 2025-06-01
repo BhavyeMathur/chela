@@ -2,7 +2,7 @@ use crate::flat_index_generator::FlatIndexGenerator;
 use crate::ndarray::collapse_contiguous::has_uniform_stride;
 use crate::{IntegerDataType};
 use num::{Bounded};
-use crate::ops::partial_ord::partial_max;
+use crate::util::partial_ord::partial_max;
 
 pub(crate) trait ReduceMax: Copy + PartialOrd + Bounded {
     /// Computes the max of `count` elements stored contiguously in memory pointed to by `ptr`.

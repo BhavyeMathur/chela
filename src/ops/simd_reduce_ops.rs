@@ -1,5 +1,5 @@
 use crate::acceleration::simd::SIMD;
-use crate::ops::partial_ord::{partial_max, partial_min};
+use crate::util::partial_ord::{partial_max, partial_min};
 
 pub(crate) trait SIMDReduceOps: SIMD {
     #[cfg(neon_simd)]

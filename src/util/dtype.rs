@@ -3,9 +3,11 @@ use crate::linalg::matrix_ops::MatrixOps;
 use crate::ops::dot_product::DotProduct;
 use crate::ops::reduce_max::ReduceMax;
 use crate::ops::reduce_min::ReduceMin;
+use crate::ops::reduce_min_magnitude::ReduceMinMagnitude;
 use crate::ops::reduce_product::ReduceProduct;
 use crate::ops::reduce_sum::ReduceSum;
 use crate::sum_of_products::SumOfProductsType;
+use crate::util::absolute::Absolute;
 use num::traits::MulAdd;
 use num::{Float, NumCast, ToPrimitive};
 use rand::distributions::uniform::SampleUniform;
@@ -34,8 +36,9 @@ impl RawDataType for f64 {}
 
 impl RawDataType for bool {}
 
-pub trait NumericDataType: RawDataType + ToPrimitive + NumCast
-+ Sum + Product + SubAssign + From<bool> + ReduceSum + ReduceProduct + ReduceMin + ReduceMax + DotProduct
+pub trait NumericDataType: RawDataType + ToPrimitive + NumCast + Absolute
++ Sum + Product + SubAssign + From<bool> + DotProduct
++ ReduceSum + ReduceProduct + ReduceMin + ReduceMax + ReduceMinMagnitude
 + Sub<Output=Self> + Div<Output=Self> + MulAdd<Output=Self>
 {
     type AsFloatType: FloatDataType;
@@ -43,8 +46,6 @@ pub trait NumericDataType: RawDataType + ToPrimitive + NumCast
     fn to_float(&self) -> Self::AsFloatType {
         self.to_f32().unwrap().into()
     }
-
-    fn abs(&self) -> Self;
 
     fn ceil(&self) -> Self {
         *self
@@ -57,106 +58,54 @@ pub trait NumericDataType: RawDataType + ToPrimitive + NumCast
 
 impl NumericDataType for u8 {
     type AsFloatType = f32;
-
-    fn abs(&self) -> Self {
-        *self
-    }
 }
 
 impl NumericDataType for u16 {
     type AsFloatType = f32;
-
-    fn abs(&self) -> Self {
-        *self
-    }
 }
 
 impl NumericDataType for u32 {
     type AsFloatType = f32;
-
-    fn abs(&self) -> Self {
-        *self
-    }
 }
 
 impl NumericDataType for u64 {
     type AsFloatType = f64;
-
-    fn abs(&self) -> Self {
-        *self
-    }
 }
 
 impl NumericDataType for u128 {
     type AsFloatType = f64;
-
-    fn abs(&self) -> Self {
-        *self
-    }
 }
 
 impl NumericDataType for usize {
     type AsFloatType = f64;
-
-    fn abs(&self) -> Self {
-        *self
-    }
 }
 
 impl NumericDataType for i8 {
     type AsFloatType = f32;
-
-    fn abs(&self) -> Self {
-        num::Signed::abs(self)
-    }
 }
 
 impl NumericDataType for i16 {
     type AsFloatType = f32;
-
-    fn abs(&self) -> Self {
-        num::Signed::abs(self)
-    }
 }
 
 impl NumericDataType for i32 {
     type AsFloatType = f32;
-
-    fn abs(&self) -> Self {
-        num::Signed::abs(self)
-    }
 }
 
 impl NumericDataType for i64 {
     type AsFloatType = f64;
-
-    fn abs(&self) -> Self {
-        num::Signed::abs(self)
-    }
 }
 
 impl NumericDataType for i128 {
     type AsFloatType = f64;
-
-    fn abs(&self) -> Self {
-        num::Signed::abs(self)
-    }
 }
 
 impl NumericDataType for isize {
     type AsFloatType = f64;
-
-    fn abs(&self) -> Self {
-        num::Signed::abs(self)
-    }
 }
 
 impl NumericDataType for f32 {
     type AsFloatType = f32;
-
-    fn abs(&self) -> Self {
-        num::Signed::abs(self)
-    }
 
     fn ceil(&self) -> Self {
         num::Float::ceil(*self)
@@ -169,10 +118,6 @@ impl NumericDataType for f32 {
 
 impl NumericDataType for f64 {
     type AsFloatType = f64;
-
-    fn abs(&self) -> Self {
-        num::Signed::abs(self)
-    }
 
     fn ceil(&self) -> Self {
         num::Float::ceil(*self)

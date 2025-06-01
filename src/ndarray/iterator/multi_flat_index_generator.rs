@@ -1,5 +1,5 @@
 use crate::ndarray::{MAX_ARGS, MAX_DIMS};
-use crate::NumericDataType;
+use crate::util::absolute::Absolute;
 
 #[non_exhaustive]
 pub struct MultiFlatIndexGenerator
@@ -80,7 +80,7 @@ impl MultiFlatIndexGenerator {
                                               -> Self {
         let ndims = shape.len();
         assert_eq!(strides.len(), ndims);
-        
+
         assert!(OPERANDS <= MAX_ARGS);
         assert!(nops <= OPERANDS);
         assert!(ndims <= MAX_DIMS);

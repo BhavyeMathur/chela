@@ -2,7 +2,7 @@ use crate::flat_index_generator::FlatIndexGenerator;
 use crate::ndarray::collapse_contiguous::has_uniform_stride;
 use crate::{IntegerDataType};
 use num::{Bounded};
-use crate::ops::partial_ord::partial_min;
+use crate::util::partial_ord::partial_min;
 
 pub(crate) trait ReduceMin: Copy + PartialOrd + Bounded {
     /// Computes the min of `count` elements stored contiguously in memory pointed to by `ptr`.
