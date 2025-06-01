@@ -1,11 +1,12 @@
 use crate::dtype::{NumericDataType, RawDataType};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
-use crate::linalg::Reduce;
 use crate::util::to_vec::ToVec;
 use crate::{AxisType, Constructors, FloatDataType, NdArray, StridedMemory};
 use num::NumCast;
 use std::collections::VecDeque;
+use crate::ops::reduce_product::ReduceProduct;
+use crate::ops::reduce_sum::ReduceSum;
 
 /// Returns a tuple `(output_shape, map_stride)`
 ///
@@ -106,7 +107,7 @@ impl<T: RawDataType> NdArray<'_, T> {
 
 impl<T: NumericDataType> NdArray<'_, T> {
     pub fn sum(&self) -> NdArray<'static, T> {
-        let output = unsafe { <T as Reduce>::sum(self.ptr(), self.shape(), self.stride()) };
+        let output = unsafe { <T as ReduceSum>::sum(self.ptr(), self.shape(), self.stride()) };
         NdArray::scalar(output)
     }
 
@@ -115,7 +116,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     }
 
     pub fn product(&self) -> NdArray<'static, T> {
-        self.reduce(|val, acc| acc * val, T::one())
+        let output = unsafe { <T as ReduceProduct>::product(self.ptr(), self.shape(), self.stride()) };
+        NdArray::scalar(output)
     }
 
     pub fn product_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {

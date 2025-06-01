@@ -4,7 +4,7 @@ use std::env;
 use cpu_time::ProcessTime;
 
 
-const N: usize = 10000000;
+const N: usize = 1000000;
 
 type T = f32;
 
@@ -86,6 +86,33 @@ fn reduce20() -> u128 {
     start.elapsed().as_nanos()
 }
 
+fn reduce21() -> u128 {
+    let tensor = NdArray::<f32>::rand([N, 3]).astype::<T>();
+    let tensor = tensor.slice_along(Axis(1), 0..2);
+
+    let start = ProcessTime::now();
+    _ = tensor.product();
+    start.elapsed().as_nanos()
+}
+
+fn reduce22() -> u128 {
+    let tensor = NdArray::<f32>::rand([N, 3]).astype::<T>();
+    let tensor = tensor.slice_along(Axis(1), 0..2);
+
+    let start = ProcessTime::now();
+    _ = tensor.min();
+    start.elapsed().as_nanos()
+}
+
+fn reduce23() -> u128 {
+    let tensor = NdArray::<f32>::rand([N, 3]).astype::<T>();
+    let tensor = tensor.slice_along(Axis(1), 0..2);
+
+    let start = ProcessTime::now();
+    _ = tensor.max();
+    start.elapsed().as_nanos()
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let id = args[1].parse::<usize>().unwrap();
@@ -102,6 +129,9 @@ fn main() {
         else if id == 13 { reduce13() }
 
         else if id == 20 { reduce20() }
+        else if id == 21 { reduce21() }
+        else if id == 22 { reduce22() }
+        else if id == 23 { reduce23() }
 
         else { panic!("invalid ID") };
 

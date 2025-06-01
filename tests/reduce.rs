@@ -54,6 +54,7 @@ test_for_common_numeric_dtypes!(
             [[4, 8, 6], [5, 6, 1]]
         ]).astype::<T>();
 
+        // non-uniform stride and non-contiguous
         let slice = tensor.slice(s![1..3, .., 0..=1]);
 
         let correct = NdArray::new([12, 28]).astype::<T>();
@@ -81,22 +82,84 @@ test_for_common_numeric_dtypes!(
     }
 );
 
-#[test]
-fn test_reduce_multiply() {
-    let tensor = NdArray::new([[1, 1], [2, 2], [3, 3]]);
+test_for_all_numeric_dtypes!(
+    test_reduce_multiply, {
+        let tensor = NdArray::new([[1, 1], [2, 2], [3, 3]]).astype::<T>();
 
-    let correct = NdArray::new([1, 4, 9]);
-    let output = tensor.product_along(1);
-    assert_eq!(output, correct);
+        let correct = NdArray::new([1, 4, 9]).astype::<T>();
+        let output = tensor.product_along(1);
+        assert_eq!(output, correct);
 
-    let correct = tensor.clone();
-    let output = tensor.product_along([]);
-    assert_eq!(output, correct);
+        let correct = tensor.clone();
+        let output = tensor.product_along([]);
+        assert_eq!(output, correct);
 
-    let correct = NdArray::scalar(36);
-    let output = tensor.product();
-    assert_eq!(output, correct);
-}
+        let correct = NdArray::scalar(36).astype::<T>();
+        let output = tensor.product();
+        assert_eq!(output, correct);
+    }
+);
+
+test_for_common_numeric_dtypes!(
+    test_reduce_multiply_big, {
+        // 14 elements
+        let tensor = NdArray::new([1, 2, 3, 2, 4, 5, 1, 2, 3, 4, 5, 6, 7, 9]).astype::<T>();
+        let output = tensor.product();
+        assert_eq!(output, NdArray::scalar(10886400).astype::<T>());
+
+        // 17 elements
+        let tensor = NdArray::new([1, 2, 3, 2, 4, 5, 1, 2, 3, 4, 5, 6, 7, 9, 2, 3, 2]).astype::<T>();
+        let output = tensor.product();
+        assert_eq!(output, NdArray::scalar(130636800).astype::<T>());
+
+        // 20 elements
+        let tensor = NdArray::new([1, 2, 3, 2, 4, 5, 1, 2, 3, 4, 5, 6, 2, 9, 2, 3, 2, 6, 2, 3]).astype::<T>();
+        let output = tensor.product();
+        assert_eq!(output, NdArray::scalar(1343692800).astype::<T>());
+
+        // 23 elements
+        let tensor = NdArray::new([1, 2, 3, 2, 4, 5, 1, 2, 3, 4, 1, 5, 1, 2, 2, 3, 2, 6, 2, 3, 3, 6, 4]).astype::<T>();
+        let output = tensor.product();
+        assert_eq!(output, NdArray::scalar(1791590400).astype::<T>());
+    }
+);
+
+test_for_common_numeric_dtypes!(
+    test_product_slice, {
+        let tensor = NdArray::new([
+            [[1, 5, 3], [2, 9, 4]],
+            [[2, 6, 4], [3, 8, 3]],
+            [[3, 7, 5], [4, 7, 2]],
+            [[4, 8, 6], [5, 6, 1]]
+        ]).astype::<T>();
+
+        // non-uniform stride and non-contiguous
+        let slice = tensor.slice(s![1..3, .., 0..=1]);
+
+        let correct = NdArray::new([72, 2352]).astype::<T>();
+        let output = slice.product_along([0, 1]);
+        assert_eq!(output, correct);
+
+        let correct = NdArray::scalar(169344).astype::<T>();
+        let output = slice.product();
+        assert_eq!(output, correct);
+
+        // uniform stride but non-contiguous
+        let slice = tensor.slice(s![.., .., 0]);
+
+        let correct = NdArray::scalar(2880).astype::<T>();
+        let output = slice.product();
+        assert_eq!(output, correct);
+
+        let correct = NdArray::new([2, 6, 12, 20]).astype::<T>();
+        let output = slice.product_along([1]);
+        assert_eq!(output, correct);
+
+        let correct = NdArray::new([24, 120]).astype::<T>();
+        let output = slice.product_along([0]);
+        assert_eq!(output, correct);
+    }
+);
 
 #[test]
 fn test_reduce_mean() {

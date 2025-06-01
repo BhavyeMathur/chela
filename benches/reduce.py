@@ -6,7 +6,7 @@ from perfprofiler import *
 NUMPY_DTYPE = np.float32
 TORCH_DTYPE = torch.float32
 
-N = 10000000
+N = 1000000
 
 
 class TensorReduceTimingSuite(TimingSuite):
@@ -41,7 +41,7 @@ class TensorReduce0(TensorReduceTimingSuite):
 
 class TensorReduce1(TensorReduceTimingSuite):
     ID = 1
-    name = "Product"
+    name = "Prod"
 
     def __init__(self):
         super().__init__((N, ), "prod")
@@ -75,7 +75,7 @@ class TensorReduce10(TensorReduceTimingSuite):
 
 class TensorReduce11(TensorReduceTimingSuite):
     ID = 11
-    name = "Product Non-Contiguous"
+    name = "Prod Non-Contiguous"
 
     def __init__(self):
         super().__init__((N, 2), "prod")
@@ -113,18 +113,40 @@ class TensorReduce20(TensorReduceTimingSuite):
         self.tensor = self.tensor[:, 0:2]
 
 
+class TensorReduce21(TensorReduceTimingSuite):
+    ID = 21
+    name = "Prod Non-Uniform"
+
+    def __init__(self):
+        super().__init__((N, 3), "prod")
+        self.ndarray = self.ndarray[:, 0:2]
+        self.tensor = self.tensor[:, 0:2]
+
+
+class TensorReduce22(TensorReduceTimingSuite):
+    ID = 22
+    name = "Min Non-Uniform"
+
+    def __init__(self):
+        super().__init__((N, 3), "min")
+        self.ndarray = self.ndarray[:, 0:2]
+        self.tensor = self.tensor[:, 0:2]
+
+
 if __name__ == "__main__":
     results = profile_all([
         TensorReduce0,
         TensorReduce10,
         TensorReduce20,
 
-        # TensorReduce1,
-        # TensorReduce11,
-        #
-        # TensorReduce2,
-        # TensorReduce12,
-        #
+        TensorReduce1,
+        TensorReduce11,
+        TensorReduce21,
+
+        TensorReduce2,
+        TensorReduce12,
+        TensorReduce22,
+
         # TensorReduce3,
         # TensorReduce13,
     ], n=10)

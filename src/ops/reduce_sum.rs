@@ -1,24 +1,16 @@
-#![allow(unused_mut)]
-#![allow(unused_variables)]
-
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::ndarray::collapse_contiguous::has_uniform_stride;
 use crate::IntegerDataType;
-use num::{One, Zero};
-use std::ops::{Add, AddAssign};
+use num::Zero;
+use std::ops::AddAssign;
 
-#[cfg(apple_vdsp)]
-use std::ptr::addr_of_mut;
 
-#[cfg(apple_vdsp)]
-use crate::acceleration::vdsp::*;
-
-pub(crate) trait Reduce: Zero + One + Copy + Add<Output=Self> + AddAssign {
+pub(crate) trait ReduceSum: Zero + Copy + AddAssign {
     /// Computes the sum of `count` elements stored contiguously in memory pointed to by `ptr`.
     ///
     /// # Safety
     /// - `ptr` must point to a valid array of `count` elements.
-    unsafe fn sum_contiguous(mut ptr: *const Self, count: usize) -> Self {
+    unsafe fn sum_contiguous(ptr: *const Self, count: usize) -> Self {
         Self::sum_uniform_stride(ptr, count, 1)
     }
 
@@ -64,34 +56,52 @@ pub(crate) trait Reduce: Zero + One + Copy + Add<Output=Self> + AddAssign {
     }
 }
 
-impl<T: IntegerDataType> Reduce for T {}
+impl<T: IntegerDataType> ReduceSum for T {}
 
-impl Reduce for f32 {
+impl ReduceSum for f32 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
-    unsafe fn sum_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
+    unsafe fn sum_contiguous(ptr: *const Self, count: usize) -> Self {
         use crate::ops::simd_reduce_ops::SIMDReduceOps;
         Self::simd_sum_contiguous(ptr, count)
     }
 
     #[cfg(apple_vdsp)]
-    unsafe fn sum_uniform_stride(mut ptr: *const Self, count: usize, stride: usize) -> Self {
+    unsafe fn sum_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
+        use std::ptr::addr_of_mut;
+        use crate::acceleration::vdsp::vDSP_sve;
+    
         let mut output = Self::zero();
         unsafe { vDSP_sve(ptr, stride as isize, addr_of_mut!(output), count as isize); }
         output
     }
+    
+    #[cfg(all(neon_simd, not(apple_vdsp)))]
+    unsafe fn sum_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
+        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        Self::simd_sum_uniform(ptr, count, stride)
+    }
 }
 
-impl Reduce for f64 {
-    #[cfg(all(neon_simd, not(apple_vdsp)))]
-    unsafe fn sum_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
+impl ReduceSum for f64 {
+    // #[cfg(all(neon_simd, not(apple_vdsp)))]
+    unsafe fn sum_contiguous(ptr: *const Self, count: usize) -> Self {
         use crate::ops::simd_reduce_ops::SIMDReduceOps;
         Self::simd_sum_contiguous(ptr, count)
     }
-    
+
     #[cfg(apple_vdsp)]
-    unsafe fn sum_uniform_stride(mut ptr: *const Self, count: usize, stride: usize) -> Self {
+    unsafe fn sum_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
+        use std::ptr::addr_of_mut;
+        use crate::acceleration::vdsp::vDSP_sveD;
+    
         let mut output = Self::zero();
         unsafe { vDSP_sveD(ptr, stride as isize, addr_of_mut!(output), count as isize); }
         output
+    }
+
+    #[cfg(all(neon_simd, not(apple_vdsp)))]
+    unsafe fn sum_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
+        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        Self::simd_sum_uniform(ptr, count, stride)
     }
 }
