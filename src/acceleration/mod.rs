@@ -1,4 +1,4 @@
-pub(super) mod cblas;
-pub(super) mod vdsp;
-pub(super) mod openblas;
-pub(super) mod simd;
+pub(crate) mod cblas;
+pub(crate) mod vdsp;
+pub(crate) mod openblas;
+pub(crate) mod simd;

@@ -90,7 +90,7 @@ pub(crate) trait SumOfProductsType: NumericDataType {
     unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
         assert_unchecked(ptrs.len() == 3);
         assert_unchecked(strides.len() == 3);
-        Self::sum_of_products_out_stride_0_(ptrs, strides, count);
+        Self::strided_dot_product(ptrs[0], strides[0], ptrs[1], strides[1], ptrs[2], count);
     }
 
     #[inline(always)]
@@ -206,19 +206,7 @@ pub(crate) trait SumOfProductsType: NumericDataType {
         assert_unchecked(N == 3);
         assert_unchecked(count > 0);
 
-        let mut dst = ptrs[N - 1];
-
-        let mut data0 = ptrs[0];
-        let mut data1 = ptrs[1];
-        let mut sum = Self::default();
-
-        for i in 0..count {
-            sum += (*data0) * (*data1);
-            data0 = data0.add(1);
-            data1 = data1.add(1);
-        }
-
-        *dst += sum;
+        Self::dot_product(ptrs[0], ptrs[1], ptrs[2], count);
     }
 
     #[inline(always)]
@@ -267,13 +255,6 @@ macro_rules! accelerated_sum_of_products {
         impl SumOfProductsType for f32 {
             simd_sum_of_products_kernels!($ptrs, $strides, $count, $dst, $($func_name, { $($body)* };)+);
 
-            #[cfg(apple_vdsp)]
-            #[inline(always)]
-            unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
-                use crate::acceleration::vdsp::vDSP_dotpr;
-                vDSP_dotpr(ptrs[0], strides[0] as isize, ptrs[1], strides[1] as isize, ptrs[2], count as isize);
-            }
-
             #[cfg(all(not(apple_vdsp), not(neon_simd), blas))]
             #[inline(always)]
             unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
@@ -284,13 +265,6 @@ macro_rules! accelerated_sum_of_products {
 
         impl SumOfProductsType for f64 {
             simd_sum_of_products_kernels!($ptrs, $strides, $count, $dst, $($func_name, { $($body)* };)+);
-
-            #[cfg(apple_vdsp)]
-            #[inline(always)]
-            unsafe fn sum_of_products_in_strides_n_n_out_stride_0(ptrs: &[*mut Self], strides: &[usize], count: usize) {
-                use crate::acceleration::vdsp::vDSP_dotprD;
-                vDSP_dotprD(ptrs[0], strides[0] as isize, ptrs[1], strides[1] as isize, ptrs[2], count as isize);
-            }
             
             #[cfg(all(not(apple_vdsp), not(neon_simd), blas))]
             #[inline(always)]
@@ -306,6 +280,4 @@ accelerated_sum_of_products!(ptrs, strides, count, dst,
     sum_of_products_muladd, { Self::simd_sum_of_products_muladd(*ptrs[0], ptrs[1], ptrs[2], count); },
 
     sum_of_scaled_array, { Self::simd_sum_of_scaled_array(*ptrs[0], ptrs[1], ptrs[2], count); },
-
-    sum_of_products_in_strides_1_1_out_stride_0, { Self::simd_dot_product(ptrs[0], ptrs[1], ptrs[2], count); },
 );

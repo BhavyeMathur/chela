@@ -1,4 +1,4 @@
-pub(crate) trait SIMD: Copy + Zero + MulAdd<Output=Self> + AddAssign {
+pub(crate) trait SIMD: Copy + Zero + MulAdd<Output=Self> + AddAssign + Add<Output=Self> + Mul<Output=Self> {
     const LANES: usize;
     type SimdVec: Copy;
 
@@ -17,11 +17,11 @@ pub(crate) trait SIMD: Copy + Zero + MulAdd<Output=Self> + AddAssign {
     unsafe fn simd_sum(val: Self::SimdVec) -> Self;
 }
 
-#[cfg(neon_simd)]
-use std::arch::aarch64::*;
-use std::ops::AddAssign;
 use num::traits::MulAdd;
 use num::Zero;
+#[cfg(neon_simd)]
+use std::arch::aarch64::*;
+use std::ops::{Add, AddAssign, Mul};
 
 #[cfg(neon_simd)]
 impl SIMD for f32 {

@@ -8,6 +8,7 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
     /// # Safety
     /// - `src` and `dst` must represent a valid array of `count` elements.
     /// - The arrays pointed to by `src` and `dst` do not overlap.
+    #[cfg(neon_simd)]
     #[allow(clippy::erasing_op)]
     #[allow(clippy::identity_op)]
     unsafe fn simd_sum_of_products_muladd(scalar: Self,
@@ -68,6 +69,7 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
     /// # Safety
     /// - `src` must represent a valid array of `count` elements.
     /// - `dst` must be a valid pointer to a scalar output.
+    #[cfg(neon_simd)]
     #[allow(clippy::erasing_op)]
     #[allow(clippy::identity_op)]
     unsafe fn simd_sum_of_scaled_array(scalar: Self,
@@ -106,11 +108,13 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
         *dst = scalar.mul_add(sum, *dst);
     }
 
-    /// Performs a dot between `count` elements beginning at `src0`, `src1` and `dst`.
+    /// Performs a dot product between `count` elements beginning at `src0` and `src1`
+    /// and writing the result to `dst`
     ///
     /// # Safety
     /// - `src0` and `src1` must represent a valid array of `count` elements.
-    /// - `dst` must be a valid pointer to a scalar output.
+    /// - `dst` must be a valid pointer
+    #[cfg(neon_simd)]
     #[allow(clippy::erasing_op)]
     #[allow(clippy::identity_op)]
     unsafe fn simd_dot_product(mut src0: *const Self,

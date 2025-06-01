@@ -6,7 +6,7 @@
 
 
 #[cfg(apple_accelerate)]
-mod acceleration;
+pub mod acceleration;
 
 pub mod ndarray;
 pub use ndarray::*;
