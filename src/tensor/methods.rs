@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::common::methods::StridedMemory;
 use crate::{NdArray, Tensor, TensorDataType};

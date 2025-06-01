@@ -8,7 +8,7 @@ impl<'a, T: TensorDataType> Reshape<T> for &'a Tensor<'a, T> {
     
     unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output {
         let requires_grad = self.requires_grad();
-        let grad_fn = if requires_grad { ReshapeBackwards::new(&self, self.shape()) } else { NoneBackwards::new() };
+        let grad_fn = if requires_grad { ReshapeBackwards::new(self, self.shape()) } else { NoneBackwards::new() };
 
         unsafe { Tensor::from_raw_parts((&self.array).reshaped_view(shape, stride), requires_grad, grad_fn) }
     }

@@ -1,4 +1,4 @@
-pub(crate) trait SIMD: Copy + One + Zero + Bounded + PartialOrd
+pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
 + MulAdd<Output=Self> + Add<Output=Self> + Mul<Output=Self>
 + AddAssign + MulAssign
 {
@@ -40,7 +40,7 @@ use std::hint::assert_unchecked;
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 #[cfg(neon_simd)]
-impl SIMD for f32 {
+impl Simd for f32 {
     const LANES: usize = 4;
     type SimdVec = float32x4_t;
 
@@ -107,7 +107,7 @@ impl SIMD for f32 {
 }
 
 #[cfg(neon_simd)]
-impl SIMD for f64 {
+impl Simd for f64 {
     const LANES: usize = 2;
     type SimdVec = float64x2_t;
 

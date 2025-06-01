@@ -152,7 +152,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
         let gradient = gradient.as_ref();
         assert_eq!(gradient.shape(), self.shape());
 
-        self.grad_fn.borrow_mut().backward(&gradient);
+        self.grad_fn.borrow_mut().backward(gradient);
     }
 
     /// Computes the gradient of the `self` with respect to its leaf tensors.

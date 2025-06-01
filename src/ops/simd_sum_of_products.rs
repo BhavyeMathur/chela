@@ -1,6 +1,6 @@
-use crate::acceleration::simd::SIMD;
+use crate::acceleration::simd::Simd;
 
-pub(crate) trait SIMDSumOfProducts: SIMD {
+pub(crate) trait SIMDSumOfProducts: Simd {
     /// Performs a vectorized sum-of-products operation using fused multiply-add (FMA) instructions. 
     /// The operation performed is `*dst += scalar * (*src)` for `count` elements 
     /// beginning at `src` and `dst` and ending at `src + count` and `dst + count`.
@@ -173,4 +173,4 @@ pub(crate) trait SIMDSumOfProducts: SIMD {
     }
 }
 
-impl<T: SIMD> SIMDSumOfProducts for T {}
+impl<T: Simd> SIMDSumOfProducts for T {}
