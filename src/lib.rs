@@ -4,8 +4,6 @@
 #![allow(clippy::new_ret_no_self)]
 #![allow(ambiguous_glob_reexports)]
 
-
-#[cfg(apple_accelerate)]
 pub mod acceleration;
 
 pub mod ndarray;

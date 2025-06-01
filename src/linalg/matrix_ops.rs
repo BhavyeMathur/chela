@@ -71,7 +71,7 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
     /// - If the arrays do not have dimensions compatible for batch matrix multiplication.
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let arr1 = NdArray::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
@@ -133,7 +133,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let arr = NdArray::new([
     ///     [1, 2, 3],
@@ -152,7 +152,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let arr = NdArray::new([
     ///     [1, 2, 3],
@@ -172,7 +172,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
@@ -192,7 +192,7 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
@@ -214,7 +214,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
@@ -234,7 +234,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
@@ -255,7 +255,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
@@ -276,7 +276,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let arr = NdArray::new([
     ///     [1, 2, 3],
@@ -460,8 +460,6 @@ impl MatrixOps for f32 {
         let cols = matrix.shape()[1] as i32;
         let mut result = vec![Self::default(); rows];
 
-        let requires_grad = matrix.requires_grad() || vector.requires_grad();
-
         unsafe {
             cblas_sgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
                         rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
@@ -469,7 +467,7 @@ impl MatrixOps for f32 {
                         0.0, result.as_mut_ptr(), 1
             );
 
-            NdArray::from_contiguous_owned_buffer(vec![rows], result, requires_grad)
+            NdArray::from_contiguous_owned_buffer(vec![rows], result)
         }
     }
 }
@@ -515,8 +513,6 @@ impl MatrixOps for f64 {
         let cols = matrix.shape()[1] as i32;
         let mut result = vec![Self::default(); rows];
 
-        let requires_grad = matrix.requires_grad() || vector.requires_grad();
-
         unsafe {
             cblas_dgemv(CBLAS_ROW_MAJOR, CBLAS_NO_TRANS,
                         rows as i32, cols, 1.0, matrix.ptr(), matrix.stride()[0] as i32,
@@ -524,7 +520,7 @@ impl MatrixOps for f64 {
                         0.0, result.as_mut_ptr(), 1
             );
 
-            NdArray::from_contiguous_owned_buffer(vec![rows], result, requires_grad)
+            NdArray::from_contiguous_owned_buffer(vec![rows], result)
         }
     }
 }

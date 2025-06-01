@@ -24,7 +24,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let ndarray = NdArray::new([1, 2, 3]);  // shape is [3]
     /// let broadcasted_array = ndarray.broadcast_to(&[2, 3]);

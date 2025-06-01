@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 
-use std::ffi::{c_double, c_float, c_int};
+use std::ffi::c_int;
 
 type CBLAS_ORDER = c_int;
 type CBLAS_TRANSPOSE = c_int;
@@ -18,40 +18,40 @@ pub(crate) const CBLAS_TRANS: i32 = 112;
 #[link(name = "cblas")]
 extern "C" {
     // Fill
-    pub(crate) fn catlas_sset(N: c_int, alpha: c_float, X: *const c_float, incX: c_int);
+    pub(crate) fn catlas_sset(N: c_int, alpha: f32, X: *const f32, incX: c_int);
 
-    pub(crate) fn catlas_dset(N: c_int, alpha: c_double, X: *const c_double, incX: c_int);
+    pub(crate) fn catlas_dset(N: c_int, alpha: f64, X: *const f64, incX: c_int);
 
     // Dot Product
-    pub(crate) fn cblas_sdot(N: c_int, X: *const c_float, incX: c_int, Y: *const c_float, incY: c_int) -> c_float;
+    pub(crate) fn cblas_sdot(N: c_int, X: *const f32, incX: c_int, Y: *const f32, incY: c_int) -> f32;
 
-    pub(crate) fn cblas_ddot(N: c_int, X: *const c_double, incX: c_int, Y: *const c_double, incY: c_int) -> c_double;
+    pub(crate) fn cblas_ddot(N: c_int, X: *const f64, incX: c_int, Y: *const f64, incY: c_int) -> f64;
 
     // Matrix-Vector Product
     pub(crate) fn cblas_sgemv(ORDER: CBLAS_ORDER,
                               TRANSA: CBLAS_TRANSPOSE,
                               M: __LAPACK_int,
                               N: __LAPACK_int,
-                              ALPHA: c_float,
-                              A: *const c_float,
+                              ALPHA: f32,
+                              A: *const f32,
                               LDA: __LAPACK_int,
-                              X: *const c_float,
+                              X: *const f32,
                               INCX: __LAPACK_int,
-                              BETA: c_float,
-                              Y: *mut c_float,
+                              BETA: f32,
+                              Y: *mut f32,
                               INCY: __LAPACK_int);
 
     pub(crate) fn cblas_dgemv(ORDER: CBLAS_ORDER,
                               TRANSA: CBLAS_TRANSPOSE,
                               M: __LAPACK_int,
                               N: __LAPACK_int,
-                              ALPHA: c_double,
-                              A: *const c_double,
+                              ALPHA: f64,
+                              A: *const f64,
                               LDA: __LAPACK_int,
-                              X: *const c_double,
+                              X: *const f64,
                               INCX: __LAPACK_int,
-                              BETA: c_double, Y:
-                              *mut c_double,
+                              BETA: f64, Y:
+                              *mut f64,
                               INCY: __LAPACK_int);
 
     // Matrix-Matrix Product
@@ -61,13 +61,13 @@ extern "C" {
                               M: __LAPACK_int,
                               N: __LAPACK_int,
                               K: __LAPACK_int,
-                              ALPHA: c_float,
-                              A: *mut c_float,
+                              ALPHA: f32,
+                              A: *mut f32,
                               LDA: __LAPACK_int,
-                              B: *mut c_float,
+                              B: *mut f32,
                               LDB: __LAPACK_int,
-                              BETA: c_float,
-                              C: *mut c_float,
+                              BETA: f32,
+                              C: *mut f32,
                               LDC: __LAPACK_int,
     );
 
@@ -77,13 +77,13 @@ extern "C" {
                               M: __LAPACK_int,
                               N: __LAPACK_int,
                               K: __LAPACK_int,
-                              ALPHA: c_double,
-                              A: *mut c_double,
+                              ALPHA: f64,
+                              A: *mut f64,
                               LDA: __LAPACK_int,
-                              B: *mut c_double,
+                              B: *mut f64,
                               LDB: __LAPACK_int,
-                              BETA: c_double,
-                              C: *mut c_double,
+                              BETA: f64,
+                              C: *mut f64,
                               LDC: __LAPACK_int,
     );
 

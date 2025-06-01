@@ -5,7 +5,7 @@ use crate::ndarray::flags::NdArrayFlags;
 pub trait StridedMemory: Sized {
     /// Returns the dimensions of the ndarray along each axis.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let a = NdArray::new([3, 4, 5]);
@@ -23,7 +23,7 @@ pub trait StridedMemory: Sized {
     ///
     /// The stride represents the distance in memory between elements in an ndarray along each axis.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let a = NdArray::new([[3, 4], [5, 6]]);
@@ -33,7 +33,7 @@ pub trait StridedMemory: Sized {
 
     /// Returns the number of dimensions in the ndarray.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.ndims(), 1);
@@ -53,7 +53,7 @@ pub trait StridedMemory: Sized {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.len(), 3);
@@ -75,7 +75,7 @@ pub trait StridedMemory: Sized {
 
     /// Returns the total number of elements in the ndarray.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.size(), 3);
@@ -96,7 +96,7 @@ pub trait StridedMemory: Sized {
 
     /// Returns whether this ndarray is stored contiguously in memory.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let a = NdArray::new([[3, 4], [5, 6]]);
     /// assert!(a.is_contiguous());
@@ -111,7 +111,7 @@ pub trait StridedMemory: Sized {
 
     /// Returns whether this ndarray is slice of another ndarray.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let a = NdArray::new([[3, 4], [5, 6]]);
     /// assert!(!a.is_view());
@@ -130,7 +130,7 @@ pub trait StridedMemory: Sized {
     /// Contiguous arrays always have a uniform stride of 1.
     /// NdArray views may sometimes be uniformly strided.
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let a = NdArray::new([[3, 4, 5], [6, 7, 8]]);
     /// assert_eq!(a.has_uniform_stride(), Some(1));

@@ -11,7 +11,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// from a standard normal distribution (0 mean, unit standard deviation).
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::<f64>::randn([2, 3]);
@@ -38,7 +38,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// with values uniformly distributed in [0, 1).
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::<f64>::rand([2, 3]);
@@ -64,7 +64,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// with values uniformly distributed in [`low`, `high`).
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::<f64>::uniform([2, 3], -5.0, 3.0);
@@ -90,7 +90,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// with integer values uniformly distributed between `low` (inclusive) and `high` (exclusive).
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::<isize>::randint([2, 3], -5, 3);

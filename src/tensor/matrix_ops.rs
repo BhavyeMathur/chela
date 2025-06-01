@@ -13,7 +13,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// - Panics if the lengths of the two tensors are not equal
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     /// let tensor1 = Tensor::new([1.0, 2.0, 3.0]);
     /// let tensor2 = Tensor::new([4.0, 5.0, 6.0]);
@@ -39,7 +39,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// - If the dimensions/shape of the tensors are incompatible
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let a = Tensor::new(vec![

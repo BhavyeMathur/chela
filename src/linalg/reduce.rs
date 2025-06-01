@@ -13,7 +13,6 @@ use std::ptr::addr_of_mut;
 #[cfg(apple_vdsp)]
 use crate::acceleration::vdsp::*;
 
-
 pub(crate) trait Reduce: Zero + One + Copy + Add<Output=Self> + AddAssign {
     /// Computes the sum of `count` elements stored contiguously in memory pointed to by `ptr`.
     ///
@@ -70,7 +69,7 @@ impl<T: IntegerDataType> Reduce for T {}
 impl Reduce for f32 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn sum_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
-        use crate::acceleration::simd::SIMD;
+        use crate::ops::simd_reduce_ops::SIMDReduceOps;
         Self::simd_sum_contiguous(ptr, count)
     }
 
@@ -85,7 +84,7 @@ impl Reduce for f32 {
 impl Reduce for f64 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn sum_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
-        use crate::acceleration::simd::SIMD;
+        use crate::ops::simd_reduce_ops::SIMDReduceOps;
         Self::simd_sum_contiguous(ptr, count)
     }
     

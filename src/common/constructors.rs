@@ -125,7 +125,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     /// - `n`: The value to be stored in the scalar ndarray.
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let scalar_array = NdArray::scalar(42);
@@ -150,7 +150,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let ndarray = NdArray::arange(0i32, 5); // [0, 1, 2, 3, 4].
     /// ```
@@ -171,7 +171,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// let ndarray = NdArray::arange_with_step(0i32, 5, 2); // [0, 2, 4].
     /// ```

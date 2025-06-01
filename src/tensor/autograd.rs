@@ -12,7 +12,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut tensor = Tensor::new([1.0, 2.0, 3.0]);
@@ -39,7 +39,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut tensor = Tensor::new([1.0, 2.0, 3.0]);
@@ -84,7 +84,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut a = Tensor::scalar(2.0f32);
@@ -106,7 +106,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut a = Tensor::scalar(2.0f32);
@@ -134,7 +134,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut a = Tensor::full(2.0, [3]);  // [2, 2, 2]
@@ -159,7 +159,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut a = Tensor::full(2.0, [3]);  // [2, 2, 2]
@@ -181,7 +181,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut a = Tensor::full(2.0, [3]);

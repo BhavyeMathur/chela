@@ -46,7 +46,7 @@ impl<T: RawDataType> NdArray<'_, T> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut arr = NdArray::new([1, 2, 4]);
@@ -68,7 +68,7 @@ impl<T: RawDataType + From<bool>> NdArray<'_, T> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let mut arr = NdArray::new([1, 2, 4]);

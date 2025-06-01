@@ -4,7 +4,6 @@
 use crate::dtype::{IntegerDataType, NumericDataType};
 use std::hint::assert_unchecked;
 
-use crate::ops::simd_sum_of_products::SIMDSumOfProducts;
 
 pub(super) fn get_sum_of_products_function<const N: usize, T: SumOfProductsType>(strides: &[usize; N])
                                                                                  -> unsafe fn(ptrs: &[*mut T; N], stride: &[usize; N], count: usize) {
@@ -242,6 +241,8 @@ macro_rules! simd_sum_of_products_kernels {
             #[allow(clippy::erasing_op)]
             #[allow(clippy::identity_op)]
             unsafe fn $func_name<const N: usize>($ptrs: &[*mut Self; N], $strides: &[usize; N], mut $count: usize) {
+                use crate::ops::simd_sum_of_products::SIMDSumOfProducts;
+                
                 assert_unchecked($count > 0);
                 $($body)*
             }

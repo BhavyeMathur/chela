@@ -1,7 +1,6 @@
 use crate::IntegerDataType;
 use rand_distr::num_traits::Zero;
 use std::ops::{AddAssign, Mul};
-use std::ptr::addr_of_mut;
 
 pub(crate) trait DotProduct: AddAssign + Mul<Output=Self> + Zero + Copy {
     /// Performs a dot product between `count` elements beginning at `src0` and `src1`
@@ -51,6 +50,7 @@ impl DotProduct for f32 {
     #[cfg(apple_vdsp)]
     unsafe fn dot_product(src0: *const Self, src1: *const Self, dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_dotpr;
+        use std::ptr::addr_of_mut;
     
         let mut sum = Self::zero();
         vDSP_dotpr(src0, 1, src1, 1, addr_of_mut!(sum), count as isize);
@@ -75,6 +75,7 @@ impl DotProduct for f32 {
                                   src1: *const Self, stride1: usize,
                                   dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_dotpr;
+        use std::ptr::addr_of_mut;
     
         let mut sum = Self::zero();
         vDSP_dotpr(src0, stride0 as isize, src1, stride1 as isize, addr_of_mut!(sum), count as isize);
@@ -94,6 +95,7 @@ impl DotProduct for f64 {
     #[cfg(apple_vdsp)]
     unsafe fn dot_product(src0: *const Self, src1: *const Self, dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_dotprD;
+        use std::ptr::addr_of_mut;
     
         let mut sum = Self::zero();
         vDSP_dotprD(src0, 1, src1, 1, addr_of_mut!(sum), count as isize);
@@ -117,6 +119,7 @@ impl DotProduct for f64 {
                                   src1: *const Self, stride1: usize,
                                   dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_dotprD;
+        use std::ptr::addr_of_mut;
     
         let mut sum = Self::zero();
         vDSP_dotprD(src0, stride0 as isize, src1, stride1 as isize, addr_of_mut!(sum), count as isize);

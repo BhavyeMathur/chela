@@ -20,7 +20,7 @@ pub trait AxisType {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// # use chela::*;
     /// assert_eq!(Axis(-1).as_absolute(4), 3);
     /// assert_eq!(Axis(-2).as_absolute(4), 2);

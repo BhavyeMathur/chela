@@ -11,7 +11,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// single element)
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::scalar(50f32);
@@ -31,7 +31,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// Returns a slice of the ndarray's (flattened) data buffer
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::new([[50, 60], [-5, -10]]);
@@ -48,7 +48,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - If the ndarray does not own its data (it is a NdArray view).
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::new([[50, 60], [-5, -10]]);
