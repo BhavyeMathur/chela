@@ -95,6 +95,13 @@ macro_rules! test_for_signed_dtypes {
 }
 
 #[macro_export]
+macro_rules! test_for_unsigned_dtypes {
+    ($name:ident, $body:tt) => {
+        test_for_unsigned_int_dtypes!($name, $body);
+    };
+}
+
+#[macro_export]
 macro_rules! test_for_integer_dtypes {
     ($name:ident, $body:tt) => {
         test_for_signed_int_dtypes!($name, $body);

@@ -11,6 +11,7 @@ use crate::util::to_vec::ToVec;
 use crate::{AxisType, Constructors, FloatDataType, NdArray, StridedMemory};
 use num::NumCast;
 use std::collections::VecDeque;
+use crate::ops::reduce_max_magnitude::ReduceMaxMagnitude;
 
 /// Returns a tuple `(output_shape, map_stride)`
 ///
@@ -110,6 +111,16 @@ impl<T: RawDataType> NdArray<'_, T> {
 }
 
 impl<T: NumericDataType> NdArray<'_, T> {
+    /// Computes the sum of all elements in the array.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use chela::*;
+    ///
+    /// let array = NdArray::new(vec![1, 2, 3, 4]);
+    /// let sum = array.sum();
+    /// assert_eq!(sum.value(), 1 + 2 + 3 + 4);
+    /// ```
     pub fn sum(&self) -> NdArray<'static, T> {
         let output = unsafe { <T as ReduceSum>::sum(self.ptr(), self.shape(), self.stride()) };
         NdArray::scalar(output)
@@ -119,6 +130,16 @@ impl<T: NumericDataType> NdArray<'_, T> {
         self.reduce_along(|val, acc| acc + val, axes, T::zero())
     }
 
+    /// Computes the product of all elements in the array.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use chela::*;
+    ///
+    /// let array = NdArray::new(vec![1, 2, 3, 4]);
+    /// let prod = array.product();
+    /// assert_eq!(prod.value(), 1 * 2 * 3 * 4);
+    /// ```
     pub fn product(&self) -> NdArray<'static, T> {
         let output = unsafe { <T as ReduceProduct>::product(self.ptr(), self.shape(), self.stride()) };
         NdArray::scalar(output)
@@ -128,6 +149,16 @@ impl<T: NumericDataType> NdArray<'_, T> {
         self.reduce_along(|val, acc| acc * val, axes, T::one())
     }
 
+    /// Computes the minimum of all elements in the array.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use chela::*;
+    ///
+    /// let array = NdArray::new(vec![-1, 3, -7, 8]);
+    /// let min = array.min();
+    /// assert_eq!(min.value(), -7);
+    /// ```
     pub fn min(&self) -> NdArray<'static, T> {
         let output = unsafe { <T as ReduceMin>::min(self.ptr(), self.shape(), self.stride()) };
         NdArray::scalar(output)
@@ -137,11 +168,35 @@ impl<T: NumericDataType> NdArray<'_, T> {
         self.reduce_along(partial_min, axes, T::max_value())
     }
 
+    /// Computes the maximum of all elements in the array.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use chela::*;
+    ///
+    /// let array = NdArray::new(vec![-1, 3, -7, 8]);
+    /// let max = array.max();
+    /// assert_eq!(max.value(), 8);
+    /// ```
     pub fn max(&self) -> NdArray<'static, T> {
         let output = unsafe { <T as ReduceMax>::max(self.ptr(), self.shape(), self.stride()) };
         NdArray::scalar(output)
     }
 
+    pub fn max_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
+        self.reduce_along(partial_max, axes, T::min_value())
+    }
+
+    /// Computes the minimum absolute value of all elements in the array.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use chela::*;
+    ///
+    /// let array = NdArray::new(vec![-1, 3, -7, 8]);
+    /// let min = array.min_magnitude();
+    /// assert_eq!(min.value(), 1);
+    /// ```
     pub fn min_magnitude(&self) -> NdArray<'static, T> {
         let output = unsafe { <T as ReduceMinMagnitude>::min_magnitude(self.ptr(), self.shape(), self.stride()) };
         NdArray::scalar(output)
@@ -151,18 +206,35 @@ impl<T: NumericDataType> NdArray<'_, T> {
         self.reduce_along(partial_min_magnitude, axes, T::max_value())
     }
 
-    pub fn max_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
-        self.reduce_along(partial_max, axes, T::min_value())
-    }
-
+    /// Computes the maximum absolute value of all elements in the array.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use chela::*;
+    ///
+    /// let array = NdArray::new(vec![-1, 3, -9, 8]);
+    /// let max = array.max_magnitude();
+    /// assert_eq!(max.value(), 9);
+    /// ```
     pub fn max_magnitude(&self) -> NdArray<'static, T> {
-        self.reduce(partial_max_magnitude, T::zero())
+        let output = unsafe { <T as ReduceMaxMagnitude>::max_magnitude(self.ptr(), self.shape(), self.stride()) };
+        NdArray::scalar(output)
     }
 
     pub fn max_magnitude_along(&self, axes: impl ToVec<isize>) -> NdArray<'static, T> {
         self.reduce_along(partial_max_magnitude, axes, T::zero())
     }
 
+    /// Computes the mean of all elements in the array.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use chela::*;
+    ///
+    /// let array = NdArray::new(vec![1.0, 3.0, 5.0, 7.0]);
+    /// let mean = array.mean();
+    /// assert_eq!(mean.value(), 4.0);
+    /// ```
     pub fn mean(&self) -> NdArray<'static, T>
     where
         T: FloatDataType

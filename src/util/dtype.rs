@@ -2,12 +2,12 @@ use crate::common::binary_ops::BinaryOps;
 use crate::linalg::matrix_ops::MatrixOps;
 use crate::ops::dot_product::DotProduct;
 use crate::ops::reduce_max::ReduceMax;
+use crate::ops::reduce_max_magnitude::ReduceMaxMagnitude;
 use crate::ops::reduce_min::ReduceMin;
 use crate::ops::reduce_min_magnitude::ReduceMinMagnitude;
 use crate::ops::reduce_product::ReduceProduct;
 use crate::ops::reduce_sum::ReduceSum;
 use crate::sum_of_products::SumOfProductsType;
-use crate::util::absolute::Absolute;
 use num::traits::MulAdd;
 use num::{Float, NumCast, ToPrimitive};
 use rand::distributions::uniform::SampleUniform;
@@ -36,10 +36,9 @@ impl RawDataType for f64 {}
 
 impl RawDataType for bool {}
 
-pub trait NumericDataType: RawDataType + ToPrimitive + NumCast + Absolute
-+ Sum + Product + SubAssign + From<bool> + DotProduct
-+ ReduceSum + ReduceProduct + ReduceMin + ReduceMax + ReduceMinMagnitude
-+ Sub<Output=Self> + Div<Output=Self> + MulAdd<Output=Self>
+pub trait NumericDataType: RawDataType + ToPrimitive + NumCast + From<bool>
++ Sum + Product + SubAssign + Sub<Output=Self> + Div<Output=Self> + MulAdd<Output=Self> + DotProduct
++ ReduceSum + ReduceProduct + ReduceMin + ReduceMax + ReduceMinMagnitude + ReduceMaxMagnitude
 {
     type AsFloatType: FloatDataType;
 
