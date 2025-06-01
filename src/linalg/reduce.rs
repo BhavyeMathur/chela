@@ -68,17 +68,31 @@ pub(crate) trait Reduce: Zero + One + Copy + Add<Output=Self> + AddAssign {
 impl<T: IntegerDataType> Reduce for T {}
 
 impl Reduce for f32 {
-    #[cfg(neon_simd)]
-    unsafe fn sum_contiguous(mut ptr: *const Self, count: usize) -> Self {
-        Self::sum_uniform_stride(ptr, count, 1)
+    #[cfg(all(neon_simd, not(apple_vdsp)))]
+    unsafe fn sum_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
+        use crate::accelerate::simd::SIMD;
+        Self::simd_sum_contiguous(ptr, count)
     }
-    
+
     #[cfg(apple_vdsp)]
     unsafe fn sum_uniform_stride(mut ptr: *const Self, count: usize, stride: usize) -> Self {
-        let mut output = 0.0;
+        let mut output = Self::zero();
         unsafe { vDSP_sve(ptr, stride as isize, addr_of_mut!(output), count as isize); }
         output
     }
 }
 
-impl Reduce for f64 {}
+impl Reduce for f64 {
+    #[cfg(all(neon_simd, not(apple_vdsp)))]
+    unsafe fn sum_contiguous(mut ptr: *const Self, mut count: usize) -> Self {
+        use crate::accelerate::simd::SIMD;
+        Self::simd_sum_contiguous(ptr, count)
+    }
+    
+    #[cfg(apple_vdsp)]
+    unsafe fn sum_uniform_stride(mut ptr: *const Self, count: usize, stride: usize) -> Self {
+        let mut output = Self::zero();
+        unsafe { vDSP_sveD(ptr, stride as isize, addr_of_mut!(output), count as isize); }
+        output
+    }
+}
