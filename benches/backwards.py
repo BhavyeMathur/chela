@@ -42,4 +42,4 @@ if __name__ == "__main__":
     results = profile_all([
         TensorBackwards0
     ], n=20)
-    plot_barplot(results, "Tensor Operations Benchmark", normalize="PyTorch CPU")
+    plot_barplot(results, "Autograd Backwards Benchmark", normalize="PyTorch CPU")
