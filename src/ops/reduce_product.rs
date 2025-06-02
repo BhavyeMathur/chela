@@ -61,13 +61,13 @@ impl<T: IntegerDataType> ReduceProduct for T {}
 impl ReduceProduct for f32 {
     #[cfg(neon_simd)]
     unsafe fn product_contiguous(ptr: *const Self, count: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_product_contiguous(ptr, count)
     }
 
     #[cfg(neon_simd)]
     unsafe fn product_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_product_uniform(ptr, count, stride)
     }
 }
@@ -75,13 +75,13 @@ impl ReduceProduct for f32 {
 impl ReduceProduct for f64 {
     #[cfg(neon_simd)]
     unsafe fn product_contiguous(ptr: *const Self, count: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_product_contiguous(ptr, count)
     }
 
     #[cfg(neon_simd)]
     unsafe fn product_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_product_uniform(ptr, count, stride)
     }
 }

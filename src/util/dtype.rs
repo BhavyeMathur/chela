@@ -14,10 +14,11 @@ use rand::distributions::uniform::SampleUniform;
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Div, Neg, Sub, SubAssign};
+use crate::ops::binary_op_addition::BinaryOpAdd;
 use crate::ops::fill::Fill;
 
-pub trait RawDataType: 'static + Default + Copy + Clone + Debug + Display
-+ PartialEq + BinaryOps<Self> + Fill
+pub trait RawDataType: 'static + Default + Copy + Clone + Debug + Display + Sized
++ PartialEq + BinaryOps + Fill
 + Send + Sync {}
 
 impl RawDataType for u8 {}
@@ -42,6 +43,7 @@ impl RawDataType for bool {}
 pub trait NumericDataType: RawDataType + ToPrimitive + NumCast + From<bool>
 + Sum + Product + SubAssign + Sub<Output=Self> + Div<Output=Self> + MulAdd<Output=Self> + DotProduct
 + ReduceSum + ReduceProduct + ReduceMin + ReduceMax + ReduceMinMagnitude + ReduceMaxMagnitude
++ BinaryOpAdd
 {
     type AsFloatType: FloatDataType;
 

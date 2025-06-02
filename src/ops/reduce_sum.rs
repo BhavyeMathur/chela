@@ -61,7 +61,7 @@ impl<T: IntegerDataType> ReduceSum for T {}
 impl ReduceSum for f32 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn sum_contiguous(ptr: *const Self, count: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_sum_contiguous(ptr, count)
     }
 
@@ -77,7 +77,7 @@ impl ReduceSum for f32 {
     
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn sum_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_sum_uniform(ptr, count, stride)
     }
 }
@@ -85,7 +85,7 @@ impl ReduceSum for f32 {
 impl ReduceSum for f64 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn sum_contiguous(ptr: *const Self, count: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_sum_contiguous(ptr, count)
     }
 
@@ -101,7 +101,7 @@ impl ReduceSum for f64 {
 
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn sum_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_sum_uniform(ptr, count, stride)
     }
 }

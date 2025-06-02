@@ -4,7 +4,7 @@
 use crate::acceleration::simd::Simd;
 use crate::util::partial_ord::{partial_max, partial_min};
 
-pub(crate) trait SIMDReduceOps: Simd {
+pub(crate) trait SimdReduceOps: Simd {
     #[cfg(neon_simd)]
     unsafe fn simd_vec_from_stride(ptr: *const Self, stride: usize) -> Self::SimdVec {
         if Self::LANES == 4 {
@@ -228,4 +228,4 @@ pub(crate) trait SIMDReduceOps: Simd {
     }
 }
 
-impl<T: Simd> SIMDReduceOps for T {}
+impl<T: Simd> SimdReduceOps for T {}

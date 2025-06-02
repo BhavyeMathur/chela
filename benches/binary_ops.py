@@ -6,7 +6,7 @@ from perfprofiler import *
 NUMPY_DTYPE = np.float32
 TORCH_DTYPE = torch.float32
 
-N = 10000
+N = 100000
 
 
 class TensorBinaryOps(TimingSuite):
@@ -27,11 +27,11 @@ class TensorBinaryOps(TimingSuite):
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        _ = self.tensors[0] * self.tensors[1]
+        _ = self.tensors[0] + self.tensors[1]
 
     @measure_performance("NumPy")
     def run(self):
-        _ = self.ndarrays[0] * self.ndarrays[1]
+        _ = self.ndarrays[0] + self.ndarrays[1]
 
 
 class TensorBinaryOps0(TensorBinaryOps):

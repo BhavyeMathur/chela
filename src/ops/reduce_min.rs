@@ -60,7 +60,7 @@ impl<T: IntegerDataType> ReduceMin for T {}
 impl ReduceMin for f32 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn min_contiguous(ptr: *const Self, count: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_min_contiguous(ptr, count)
     }
 
@@ -76,7 +76,7 @@ impl ReduceMin for f32 {
 
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn min_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_min_uniform(ptr, count, stride)
     }
 }
@@ -84,7 +84,7 @@ impl ReduceMin for f32 {
 impl ReduceMin for f64 {
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn min_contiguous(ptr: *const Self, count: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_min_contiguous(ptr, count)
     }
 
@@ -100,7 +100,7 @@ impl ReduceMin for f64 {
 
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn min_uniform_stride(ptr: *const Self, count: usize, stride: usize) -> Self {
-        use crate::ops::simd_reduce_ops::SIMDReduceOps;
+        use crate::ops::simd_reduce_ops::SimdReduceOps;
         Self::simd_min_uniform(ptr, count, stride)
     }
 }

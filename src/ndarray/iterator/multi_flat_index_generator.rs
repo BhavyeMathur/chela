@@ -2,7 +2,7 @@ use crate::ndarray::{MAX_ARGS, MAX_DIMS};
 use crate::util::absolute::Absolute;
 
 #[non_exhaustive]
-pub struct MultiFlatIndexGenerator
+pub(crate) struct MultiFlatIndexGenerator
 {
     ndims: usize,
     nops: usize,

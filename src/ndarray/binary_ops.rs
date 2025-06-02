@@ -3,6 +3,7 @@ use crate::{NdArray, RawDataType};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
 use paste::paste;
+use crate::ops::binary_op_addition::BinaryOpAdd;
 
 macro_rules! implement_binary_ops {
     ($object:ident, $($trait_: ident, $operator:tt, $method: ident;)* ) => { $(
@@ -27,7 +28,7 @@ macro_rules! implement_binary_ops {
         impl<T: RawDataType + $trait_<Output=T>> $trait_<&$object<'_, T>> for &$object<'_, T> {
             type Output = $object<'static, T>;
 
-            fn $method(self, rhs: &$object<T>) -> Self::Output { <T as BinaryOps<T>>::$method(self, rhs) }
+            fn $method(self, rhs: &$object<T>) -> Self::Output { <T as BinaryOps>::$method(self, rhs) }
         }
         
         impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for $object<'_, T> {
@@ -39,7 +40,7 @@ macro_rules! implement_binary_ops {
         impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for &$object<'_, T> {
             type Output = $object<'static, T>;
 
-            fn $method(self, rhs: T) -> Self::Output { paste! { <T as BinaryOps<T>>::[<$method _scalar>](self, rhs) } }
+            fn $method(self, rhs: T) -> Self::Output { paste! { <T as BinaryOps>::[<$method _scalar>](self, rhs) } }
         }
     )*};
 
@@ -57,7 +58,7 @@ macro_rules! implement_binary_ops {
 
 implement_binary_ops!(
     NdArray,
-    Add, +, add;
+    // Add, +, add;
     Sub, -, sub;
     Mul, *, mul;
     Div, /, div;
@@ -67,3 +68,39 @@ implement_binary_ops!(
     Shl, <<, shl;
     Shr, >>, shr;
 );
+
+impl<T: RawDataType + BinaryOpAdd> Add<NdArray<'_, T>> for NdArray<'_, T> {
+    type Output = NdArray<'static, T>;
+
+    fn add(self, rhs: NdArray<T>) -> Self::Output { &self + &rhs }
+}
+
+impl<T: RawDataType + BinaryOpAdd> Add<&NdArray<'_, T>> for NdArray<'_, T> {
+    type Output = NdArray<'static, T>;
+
+    fn add(self, rhs: &NdArray<T>) -> Self::Output { &self + rhs }
+}
+
+impl<T: RawDataType + BinaryOpAdd> Add<NdArray<'_, T>> for &NdArray<'_, T> {
+    type Output = NdArray<'static, T>;
+
+    fn add(self, rhs: NdArray<T>) -> Self::Output { self + &rhs }
+}
+
+impl<T: RawDataType + BinaryOpAdd> Add<&NdArray<'_, T>> for &NdArray<'_, T> {
+    type Output = NdArray<'static, T>;
+
+    fn add(self, rhs: &NdArray<T>) -> Self::Output { <T as BinaryOps>::add(self, rhs) }
+}
+
+impl<T: RawDataType + Add<Output=T>> Add<T> for NdArray<'_, T> {
+    type Output = NdArray<'static, T>;
+
+    fn add(self, rhs: T) -> Self::Output { &self + rhs }
+}
+
+impl<T: RawDataType + Add<Output=T>> Add<T> for &NdArray<'_, T> {
+    type Output = NdArray<'static, T>;
+
+    fn add(self, rhs: T) -> Self::Output { <T as BinaryOps>::add_scalar(self, rhs) }
+}

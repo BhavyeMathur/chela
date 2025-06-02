@@ -1,6 +1,5 @@
 use std::ptr::addr_of;
 use crate::ndarray::collapse_contiguous::has_uniform_stride;
-use crate::{IntegerDataType};
 
 pub(crate) trait Fill: Copy {
     /// Fills a contiguous sequence of memory locations with a given value.

@@ -118,7 +118,7 @@ fn broadcast_shape(shape: &[usize], to: &[usize]) -> Vec<usize> {
 /// let result = broadcast_stride(&stride, &broadcast_shape, &original_shape);
 /// assert_eq!(result, vec![0, 4, 1]);
 /// ```
-fn broadcast_stride(stride: &[usize],
+pub(crate) fn broadcast_stride(stride: &[usize],
                     broadcast_shape: &[usize],
                     original_shape: &[usize]) -> Vec<usize> {
     let ndims = broadcast_shape.len();

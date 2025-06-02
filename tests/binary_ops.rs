@@ -1,15 +1,19 @@
 use chela::*;
+use paste::paste;
 
-#[test]
-fn test_add() {
-    let tensor1 = NdArray::new([[1, 1], [2, 2], [3, 3]]);
-    let tensor2 = NdArray::new([[1, 2], [3, 4], [5, 6]]);
 
-    let correct = NdArray::new([[2, 3], [5, 6], [8, 9]]);
-    let output = tensor1 + tensor2;
+test_for_all_numeric_dtypes!(
+    test_add, {
+        // contiguous add
+        for n in 1..23 {
+            let tensor1 = NdArray::arange(0, n).astype::<T>();
+            let tensor2 = NdArray::arange(n, n * 2).astype::<T>();
 
-    assert_eq!(output, correct);
-}
+            let correct = NdArray::arange_with_step(n, 2 * n + n, 2).astype::<T>();
+            assert_eq!(tensor1 + tensor2, correct);
+        }
+    }
+);
 
 #[test]
 fn test_broadcast_add() {

@@ -10,13 +10,27 @@ type vDSP_Stride = isize;
 #[cfg(apple_vdsp)]
 #[link(name = "Accelerate")]
 extern "C" {
+    // element-wise addition
+
+    pub(crate) fn vDSP_vadd(__A: *const c_float, __IA: isize,
+                            __B: *const c_float, __IB: isize,
+                            __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
+
+    pub(crate) fn vDSP_vaddD(__A: *const c_double, __IA: isize,
+                             __B: *const c_double, __IB: isize,
+                             __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
+
+    pub(crate) fn vDSP_vaddi(__A: *const c_int, __IA: isize,
+                             __B: *const c_int, __IB: isize,
+                             __C: *mut c_int, __IC: vDSP_Stride, __N: vDSP_Length);
+
     // vector fill
     pub(crate) fn vDSP_vfill(__A: *const c_float, __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
 
     pub(crate) fn vDSP_vfillD(__A: *const c_double, __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
 
     pub(crate) fn vDSP_vfilli(__A: *const c_int, __C: *mut c_int, __IC: vDSP_Stride, __N: vDSP_Length);
-    
+
     // vector sum
     pub(crate) fn vDSP_sve(__A: *const c_float, __I: isize, __C: *mut c_float, __N: vDSP_Length);
 
