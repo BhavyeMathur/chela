@@ -4,6 +4,17 @@ use std::ops::Add;
 
 
 pub(crate) trait BinaryOpAdd: Add<Output=Self> + Sized + Copy {
+    unsafe fn add_stride_n_0(lhs: *const Self, lhs_stride: usize,
+                             rhs: *const Self, dst: *mut Self, count: usize) {
+        // TODO SIMD kernel for this
+        Self::add_stride_n_n(lhs, lhs_stride, rhs, 0, dst, count)
+    }
+
+    unsafe fn add_stride_n_1(lhs: *const Self, lhs_stride: usize,
+                             rhs: *const Self, dst: *mut Self, count: usize) {
+        Self::add_stride_n_n(lhs, lhs_stride, rhs, 1, dst, count)
+    }
+
     unsafe fn add_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
         Self::add_stride_n_n(lhs, 1, rhs, 1, dst, count)
     }
@@ -18,6 +29,33 @@ pub(crate) trait BinaryOpAdd: Add<Output=Self> + Sized + Copy {
             lhs = lhs.add(lhs_stride);
             rhs = rhs.add(rhs_stride);
             dst = dst.add(1);
+        }
+    }
+
+    unsafe fn add_nonunif_0(lhs: *const Self, lhs_shape: &[usize], lhs_stride: &[usize],
+                            rhs: *const Self,
+                            dst: *mut Self, count: usize) {
+        Self::add_nonunif_n(lhs, lhs_shape, lhs_stride, rhs, 0, dst, count)
+    }
+
+    unsafe fn add_nonunif_1(lhs: *const Self, lhs_shape: &[usize], lhs_stride: &[usize],
+                            rhs: *const Self,
+                            dst: *mut Self, count: usize) {
+        Self::add_nonunif_n(lhs, lhs_shape, lhs_stride, rhs, 1, dst, count)
+    }
+
+    unsafe fn add_nonunif_n(lhs: *const Self, lhs_shape: &[usize], lhs_stride: &[usize],
+                            mut rhs: *const Self, rhs_stride: usize,
+                            mut dst: *mut Self, mut count: usize) {
+        let mut lhs_indices = FlatIndexGenerator::from(lhs_shape, lhs_stride);
+
+        while count != 0 {
+            let lhs_index = lhs_indices.next().unwrap_unchecked();
+            *dst = *lhs.add(lhs_index) + *rhs;
+
+            count -= 1;
+            dst = dst.add(1);
+            rhs = rhs.add(rhs_stride);
         }
     }
 
@@ -46,13 +84,51 @@ pub(crate) trait BinaryOpAdd: Add<Output=Self> + Sized + Copy {
         let rhs_inner_stride = rhs_stride[rhs_dims - 1];
 
         if lhs_dims == 1 && rhs_dims == 1 { // both operands have a uniform stride
-            if lhs_inner_stride == 1 && rhs_inner_stride == 1 {  // both operands are contiguous
+
+            // one operand is a scalar
+            if rhs_inner_stride == 0 {
+                return Self::add_stride_n_0(lhs, lhs_inner_stride, rhs, dst, lhs_shape[0]);
+            } else if lhs_inner_stride == 0 {
+                return Self::add_stride_n_0(rhs, rhs_inner_stride, lhs, dst, lhs_shape[0]);
+            }
+
+            // both operands are contiguous
+            if lhs_inner_stride == 1 && rhs_inner_stride == 1 {
                 return Self::add_stride_1_1(lhs, rhs, dst, lhs_shape[0]);
             }
 
+            // neither element is contiguous
             return Self::add_stride_n_n(lhs, lhs_inner_stride, rhs, rhs_inner_stride, dst, lhs_shape[0]);
         }
 
+        // only 1 operand has a uniform stride
+        if rhs_dims == 1 && rhs_inner_stride == 0 {
+            return Self::add_nonunif_0(lhs, &lhs_shape, &lhs_stride,
+                                       rhs, dst, rhs_shape[0]);
+        } else if lhs_dims == 1 && lhs_inner_stride == 0 {
+            return Self::add_nonunif_0(rhs, &rhs_shape, &rhs_stride,
+                                       lhs, dst, lhs_shape[0]);
+        }
+
+        if rhs_dims == 1 && rhs_inner_stride == 1 {
+            return Self::add_nonunif_1(lhs, &lhs_shape, &lhs_stride,
+                                       rhs, dst, rhs_shape[0]);
+        } else if lhs_dims == 1 && lhs_inner_stride == 1 {
+            return Self::add_nonunif_1(rhs, &rhs_shape, &rhs_stride,
+                                       lhs, dst, lhs_shape[0]);
+        }
+
+        if rhs_dims == 1 {
+            return Self::add_nonunif_n(lhs, &lhs_shape, &lhs_stride,
+                                       rhs, rhs_inner_stride, 
+                                       dst, rhs_shape[0]);
+        } else if lhs_dims == 1 {
+            return Self::add_nonunif_n(rhs, &rhs_shape, &rhs_stride,
+                                       lhs, lhs_inner_stride, 
+                                       dst, lhs_shape[0]);
+        }
+
+        // unspecialized loop
         Self::add_unspecialized(lhs, &lhs_shape, &lhs_stride,
                                 rhs, &rhs_shape, &rhs_stride,
                                 dst);
@@ -73,6 +149,13 @@ impl BinaryOpAdd for u128 {}
 impl BinaryOpAdd for usize {}
 
 impl BinaryOpAdd for f32 {
+    #[cfg(apple_vdsp)]
+    unsafe fn add_stride_n_0(lhs: *const Self, lhs_stride: usize,
+                             rhs: *const Self, dst: *mut Self, count: usize) {
+        use crate::acceleration::vdsp::vDSP_vsadd;
+        vDSP_vsadd(lhs, lhs_stride as isize, rhs, dst, 1, count);
+    }
+
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn add_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
         use crate::ops::simd_binary_ops::SimdBinaryOps;
@@ -89,6 +172,13 @@ impl BinaryOpAdd for f32 {
 }
 
 impl BinaryOpAdd for f64 {
+    #[cfg(apple_vdsp)]
+    unsafe fn add_stride_n_0(lhs: *const Self, lhs_stride: usize,
+                             rhs: *const Self, dst: *mut Self, count: usize) {
+        use crate::acceleration::vdsp::vDSP_vsaddD;
+        vDSP_vsaddD(lhs, lhs_stride as isize, rhs, dst, 1, count);
+    }
+
     #[cfg(all(neon_simd, not(apple_vdsp)))]
     unsafe fn add_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
         use crate::ops::simd_binary_ops::SimdBinaryOps;
@@ -106,6 +196,13 @@ impl BinaryOpAdd for f64 {
 
 impl BinaryOpAdd for i32 {
     #[cfg(apple_vdsp)]
+    unsafe fn add_stride_n_0(lhs: *const Self, lhs_stride: usize,
+                             rhs: *const Self, dst: *mut Self, count: usize) {
+        use crate::acceleration::vdsp::vDSP_vsaddi;
+        vDSP_vsaddi(lhs, lhs_stride as isize, rhs, dst, 1, count);
+    }
+
+    #[cfg(apple_vdsp)]
     unsafe fn add_stride_n_n(lhs: *const Self, lhs_stride: usize,
                              rhs: *const Self, rhs_stride: usize,
                              dst: *mut Self, count: usize) {
@@ -115,6 +212,14 @@ impl BinaryOpAdd for i32 {
 }
 
 impl BinaryOpAdd for u32 {
+    #[cfg(apple_vdsp)]
+    unsafe fn add_stride_n_0(lhs: *const Self, lhs_stride: usize,
+                             rhs: *const Self, dst: *mut Self, count: usize) {
+        use crate::acceleration::vdsp::vDSP_vsaddi;
+        vDSP_vsaddi(lhs as *const i32, lhs_stride as isize,
+                    rhs as *const i32, dst as *mut i32, 1, count);
+    }
+
     #[cfg(apple_vdsp)]
     unsafe fn add_stride_n_n(lhs: *const Self, lhs_stride: usize,
                              rhs: *const Self, rhs_stride: usize,

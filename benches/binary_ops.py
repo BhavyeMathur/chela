@@ -6,7 +6,7 @@ from perfprofiler import *
 NUMPY_DTYPE = np.float32
 TORCH_DTYPE = torch.float32
 
-N = 100000
+N = 10000
 
 
 class TensorBinaryOps(TimingSuite):
@@ -15,7 +15,7 @@ class TensorBinaryOps(TimingSuite):
     tensors: list
     ndarrays: list[np.ndarray]
 
-    operation = "Multiplication"
+    operation = "Addition"
 
     def __init__(self, shapes, slices=None):
         self.ndarrays = rand_ndarrays_with_shape(shapes, slices=slices, dtype=NUMPY_DTYPE)

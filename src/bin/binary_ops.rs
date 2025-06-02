@@ -3,7 +3,7 @@ use std::env;
 
 use cpu_time::ProcessTime;
 
-const N: usize = 100000;
+const N: usize = 10000;
 type T = f32;
 
 
@@ -97,7 +97,7 @@ fn binary_ops7() -> u128 {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let id = args[1].parse::<usize>().unwrap();
-    
+
     let time =
         if id == 0 { binary_ops0() }
         else if id == 1 { binary_ops1() }
@@ -107,8 +107,8 @@ fn main() {
         else if id == 5 { binary_ops5() }
         else if id == 6 { binary_ops6() }
         else if id == 7 { binary_ops7() }
-    
+
         else { panic!("invalid ID") };
-    
+
     println!("{}", time);
 }
