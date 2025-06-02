@@ -1,5 +1,4 @@
 use crate::dtype::{NumericDataType, RawDataType};
-use crate::fill::fill_shape_and_stride;
 use crate::iterator::collapse_contiguous::has_uniform_stride;
 use crate::iterator::multi_flat_index_generator::MultiFlatIndexGenerator;
 use crate::linalg::specialized_einsum::*;
@@ -9,6 +8,7 @@ use crate::util::functions::{permute_array, transpose_2d_array};
 use crate::{Constructors, NdArray, StridedMemory};
 use crate::ndarray::constructors::stride_from_shape;
 use crate::common::Reshape;
+use crate::ops::fill::Fill;
 
 const MAX_EINSUM_OPERANDS: usize = 32;
 
@@ -456,8 +456,8 @@ where
     if let Some(stride) = has_uniform_stride(&output_shape, result_stride) {
         assert_eq!(stride, 1, "only contiguous result ndarrays are currently supported");
     }
-
-    fill_shape_and_stride(result, T::zero(), &output_shape, result_stride);
+    
+    <T as Fill>::fill(result, &output_shape, result_stride, output_shape.iter().product(), T::zero());
 
     unsafe {
         if !try_specialized_einsum_loop(operands, &strides, iter_ndims, &iter_shape, result) {

@@ -9,4 +9,5 @@ pub mod reduce_min;
 pub mod reduce_max;
 pub mod reduce_min_magnitude;
 pub mod reduce_max_magnitude;
+pub mod fill;
 

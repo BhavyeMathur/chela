@@ -71,7 +71,7 @@ impl ReduceSum for f32 {
         use crate::acceleration::vdsp::vDSP_sve;
     
         let mut output = Self::zero();
-        unsafe { vDSP_sve(ptr, stride as isize, addr_of_mut!(output), count as isize); }
+        unsafe { vDSP_sve(ptr, stride as isize, addr_of_mut!(output), count); }
         output
     }
     
@@ -95,7 +95,7 @@ impl ReduceSum for f64 {
         use crate::acceleration::vdsp::vDSP_sveD;
     
         let mut output = Self::zero();
-        unsafe { vDSP_sveD(ptr, stride as isize, addr_of_mut!(output), count as isize); }
+        unsafe { vDSP_sveD(ptr, stride as isize, addr_of_mut!(output), count); }
         output
     }
 

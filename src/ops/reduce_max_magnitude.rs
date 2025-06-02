@@ -65,7 +65,7 @@ impl ReduceMaxMagnitude for f32 {
         use crate::acceleration::vdsp::vDSP_maxmgv;
     
         let mut output = Self::min_value();
-        unsafe { vDSP_maxmgv(ptr, stride as isize, addr_of_mut!(output), count as isize); }
+        unsafe { vDSP_maxmgv(ptr, stride as isize, addr_of_mut!(output), count); }
         output
     }
 }
@@ -77,7 +77,7 @@ impl ReduceMaxMagnitude for f64 {
         use crate::acceleration::vdsp::vDSP_maxmgvD;
     
         let mut output = Self::min_value();
-        unsafe { vDSP_maxmgvD(ptr, stride as isize, addr_of_mut!(output), count as isize); }
+        unsafe { vDSP_maxmgvD(ptr, stride as isize, addr_of_mut!(output), count); }
         output
     }
 }

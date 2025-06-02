@@ -51,9 +51,9 @@ impl DotProduct for f32 {
     unsafe fn dot_product(src0: *const Self, src1: *const Self, dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_dotpr;
         use std::ptr::addr_of_mut;
-    
+
         let mut sum = Self::zero();
-        vDSP_dotpr(src0, 1, src1, 1, addr_of_mut!(sum), count as isize);
+        vDSP_dotpr(src0, 1, src1, 1, addr_of_mut!(sum), count);
         *dst += sum;
     }
 
@@ -76,9 +76,9 @@ impl DotProduct for f32 {
                                   dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_dotpr;
         use std::ptr::addr_of_mut;
-    
+
         let mut sum = Self::zero();
-        vDSP_dotpr(src0, stride0 as isize, src1, stride1 as isize, addr_of_mut!(sum), count as isize);
+        vDSP_dotpr(src0, stride0 as isize, src1, stride1 as isize, addr_of_mut!(sum), count);
         *dst += sum;
     }
 
@@ -96,9 +96,9 @@ impl DotProduct for f64 {
     unsafe fn dot_product(src0: *const Self, src1: *const Self, dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_dotprD;
         use std::ptr::addr_of_mut;
-    
+
         let mut sum = Self::zero();
-        vDSP_dotprD(src0, 1, src1, 1, addr_of_mut!(sum), count as isize);
+        vDSP_dotprD(src0, 1, src1, 1, addr_of_mut!(sum), count);
         *dst += sum;
     }
 
@@ -120,9 +120,9 @@ impl DotProduct for f64 {
                                   dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_dotprD;
         use std::ptr::addr_of_mut;
-    
+
         let mut sum = Self::zero();
-        vDSP_dotprD(src0, stride0 as isize, src1, stride1 as isize, addr_of_mut!(sum), count as isize);
+        vDSP_dotprD(src0, stride0 as isize, src1, stride1 as isize, addr_of_mut!(sum), count);
         *dst += sum;
     }
 

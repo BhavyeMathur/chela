@@ -70,7 +70,7 @@ impl ReduceMin for f32 {
         use crate::acceleration::vdsp::vDSP_minv;
 
         let mut output = Self::max_value();
-        unsafe { vDSP_minv(ptr, stride as isize, addr_of_mut!(output), count as isize); }
+        unsafe { vDSP_minv(ptr, stride as isize, addr_of_mut!(output), count); }
         output
     }
 
@@ -94,7 +94,7 @@ impl ReduceMin for f64 {
         use crate::acceleration::vdsp::vDSP_minvD;
 
         let mut output = Self::max_value();
-        unsafe { vDSP_minvD(ptr, stride as isize, addr_of_mut!(output), count as isize); }
+        unsafe { vDSP_minvD(ptr, stride as isize, addr_of_mut!(output), count); }
         output
     }
 
