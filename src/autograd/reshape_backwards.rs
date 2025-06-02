@@ -6,7 +6,6 @@ use std::rc::Rc;
 
 pub(crate) struct ReshapeBackwards<T: FloatDataType> {
     next_function: GradientFunction<T>,
-
     shape: Vec<usize>,
 }
 
@@ -19,11 +18,9 @@ impl<T: FloatDataType> GradientFuncTrait<T> for ReshapeBackwards<T> {
 
 impl<T: FloatDataType> ReshapeBackwards<T> {
     pub(crate) fn new(tensor: &Tensor<T>, old_shape: impl ToVec<usize>) -> GradientFunction<T> {
-        let grad_fn = Self {
+        Rc::new(RefCell::new(Self {
             next_function: tensor.grad_fn(),
             shape: old_shape.to_vec(),
-        };
-
-        Rc::new(RefCell::new(grad_fn))
+        }))
     }
 }

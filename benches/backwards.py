@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 
 from perfprofiler import *
 
@@ -17,22 +16,25 @@ class TensorBackwardsTimingSuite(TimingSuite):
 
 class TensorBackwards0(TensorBackwardsTimingSuite):
     ID = 0
-    name = "Add Backwards"
+    name = "Arithmetic Backwards"
 
-    def __init__(self):      
-        self.tensor_a = torch.rand(1000, dtype=TORCH_DTYPE, requires_grad=True)
-        self.tensor_b = torch.rand(1000, dtype=TORCH_DTYPE, requires_grad=True)
-        self.tensor_c = torch.rand(1000, dtype=TORCH_DTYPE, requires_grad=True)
+    def __init__(self):
+        n = 1000
+        self.tensor_a = torch.rand(n, dtype=TORCH_DTYPE, requires_grad=True)
+        self.tensor_b = torch.rand(n, dtype=TORCH_DTYPE, requires_grad=True)
+        self.tensor_c = torch.rand(n, dtype=TORCH_DTYPE, requires_grad=True)
+
+        self.ones = torch.ones(n, dtype=TORCH_DTYPE)
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        for _ in range(100):
-            self.tensor_a.grad.zero()
-            self.tensor_b.grad.zero()
-            self.tensor_c.grad.zero()
-            
-            result = (self.tensor_a + self.tensor_b) / (self.tensor_c + 1)
-            result.backward()
+        for _ in range(1000):
+            result = (self.tensor_a * self.tensor_b) / (self.tensor_c + 1)
+            result.backward(self.ones)
+
+            self.tensor_a.grad.zero_()
+            self.tensor_b.grad.zero_()
+            self.tensor_c.grad.zero_()
 
 
 
@@ -40,4 +42,4 @@ if __name__ == "__main__":
     results = profile_all([
         TensorBackwards0
     ], n=20)
-    plot_barplot(results, "Tensor Operations Benchmark")
+    plot_barplot(results, "Tensor Operations Benchmark", normalize="PyTorch CPU")

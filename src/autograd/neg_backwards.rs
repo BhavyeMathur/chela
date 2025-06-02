@@ -6,7 +6,6 @@ use std::rc::Rc;
 
 pub(crate) struct NegBackwards<T: FloatDataType> {
     next_function: GradientFunction<T>,
-
     shape: Vec<usize>,
 }
 
@@ -21,11 +20,9 @@ impl<T: FloatDataType> GradientFuncTrait<T> for NegBackwards<T> {
 
 impl<T: FloatDataType> NegBackwards<T> {
     pub(crate) fn new(rhs: &Tensor<T>) -> GradientFunction<T> {
-        let grad_fn = Self {
+        Rc::new(RefCell::new(Self {
             next_function: rhs.grad_fn(),
             shape: rhs.shape().to_vec(),
-        };
-
-        Rc::new(RefCell::new(grad_fn))
+        }))
     }
 }

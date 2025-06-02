@@ -32,6 +32,11 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
         self.array.as_ref()
     }
 
+    /// Returns a reference-counted pointer to the underlying `NdArray` of the tensor
+    pub fn get_ndarray(&self) -> Rc<NdArray<'static, T>> {
+        self.array.clone()
+    }
+
     /// Converts the tensor to an `NdArray`
     pub fn into_ndarray(self) -> NdArray<'static, T> {
         match Rc::try_unwrap(self.array) {

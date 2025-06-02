@@ -19,12 +19,10 @@ impl<T: FloatDataType> GradientFuncTrait<T> for TransposeBackwards<T> {
 
 impl<T: FloatDataType> TransposeBackwards<T> {
     pub(crate) fn new(tensor: &Tensor<T>, axis1: impl AxisType, axis2: impl AxisType) -> GradientFunction<T> {
-        let grad_fn = Self {
+        Rc::new(RefCell::new(Self {
             next_function: tensor.grad_fn(),
             axis1: axis1.isize(),
             axis2: axis2.isize(),
-        };
-
-        Rc::new(RefCell::new(grad_fn))
+        }))
     }
 }

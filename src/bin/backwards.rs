@@ -8,13 +8,29 @@ type T = f32;
 
 
 fn backward0() -> u128 {
-    let i = 10000;
+    let n = 1000;
 
-    let tensor_a = NdArray::<T>::rand([i]);
-    let tensor_b = NdArray::<T>::rand([i]);
+    let mut tensor_a = Tensor::<T>::rand([n]);
+    let mut tensor_b = Tensor::<T>::rand([n]);
+    let mut tensor_c = Tensor::<T>::rand([n]);
+    
+    tensor_a.set_requires_grad(true);
+    tensor_b.set_requires_grad(true);
+    tensor_c.set_requires_grad(true);
+
+    let ones = NdArray::<T>::ones([n]);
 
     let start = ProcessTime::now();
-    _ = einsum([&tensor_a, &tensor_b], (["i", "i"], ""));
+
+    for _ in 0..1000 {
+        let result = (&tensor_a * &tensor_b) / (&tensor_c + 1.0);
+        result.backward_with(&ones);
+
+        tensor_a.zero_gradient();
+        tensor_b.zero_gradient();
+        tensor_c.zero_gradient();
+    }
+
     start.elapsed().as_nanos()
 }
 

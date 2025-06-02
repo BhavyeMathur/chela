@@ -404,8 +404,6 @@ fn test_autograd_transpose_ops() {
 
     let matrix3 = (&matrix1).transpose(1, 2);
 
-    println!("{:?}", matrix3);
-
     let x = matrix3.bmm(&matrix2);
     x.backward();
 
