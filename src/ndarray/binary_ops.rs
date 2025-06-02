@@ -3,10 +3,11 @@ use crate::{NdArray, RawDataType};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
 use crate::ops::binary_op::*;
-use crate::ops::binary_op_addition::BinaryOpAdd;
-use crate::ops::binary_op_multiplication::BinaryOpMul;
-use crate::ops::binary_op_subtraction::BinaryOpSub;
+use crate::ops::binary_op_add::BinaryOpAdd;
+use crate::ops::binary_op_mul::BinaryOpMul;
+use crate::ops::binary_op_sub::BinaryOpSub;
 use paste::paste;
+use crate::ops::binary_op_div::BinaryOpDiv;
 
 macro_rules! implement_binary_ops {
     ($object:ident, $($trait_:ident, $binary_op_trait:ident, $operator:tt, $method: ident;)* ) => { $(

@@ -1,4 +1,4 @@
-use std::ops::{BitAnd, BitOr, Div, Rem, Shl, Shr};
+use std::ops::{BitAnd, BitOr, Rem, Shl, Shr};
 
 #[macro_export]
 macro_rules! impl_default_binary_op_trait {
@@ -110,6 +110,7 @@ macro_rules! define_binary_op_trait {
                         if rhs_inner_stride == 0 {
                             return Self::[<$name _stride_n_0>](lhs, lhs_inner_stride, rhs, dst, lhs_shape[0]);
                         } else if lhs_inner_stride == 0 {
+                            // TODO shouldn't this only work if the operation is commutative?
                             return Self::[<$name _stride_n_0>](rhs, rhs_inner_stride, lhs, dst, lhs_shape[0]);
                         }
 
@@ -127,6 +128,7 @@ macro_rules! define_binary_op_trait {
                         return Self::[<$name _nonunif_0>](lhs, &lhs_shape, &lhs_stride,
                                                           rhs, dst, rhs_shape[0]);
                     } else if lhs_dims == 1 && lhs_inner_stride == 0 {
+                        // TODO shouldn't this only work if the operation is commutative?
                         return Self::[<$name _nonunif_0>](rhs, &rhs_shape, &rhs_stride,
                                                           lhs, dst, lhs_shape[0]);
                     }
@@ -135,6 +137,7 @@ macro_rules! define_binary_op_trait {
                         return Self::[<$name _nonunif_1>](lhs, &lhs_shape, &lhs_stride,
                                                           rhs, dst, rhs_shape[0]);
                     } else if lhs_dims == 1 && lhs_inner_stride == 1 {
+                        // TODO shouldn't this only work if the operation is commutative?
                         return Self::[<$name _nonunif_1>](rhs, &rhs_shape, &rhs_stride,
                                                           lhs, dst, lhs_shape[0]);
                     }
@@ -144,6 +147,7 @@ macro_rules! define_binary_op_trait {
                                                           rhs, rhs_inner_stride,
                                                           dst, rhs_shape[0]);
                     } else if lhs_dims == 1 {
+                        // TODO shouldn't this only work if the operation is commutative?
                         return Self::[<$name _nonunif_n>](rhs, &rhs_shape, &rhs_stride,
                                                           lhs, lhs_inner_stride,
                                                           dst, lhs_shape[0]);
@@ -159,7 +163,6 @@ macro_rules! define_binary_op_trait {
     }
 }
 
-pub(crate) trait BinaryOpDiv: Div<Output=Self> + Sized + Copy {}
 pub(crate) trait BinaryOpRem: Rem<Output=Self> + Sized + Copy {}
 pub(crate) trait BinaryOpBitAnd: BitAnd<Output=Self> + Sized + Copy {}
 pub(crate) trait BinaryOpBitOr: BitOr<Output=Self> + Sized + Copy {}
@@ -187,5 +190,3 @@ impl_default_binary_op_trait!(BinaryOpShl,
 impl_default_binary_op_trait!(BinaryOpShr,
                               i8, i16, i32, i64, i128, isize,
                               u8, u16, u32, u64, u128, usize);
-
-impl_default_binary_op_trait!(BinaryOpDiv, f32, f64);

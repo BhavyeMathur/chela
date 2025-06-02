@@ -4,7 +4,7 @@ use crate::StridedMemory;
 use crate::{IntegerDataType, NdArray, RawDataType};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
-use crate::ops::binary_op_addition::BinaryOpAdd;
+use crate::ops::binary_op_add::BinaryOpAdd;
 use paste::paste;
 
 macro_rules! define_binary_ops {

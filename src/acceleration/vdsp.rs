@@ -10,7 +10,6 @@ type vDSP_Stride = isize;
 #[cfg(apple_vdsp)]
 #[link(name = "Accelerate")]
 extern "C" {
-    
     // element-wise addition
     pub(crate) fn vDSP_vadd(__A: *const c_float, __IA: isize,
                             __B: *const c_float, __IB: isize,
@@ -24,7 +23,40 @@ extern "C" {
                              __B: *const c_int, __IB: isize,
                              __C: *mut c_int, __IC: vDSP_Stride, __N: vDSP_Length);
 
-    
+    // element-wise subtraction
+    pub(crate) fn vDSP_vsub(__A: *const c_float, __IA: isize,
+                            __B: *const c_float, __IB: isize,
+                            __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
+
+    pub(crate) fn vDSP_vsubD(__A: *const c_double, __IA: isize,
+                             __B: *const c_double, __IB: isize,
+                             __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
+
+
+    // element-wise multiplication
+    pub(crate) fn vDSP_vmul(__A: *const c_float, __IA: isize,
+                            __B: *const c_float, __IB: isize,
+                            __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
+
+    pub(crate) fn vDSP_vmulD(__A: *const c_double, __IA: isize,
+                             __B: *const c_double, __IB: isize,
+                             __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
+
+
+    // element-wise division
+    pub(crate) fn vDSP_vdiv(__A: *const c_float, __IA: isize,
+                            __B: *const c_float, __IB: isize,
+                            __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
+
+    pub(crate) fn vDSP_vdivD(__A: *const c_double, __IA: isize,
+                             __B: *const c_double, __IB: isize,
+                             __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
+
+    pub(crate) fn vDSP_vdivi(__A: *const c_int, __IA: isize,
+                             __B: *const c_int, __IB: isize,
+                             __C: *mut c_int, __IC: vDSP_Stride, __N: vDSP_Length);
+
+
     // vector-scalar addition
     pub(crate) fn vDSP_vsadd(__A: *const c_float, __IA: vDSP_Stride,
                              __B: *const c_float,
@@ -38,26 +70,13 @@ extern "C" {
                               __N: vDSP_Length,
     );
 
-    // element-wise subtraction
-    pub(crate) fn vDSP_vsub(__A: *const c_float, __IA: isize,
-                            __B: *const c_float, __IB: isize,
-                            __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
+    pub(crate) fn vDSP_vsaddi(__A: *const c_int, __IA: vDSP_Stride,
+                              __B: *const c_int,
+                              __C: *mut c_int, __IC: vDSP_Stride,
+                              __N: vDSP_Length,
+    );
 
-    pub(crate) fn vDSP_vsubD(__A: *const c_double, __IA: isize,
-                             __B: *const c_double, __IB: isize,
-                             __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
 
-    
-    // element-wise multiplication
-    pub(crate) fn vDSP_vmul(__A: *const c_float, __IA: isize,
-                            __B: *const c_float, __IB: isize,
-                            __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
-
-    pub(crate) fn vDSP_vmulD(__A: *const c_double, __IA: isize,
-                             __B: *const c_double, __IB: isize,
-                             __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
-
-    
     // vector-scalar multiplication
     pub(crate) fn vDSP_vsmul(__A: *const c_float, __IA: vDSP_Stride,
                              __B: *const c_float,
@@ -71,13 +90,39 @@ extern "C" {
                               __N: vDSP_Length,
     );
 
-    pub(crate) fn vDSP_vsaddi(__A: *const c_int, __IA: vDSP_Stride,
+
+    // vector-scalar division
+    pub(crate) fn vDSP_vsdiv(__A: *const c_float, __IA: vDSP_Stride,
+                             __B: *const c_float,
+                             __C: *mut c_float, __IC: vDSP_Stride,
+                             __N: vDSP_Length,
+    );
+
+    pub(crate) fn vDSP_vsdivD(__A: *const c_double, __IA: vDSP_Stride,
+                              __B: *const c_double,
+                              __C: *mut c_double, __IC: vDSP_Stride,
+                              __N: vDSP_Length,
+    );
+
+    pub(crate) fn vDSP_vsdivi(__A: *const c_int, __IA: vDSP_Stride,
                               __B: *const c_int,
                               __C: *mut c_int, __IC: vDSP_Stride,
                               __N: vDSP_Length,
     );
-
     
+    pub(crate) fn vDSP_svdiv(__A: *const c_float,
+                             __B: *const c_float, __IB: vDSP_Stride,
+                             __C: *mut c_float, __IC: vDSP_Stride,
+                             __N: vDSP_Length,
+    );
+
+    pub(crate) fn vDSP_svdivD(__A: *const c_double,
+                              __B: *const c_double, __IB: vDSP_Stride,
+                              __C: *mut c_double, __IC: vDSP_Stride,
+                              __N: vDSP_Length,
+    );
+
+
     // vector fill
     pub(crate) fn vDSP_vfill(__A: *const c_float,
                              __C: *mut c_float, __IC: vDSP_Stride,
@@ -91,13 +136,13 @@ extern "C" {
                               __C: *mut c_int, __IC: vDSP_Stride,
                               __N: vDSP_Length);
 
-    
+
     // vector sum
     pub(crate) fn vDSP_sve(__A: *const c_float, __I: isize, __C: *mut c_float, __N: vDSP_Length);
 
     pub(crate) fn vDSP_sveD(__A: *const c_double, __I: isize, __C: *mut c_double, __N: vDSP_Length);
 
-    
+
     // vector minimum & maximum
     pub(crate) fn vDSP_maxv(__A: *const c_float, __IA: isize,
                             __C: *mut c_float, __N: vDSP_Length);
@@ -111,7 +156,7 @@ extern "C" {
     pub(crate) fn vDSP_minvD(__A: *const c_double, __IA: isize,
                              __C: *mut c_double, __N: vDSP_Length);
 
-    
+
     // vector minimum & maximum magnitudes
     pub(crate) fn vDSP_maxmgv(__A: *const c_float, __IA: isize,
                               __C: *mut c_float, __N: vDSP_Length);
@@ -125,7 +170,7 @@ extern "C" {
     pub(crate) fn vDSP_minmgvD(__A: *const c_double, __IA: isize,
                                __C: *mut c_double, __N: vDSP_Length);
 
-    
+
     // vector dot product
     pub(crate) fn vDSP_dotpr(__A: *const c_float, __IA: isize,
                              __B: *const c_float, __IB: isize,
