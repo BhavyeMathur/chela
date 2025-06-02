@@ -85,7 +85,7 @@ impl<'a, T: TensorDataType> StridedMemory for Tensor<'a, T> {
     /// Returns flags containing information about various tensor metadata.
     #[inline]
     fn flags(&self) -> NdArrayFlags {
-        self.flags
+        self.array.flags()
     }
 }
 
@@ -128,6 +128,6 @@ impl<T: TensorDataType> StridedMemory for &Tensor<'_, T> {
     /// Returns flags containing information about various tensor metadata.
     #[inline]
     fn flags(&self) -> NdArrayFlags {
-        self.flags
+        self.array.flags()
     }
 }

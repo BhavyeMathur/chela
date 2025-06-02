@@ -58,7 +58,9 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
             return self.view();
         }
         
-        assert!(self.is_uniformly_strided(), "reshape requires uniformly strided array. Try `array.clone().reshape()` instead.");
+        assert!(self.is_uniformly_strided(), 
+                "reshape requires uniformly strided array. This array has shape {:?} and stride {:?}.\
+         Try `array.clone().reshape()` instead.", self.shape(), self.stride());
         
         if self.size() != new_shape.iter().product() {
             panic!("total number of elements must not change during reshape");

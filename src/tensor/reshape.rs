@@ -2,11 +2,18 @@ use crate::none_backwards::NoneBackwards;
 use crate::reshape_backwards::ReshapeBackwards;
 use crate::transpose_backwards::TransposeBackwards;
 use crate::{AxisType, Reshape, StridedMemory, Tensor, TensorDataType};
-use std::rc::Rc;
+use crate::identity_backwards::IdentityBackwards;
+
 
 impl<'a, T: TensorDataType> Reshape<T> for &'a Tensor<'a, T> {
     type Output = Tensor<'a, T>;
 
+    /// Provides a non-owning view of the tensor with the specified shape and stride.
+    /// The data pointed to by the view is shared with the original tensor.
+    ///
+    /// # Safety
+    /// - Ensure the memory layout referenced by `shape`, and `stride` is valid and owned
+    ///   by the original tensor.
     unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output {
         let requires_grad = self.requires_grad();
         let grad_fn = if requires_grad { ReshapeBackwards::new(self, self.shape()) } else { NoneBackwards::new() };
@@ -20,6 +27,45 @@ impl<'a, T: TensorDataType> Reshape<T> for &'a Tensor<'a, T> {
         Tensor::from_raw_parts(result, requires_grad, grad_fn)
     }
 
+    /// Provides a non-owning view of the tensor that shares its data with the original tensor.
+    ///
+    /// # Example
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let tensor = Tensor::new(vec![1, 2, 3, 4]);
+    /// let view = (&tensor).view();
+    /// assert!(view.is_view())
+    /// ```
+    fn view(self) -> Self::Output {
+        let requires_grad = self.requires_grad();
+        let grad_fn = if requires_grad { IdentityBackwards::new(self) } else { NoneBackwards::new() };
+
+        let result = self.array.as_ref().view();
+
+        unsafe {
+            // NdArray<'static, T> needed to create a shared pointer to the result
+            // this function outputs a Tensor<'a, T> where ('a: 'static) so it should be safe.
+            let result = result.lifetime_cast();
+
+            Tensor::from_raw_parts(result, requires_grad, grad_fn)
+        }
+    }
+
+    /// Returns a transposed version of the tensor, swapping the specified axes.
+    ///
+    /// # Panics
+    /// - If `axis1` or `axis2` are out of bounds
+    ///
+    /// # Examples
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let array = Tensor::new([[2, 3, 4], [10, 20, 30]]);
+    ///
+    /// let transposed = array.transpose(0, 1);
+    /// assert_eq!(transposed, Tensor::new([[2, 10], [3, 20], [4, 30]]));
+    /// ```
     fn transpose(self, axis1: impl AxisType, axis2: impl AxisType) -> Self::Output {
         let requires_grad = self.requires_grad();
         let grad_fn =
@@ -44,19 +90,52 @@ impl<'a, T: TensorDataType> Reshape<T> for &'a Tensor<'a, T> {
 impl<T: TensorDataType> Reshape<T> for Tensor<'_, T> {
     type Output = Tensor<'static, T>;
 
+    /// Provides a non-owning view of the tensor with the specified shape and stride.
+    /// The data pointed to by the view is shared with the original tensor.
+    ///
+    /// # Safety
+    /// - Ensure the memory layout referenced by `shape`, and `stride` is valid and owned
+    ///   by the original tensor.
     unsafe fn reshaped_view(self, shape: Vec<usize>, stride: Vec<usize>) -> Self::Output {
         let requires_grad = self.requires_grad();
         let grad_fn = if requires_grad { ReshapeBackwards::new(&self, self.shape()) } else { NoneBackwards::new() };
 
-        let result = match Rc::try_unwrap(self.array) {
-            Ok(array) => array,
-            Err(rc) => rc.as_ref().clone(),
-        };
-        let result = result.reshaped_view(shape, stride);
-
+        let result = self.into_ndarray().reshaped_view(shape, stride);
         Tensor::from_raw_parts(result, requires_grad, grad_fn)
     }
 
+    /// Provides a non-owning view of the tensor that shares its data with the original tensor.
+    ///
+    /// # Example
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let tensor = Tensor::new(vec![1, 2, 3, 4]);
+    /// let view = (&tensor).view();
+    /// assert!(view.is_view())
+    /// ```
+    fn view(self) -> Self::Output {
+        let requires_grad = self.requires_grad();
+        let grad_fn = if requires_grad { IdentityBackwards::new(&self) } else { NoneBackwards::new() };
+
+        let result = self.into_ndarray().view();
+        unsafe { Tensor::from_raw_parts(result, requires_grad, grad_fn) }
+    }
+
+    /// Returns a transposed version of the tensor, swapping the specified axes.
+    ///
+    /// # Panics
+    /// - If `axis1` or `axis2` are out of bounds
+    ///
+    /// # Examples
+    /// ```ignore
+    /// # use chela::*;
+    ///
+    /// let array = Tensor::new([[2, 3, 4], [10, 20, 30]]);
+    ///
+    /// let transposed = array.transpose(0, 1);
+    /// assert_eq!(transposed, Tensor::new([[2, 10], [3, 20], [4, 30]]));
+    /// ```
     fn transpose(self, axis1: impl AxisType, axis2: impl AxisType) -> Self::Output {
         let requires_grad = self.requires_grad();
         let grad_fn =
@@ -66,12 +145,7 @@ impl<T: TensorDataType> Reshape<T> for Tensor<'_, T> {
                 NoneBackwards::new()
             };
 
-        let result = match Rc::try_unwrap(self.array) {
-            Ok(array) => array,
-            Err(rc) => rc.as_ref().clone(),
-        };
-        let result = result.transpose(axis1, axis2);
-
+        let result = self.into_ndarray().transpose(axis1, axis2);
         unsafe { Tensor::from_raw_parts(result, requires_grad, grad_fn) }
     }
 }

@@ -25,7 +25,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     #[inline]
     pub fn is_leaf(&self) -> bool {
         if self.requires_grad() {
-            self.flags().contains(NdArrayFlags::UserCreated)
+            self.flags.contains(NdArrayFlags::UserCreated)
         } else {
             true
         }
@@ -50,7 +50,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// ```
     #[inline]
     pub fn requires_grad(&self) -> bool {
-        self.flags().contains(NdArrayFlags::RequiresGrad)
+        self.flags.contains(NdArrayFlags::RequiresGrad)
     }
 
     /// Sets whether gradients must be computed for this tensor.
