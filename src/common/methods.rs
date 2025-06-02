@@ -124,6 +124,26 @@ pub trait StridedMemory: Sized {
         !self.flags().contains(NdArrayFlags::Owned)
     }
 
+    /// Whether the elements of this ndarray are stored in memory with a uniform distance between them.
+    ///
+    /// Contiguous arrays are always uniformly strided. Views may sometimes be uniformly strided.
+    ///
+    /// ```
+    /// # use chela::*;
+    /// let a = NdArray::new([[3, 4, 5], [6, 7, 8]]);
+    /// assert!(a.is_uniformly_strided());
+    ///
+    /// let b = a.slice_along(Axis(1), 0);
+    /// assert!(b.is_uniformly_strided());
+    ///
+    /// let c = a.slice_along(Axis(1), ..2);
+    /// assert!(!c.is_uniformly_strided());
+    /// ```
+    #[inline]
+    fn is_uniformly_strided(&self) -> bool {
+        self.flags().contains(NdArrayFlags::UniformStride)
+    }
+
     /// If the elements of this ndarray are stored in memory with a uniform distance between them,
     /// returns this distance.
     ///
@@ -143,7 +163,7 @@ pub trait StridedMemory: Sized {
     /// ```
     #[inline]
     fn has_uniform_stride(&self) -> Option<usize> {
-        if !self.flags().contains(NdArrayFlags::UniformStride) {
+        if !self.is_uniformly_strided() {
             return None;
         }
 

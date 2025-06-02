@@ -54,16 +54,21 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     /// ```
     fn reshape(self, new_shape: impl ToVec<usize>) -> Self::Output {
         let new_shape = new_shape.to_vec();
-
+        if new_shape == self.shape() {
+            return self.view();
+        }
+        
+        assert!(self.is_uniformly_strided(), "reshape requires uniformly strided array. Try `array.clone().reshape()` instead.");
+        
         if self.size() != new_shape.iter().product() {
             panic!("total number of elements must not change during reshape");
         }
 
         let mut new_stride = vec![0; new_shape.len()];
-        let mut acc = 1;
-        for (i, dim) in new_shape.iter().rev().enumerate() {
+        let mut acc = self.stride()[self.ndims() - 1];
+        for (i, &dim) in new_shape.iter().rev().enumerate() {
             new_stride[new_shape.len() - 1 - i] = acc;
-            acc *= *dim;
+            acc *= dim * (dim / dim);
         }
 
         unsafe { self.reshaped_view(new_shape, new_stride) }
