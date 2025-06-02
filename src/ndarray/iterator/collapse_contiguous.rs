@@ -57,8 +57,12 @@ pub(crate) fn collapse_to_uniform_stride(shape: &[usize], stride: &[usize]) -> (
     let mut last_idx = 0;
 
     for i in 1..ndims {
+
         // check if this dimension can be collapsed into the previous one
-        if new_stride[last_idx] == shape[i] * stride[i] {
+        let can_collapse =
+            new_stride[last_idx] == shape[i] * stride[i] || (new_stride[last_idx] == 0 && new_shape[last_idx] == 1);
+
+        if can_collapse {
             new_shape[last_idx] *= shape[i];  // collapse by merging dimension into the previous one
             new_stride[last_idx] = stride[i];
         } else {
@@ -78,7 +82,7 @@ pub(crate) fn has_uniform_stride(shape: &[usize], stride: &[usize]) -> Option<us
     }
 
     for i in 1..ndims {
-        if stride[i - 1] != shape[i] * stride[i] {
+        if stride[i - 1] != 0 && stride[i - 1] != shape[i] * stride[i] {
             return None;
         }
     }
@@ -123,95 +127,106 @@ mod tests {
 
     #[test]
     fn test_collapse_to_uniform_stride() {
-        // Example 1
         let shape = [2, 3];
         let stride = [3, 1];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [6]);
-        assert_eq!(b, [1]); // Collapsed stride should match the inner-most dimension's stride.
+        assert_eq!(b, [1]);
         assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
 
-        // Example 2
         let shape = [2, 3];
         let stride = [6, 2];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [6]);
-        assert_eq!(b, [2]); // Collapsed as strides are consistent.
+        assert_eq!(b, [2]);
         assert_eq!(has_uniform_stride(&shape, &stride), Some(2));
 
-        // Example 3
         let shape = [2, 3];
         let stride = [5, 2];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [2, 3]);
-        assert_eq!(b, [5, 2]); // Cannot collapse due to inconsistent strides.
+        assert_eq!(b, [5, 2]);
         assert_eq!(has_uniform_stride(&shape, &stride), None);
 
-        // Example 4
         let shape = [2, 2, 2];
         let stride = [6, 3, 2];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [4, 2]);
-        assert_eq!(b, [3, 2]); // Collapsed outer two dimensions.
+        assert_eq!(b, [3, 2]);
         assert_eq!(has_uniform_stride(&shape, &stride), None);
 
-        // Additional Example 1
         let shape = [3, 4, 5];
         let stride = [20, 5, 1];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [60]);
-        assert_eq!(b, [1]); // Fully collapsed due to consistent strides.
+        assert_eq!(b, [1]);
         assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
 
-        // Additional Example 2
         let shape = [4, 5, 6];
         let stride = [30, 6, 1];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [120]);
-        assert_eq!(b, [1]); // Fully collapsed due to consistent strides.
+        assert_eq!(b, [1]);
         assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
 
-        // Additional Example 3
         let shape = [3, 3, 3];
         let stride = [9, 3, 1];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [27]);
-        assert_eq!(b, [1]); // Fully collapsed into a single dimension.
+        assert_eq!(b, [1]);
         assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
+    }
+    #[test]
+    fn test_collapse_to_uniform_stride_edge() {
+        let shape = [1, 2];
+        let stride = [0, 2];
+        let (a, b) = collapse_to_uniform_stride(&shape, &stride);
+        assert_eq!(a, [2]);
+        assert_eq!(b, [2]);
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(2));
 
-        // Edge Case: Empty shape and stride
+        let shape = [1, 1, 1, 2];
+        let stride = [0, 0, 0, 2];
+        let (a, b) = collapse_to_uniform_stride(&shape, &stride);
+        assert_eq!(a, [2]);
+        assert_eq!(b, [2]);
+        assert_eq!(has_uniform_stride(&shape, &stride), Some(2));
+        
         let shape = [];
         let stride = [];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, []);
         assert_eq!(b, []); // Should handle empty inputs correctly.
         assert_eq!(has_uniform_stride(&shape, &stride), Some(0));
-
-        // Edge Case: Single dimension
+        
         let shape = [10];
         let stride = [1];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [10]);
         assert_eq!(b, [1]); // Single dimension remains unchanged.
         assert_eq!(has_uniform_stride(&shape, &stride), Some(1));
-
-        // Edge Case: Non-contiguous strides
+        
         let shape = [2, 3];
         let stride = [4, 2];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [2, 3]);
-        assert_eq!(b, [4, 2]); // Cannot collapse due to non-contiguous strides.
+        assert_eq!(b, [4, 2]);
         assert_eq!(has_uniform_stride(&shape, &stride), None);
-
-        // Edge Case: Zero stride
+        
+        let shape = [1, 2];
+        let stride = [5, 1];
+        let (a, b) = collapse_to_uniform_stride(&shape, &stride);
+        assert_eq!(a, [1, 2]);
+        assert_eq!(b, [5, 1]);
+        assert_eq!(has_uniform_stride(&shape, &stride), None);
+        
         let shape = [3, 3, 3];
         let stride = [0, 1, 0];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
         assert_eq!(a, [3, 3, 3]);
         assert_eq!(b, [0, 1, 0]);
         assert_eq!(has_uniform_stride(&shape, &stride), None);
-
-        // Edge Case: Zero stride with some dimensions collapsed
+        
         let shape = [5, 2, 3, 3, 4, 3];
         let stride = [6, 3, 0, 4, 1, 0];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
