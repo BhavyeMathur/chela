@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::rc::Rc;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::common::methods::StridedMemory;
 use crate::{NdArray, Tensor, TensorDataType};
@@ -29,17 +29,20 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
 
     /// Returns a reference to the underlying `NdArray` of the tensor
     pub fn ndarray(&self) -> &NdArray<'a, T> {
-        &self.array
+        self.array.as_ref()
     }
 
     /// Converts the tensor to an `NdArray`
-    pub fn into_ndarray(self) -> NdArray<'a, T> {
-        self.array
+    pub fn into_ndarray(self) -> NdArray<'static, T> {
+        match Rc::try_unwrap(self.array) {
+            Ok(result) => { result }
+            Err(rc) => { (*rc).clone() }
+        }
     }
 }
 
 #[allow(clippy::len_without_is_empty)]
-impl<T: TensorDataType> StridedMemory for Tensor<'_, T> {
+impl<'a, T: TensorDataType> StridedMemory for Tensor<'a, T> {
     /// Returns the dimensions of the tensor along each axis.
     ///
     /// ```ignore

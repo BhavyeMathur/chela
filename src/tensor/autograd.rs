@@ -193,6 +193,6 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// assert_eq!(d, NdArray::new([10.0, 10.0, 10.0]));
     /// ```
     pub fn detach(&self) -> NdArray<'static, T> {
-        self.array.clone()
+        self.array.as_ref().clone()
     }
 }

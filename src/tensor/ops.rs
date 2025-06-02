@@ -22,7 +22,7 @@ impl<T: TensorDataType> Neg for &Tensor<'_, T> {
         let requires_grad = self.requires_grad();
         let grad_fn = if requires_grad { NegBackwards::new(self) } else { NoneBackwards::new() };
 
-        unsafe { Tensor::from_raw_parts(-&self.array, requires_grad, grad_fn) }
+        unsafe { Tensor::from_raw_parts(-self.array.as_ref(), requires_grad, grad_fn) }
     }
 }
 
@@ -53,7 +53,7 @@ macro_rules! implement_binary_ops {
                 let requires_grad = self.requires_grad() || rhs.requires_grad();
                 let grad_fn = if requires_grad { $backwards::new(self, rhs) } else { NoneBackwards::new() };
 
-                unsafe { Tensor::from_raw_parts(&self.array $operator &rhs.array, requires_grad, grad_fn) }
+                unsafe { Tensor::from_raw_parts(self.array.as_ref() $operator rhs.array.as_ref(), requires_grad, grad_fn) }
             }
         }
         
@@ -70,7 +70,7 @@ macro_rules! implement_binary_ops {
                 let requires_grad = self.requires_grad();
                 let grad_fn = if requires_grad { $backwards_scalar::new(self, rhs) } else { NoneBackwards::new() };
 
-                unsafe { Tensor::from_raw_parts(&self.array $operator rhs, requires_grad, grad_fn) }
+                unsafe { Tensor::from_raw_parts(self.array.as_ref() $operator rhs, requires_grad, grad_fn) }
             }
         }
     )*};
