@@ -319,6 +319,16 @@ fn test_autograd_matmul_ops() {
     assert_eq!(vector1.gradient().unwrap(), vector2.ndarray());
     assert_eq!(vector2.gradient().unwrap(), vector1.ndarray());
 
+    let x = vector1.matmul(&vector2);
+    vector1.zero_gradient();
+    vector2.zero_gradient();
+    vector2.set_requires_grad(false);
+    x.backward();
+
+    assert_eq!(vector1.gradient().unwrap(), vector2.ndarray());
+    assert_eq!(vector2.gradient(), None);
+
+    vector2.set_requires_grad(true);
 
     // Matrix-Vector Product 1
 
@@ -389,35 +399,51 @@ fn test_autograd_bmm_ops() {
 #[test]
 fn test_autograd_transpose_ops() {
     let mut matrix1 = Tensor::new([
-        [[2.0, -2.0, 1.0], [-1.0, -2.5, 2.0], [-3.0, 3.0, 2.5]],
-        [[-3.0, 3.0, 8.0], [6.0, -3.0, -1.0], [5.0, 1.5, -4.0]],
-        [[4.0, 4.0, 7.0], [-4.0, 2.5, 6.5], [-8.0, 4.0, 9.0]]]);
+        [[2.0, -2.0], [-1.0, -2.5], [-3.0, 3.0]],
+        [[-3.0, 3.0], [6.0, -3.0], [5.0, 1.5]],
+        [[4.0, 4.0], [-4.0, 2.5], [-8.0, 4.0]],
+        [[4.0, 4.0], [-4.0, 2.5], [-8.0, 4.0]]]);  // [4, 3, 2]
 
     let mut matrix2 = Tensor::new([
-        [[1.0, -5.0, 4.0], [-3.0, -5.5, 3.0], [-9.0, 2.0, 1.5]],
-        [[4.0, 9.0, 5.5], [8.5, -1.5, 3.5], [3.0, -7.0, 2.0]],
-        [[2.0, 1.0, -1.0], [0.0, 6.5, -9.5], [-7.0, -1.0, 4.5]]]);
+        [[1.0, -5.0], [-3.0, -5.5], [-9.0, 2.0]],
+        [[4.0, 9.0], [8.5, -1.5], [3.0, -7.0]],
+        [[2.0, 1.0], [0.0, 6.5], [-7.0, -1.0]],
+        [[2.0, 1.0], [0.0, 6.5], [-7.0, -1.0]]]);  // [4, 3, 2] 
 
     matrix1.set_requires_grad(true);
     matrix2.set_requires_grad(true);
 
+    let mat1 = (&matrix1).view();
+    let mat2 = (&matrix2).view();
 
     let matrix3 = (&matrix1).transpose(1, 2);
 
     let x = matrix3.bmm(&matrix2);
     x.backward();
 
-    assert_eq!(matrix1.gradient().unwrap(),
-               NdArray::new([
-                   [[0.0, 0.0, 0.0], [-5.50, -5.50, -5.50], [-5.50, -5.50, -5.50]],
-                   [[18.50, 18.50, 18.50], [10.50, 10.50, 10.50], [-2.0, -2.0, -2.0]],
-                   [[2.0, 2.0, 2.0], [-3.0, -3.0, -3.0], [-3.50, -3.50, -3.50]]]));
+    let matrix1_correct = NdArray::new([
+        [[-4.000, -4.000], [-8.500, -8.500], [-7.0000, -7.0000]],
+        [[13.000, 13.000], [7.0000, 7.0000], [-4.0000, -4.0000]],
+        [[3.0000, 3.0000], [6.5000, 6.5000], [-8.0000, -8.0000]],
+        [[3.0000, 3.0000], [6.5000, 6.5000], [-8.0000, -8.0000]]]);
 
-    assert_eq!(matrix2.gradient().unwrap(),
-               NdArray::new([
-                   [[1.0, 1.0, 1.0], [-1.50, -1.50, -1.50], [2.50, 2.50, 2.50]],
-                   [[8.0, 8.0, 8.0], [2.0, 2.0, 2.0], [2.50, 2.50, 2.50]],
-                   [[15.0, 15.0, 15.0], [5.0, 5.0, 5.0], [5.0, 5.0, 5.0]]]));
+    let matrix2_correct = NdArray::new([
+        [[0.0000, 0.0000], [-3.500, -3.500], [0.0000, 0.0000]],
+        [[0.0000, 0.0000], [3.0000, 3.0000], [6.5000, 6.5000]],
+        [[8.0000, 8.0000], [-1.500, -1.500], [-4.00, -4.0000]],
+        [[8.0000, 8.0000], [-1.500, -1.500], [-4.00, -4.0000]]]);
+
+    assert_eq!(matrix1.gradient().unwrap(), matrix1_correct);
+    assert_eq!(matrix2.gradient().unwrap(), matrix2_correct);
+
+    let matrix3 = mat1.transpose(1, 2);
+    let x = matrix3.bmm(mat2);
+    matrix1.zero_gradient();
+    matrix2.zero_gradient();
+    x.backward();
+    
+    assert_eq!(matrix1.gradient().unwrap(), matrix1_correct);
+    assert_eq!(matrix2.gradient().unwrap(), matrix2_correct);
 }
 
 #[test]

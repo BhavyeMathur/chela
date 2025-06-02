@@ -1,4 +1,3 @@
-use std::ptr::addr_of;
 use crate::ndarray::collapse_contiguous::has_uniform_stride;
 
 pub(crate) trait Fill: Copy {
@@ -81,6 +80,7 @@ impl Fill for u32 {
     #[cfg(apple_vdsp)]
     unsafe fn fill_uniform_stride(ptr: *mut Self, count: usize, stride: usize, value: Self) {
         use crate::acceleration::vdsp::vDSP_vfilli;
+        use std::ptr::addr_of;
 
         let value_i32 = unsafe { std::mem::transmute::<u32, i32>(value) };
         vDSP_vfilli(addr_of!(value_i32), ptr as *mut i32, stride as isize, count);
@@ -92,6 +92,8 @@ impl Fill for i32 {
     #[cfg(apple_vdsp)]
     unsafe fn fill_uniform_stride(ptr: *mut Self, count: usize, stride: usize, value: Self) {
         use crate::acceleration::vdsp::vDSP_vfilli;
+        use std::ptr::addr_of;
+        
         vDSP_vfilli(addr_of!(value), ptr, stride as isize, count);
     }
 }
@@ -100,6 +102,8 @@ impl Fill for f32 {
     #[cfg(apple_vdsp)]
     unsafe fn fill_uniform_stride(ptr: *mut Self, count: usize, stride: usize, value: Self) {
         use crate::acceleration::vdsp::vDSP_vfill;
+        use std::ptr::addr_of;
+        
         vDSP_vfill(addr_of!(value), ptr, stride as isize, count);
     }
 }
@@ -108,6 +112,8 @@ impl Fill for f64 {
     #[cfg(apple_vdsp)]
     unsafe fn fill_uniform_stride(ptr: *mut Self, count: usize, stride: usize, value: Self) {
         use crate::acceleration::vdsp::vDSP_vfillD;
+        use std::ptr::addr_of;
+        
         vDSP_vfillD(addr_of!(value), ptr, stride as isize, count);
     }
 }

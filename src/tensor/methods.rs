@@ -11,7 +11,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// single element)
     ///
     /// # Example
-    /// ```ignore
+    /// ```
     /// # use chela::*;
     ///
     /// let tensor = Tensor::scalar(50.0);
@@ -53,10 +53,10 @@ impl<'a, T: TensorDataType> StridedMemory for Tensor<'a, T> {
     /// ```ignore
     /// # use chela::*;
     ///
-    /// let a = Tensor::from([3.0, 4.0, 5.0]);
+    /// let a = Tensor::new([3.0, 4.0, 5.0]);
     /// assert_eq!(a.shape(), &[3]);
     ///
-    /// let b = Tensor::from([[3.0], [5.0]]);
+    /// let b = Tensor::new([[3.0], [5.0]]);
     /// assert_eq!(b.shape(), &[2, 1]);
     ///
     /// let c = Tensor::scalar(0.0);
@@ -71,10 +71,10 @@ impl<'a, T: TensorDataType> StridedMemory for Tensor<'a, T> {
     ///
     /// The stride represents the distance in memory between elements in a tensor along each axis.
     ///
-    /// ```ignore
+    /// ```
     /// # use chela::*;
     ///
-    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
+    /// let a = Tensor::new([[3.0, 4.0], [5.0, 6.0]]);
     /// assert_eq!(a.stride(), &[2, 1]);
     /// ```
     #[inline]
@@ -96,10 +96,10 @@ impl<T: TensorDataType> StridedMemory for &Tensor<'_, T> {
     /// ```ignore
     /// # use chela::*;
     ///
-    /// let a = Tensor::from([3.0, 4.0, 5.0]);
+    /// let a = Tensor::new([3.0, 4.0, 5.0]);
     /// assert_eq!(a.shape(), &[3]);
     ///
-    /// let b = Tensor::from([[3.0], [5.0]]);
+    /// let b = Tensor::new([[3.0], [5.0]]);
     /// assert_eq!(b.shape(), &[2, 1]);
     ///
     /// let c = Tensor::scalar(0.0);
@@ -114,10 +114,10 @@ impl<T: TensorDataType> StridedMemory for &Tensor<'_, T> {
     ///
     /// The stride represents the distance in memory between elements in a tensor along each axis.
     ///
-    /// ```ignore
+    /// ```
     /// # use chela::*;
     ///
-    /// let a = Tensor::from([[3.0, 4.0], [5.0, 6.0]]);
+    /// let a = Tensor::new([[3.0, 4.0], [5.0, 6.0]]);
     /// assert_eq!(a.stride(), &[2, 1]);
     /// ```
     #[inline]

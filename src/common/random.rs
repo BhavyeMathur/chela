@@ -64,7 +64,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// with values uniformly distributed in [`low`, `high`).
     ///
     /// # Examples
-    /// ```ignore
+    /// ```
     /// # use chela::*;
     ///
     /// let ndarray = NdArray::<f64>::uniform([2, 3], -5.0, 3.0);

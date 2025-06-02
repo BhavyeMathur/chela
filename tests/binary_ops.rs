@@ -1,5 +1,5 @@
 use chela::*;
-use num::{NumCast, Zero};
+use num::{NumCast, One, Zero};
 use paste::paste;
 
 
@@ -76,6 +76,18 @@ test_for_common_numeric_dtypes!(
             assert_eq!(&tensor1 + &tensor2, correct);
             assert_eq!(&tensor2 + &tensor1, correct);
 
+            // inner strides: [1], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs + rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_eq!(&tensor1 + &tensor2, correct);
+            assert_eq!(&tensor2 + &tensor1, correct);
+
             // inner strides: [k], [non-unif]
             let tensor1 = NdArray::<T>::randint([n, 2, 2], T::zero(), ten);
             let tensor1 = tensor1.slice_along(Axis(-1), 0);
@@ -84,10 +96,10 @@ test_for_common_numeric_dtypes!(
             let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
 
             let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs + rhs).collect();
-            let correct = NdArray::new(correct);
+            let correct = NdArray::new(correct).reshape([n, 2]);
 
-            assert_eq!((&tensor1 + &tensor2).flatten(), correct);
-            assert_eq!((&tensor2 + &tensor1).flatten(), correct);
+            assert_eq!(&tensor1 + &tensor2, correct);
+            assert_eq!(&tensor2 + &tensor1, correct);
 
             // inner strides: [non-unif], [non-unif]
             let tensor1 = NdArray::<T>::randint([n, 3], T::zero(), ten);
@@ -138,6 +150,89 @@ test_for_signed_dtypes!(
     }
 );
 
+test_for_signed_dtypes!(
+    test_sub_non_contiguous, {
+        let ten = NumCast::from(10).unwrap();
+
+        for n in 1..23 {
+            // inner strides: [k], [0]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::scalar(10).astype::<T>();
+
+            let correct: Vec<T> = tensor1.flatiter().map(|lhs| lhs - ten).collect();
+            let correct = NdArray::new(correct);
+
+            assert_eq!(&tensor1 - &tensor2, correct);
+            assert_eq!(&tensor2 - &tensor1, -correct);
+
+            // inner strides: [k], [1]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n], T::zero(), ten);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs - rhs).collect();
+            let correct = NdArray::new(correct);
+
+            assert_eq!(&tensor1 - &tensor2, correct);
+            assert_eq!(&tensor2 - &tensor1, -correct);
+
+            // inner strides: [k], [j]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs - rhs).collect();
+            let correct = NdArray::new(correct);
+
+            assert_eq!(&tensor1 - &tensor2, correct);
+            assert_eq!(&tensor2 - &tensor1, -correct);
+
+            // inner strides: [1], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs - rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_eq!(&tensor1 - &tensor2, correct);
+            assert_eq!(&tensor2 - &tensor1, -correct);
+
+            // inner strides: [k], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 2, 2], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs - rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_eq!(&tensor1 - &tensor2, correct);
+            assert_eq!(&tensor2 - &tensor1, -correct);
+
+            // inner strides: [non-unif], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0..2);
+
+            let tensor2 = NdArray::<T>::randint([n, 5], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 2..4);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs - rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_eq!(&tensor1 - &tensor2, correct);
+            assert_eq!(&tensor2 - &tensor1, -correct);
+        }
+    }
+);
+
 test_for_common_numeric_dtypes!(
     test_mul, {
         for n in 1..23 {
@@ -170,6 +265,89 @@ test_for_common_numeric_dtypes!(
     }
 );
 
+test_for_common_numeric_dtypes!(
+    test_mul_non_contiguous, {
+        let ten = NumCast::from(10).unwrap();
+
+        for n in 1..23 {
+            // inner strides: [k], [0]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::scalar(ten);
+
+            let correct: Vec<T> = tensor1.flatiter().map(|lhs| lhs * ten).collect();
+            let correct = NdArray::new(correct);
+
+            assert_eq!(&tensor1 * &tensor2, correct);
+            assert_eq!(&tensor2 * &tensor1, correct);
+
+            // inner strides: [k], [1]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n], T::zero(), ten);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs * rhs).collect();
+            let correct = NdArray::new(correct);
+
+            assert_eq!(&tensor1 * &tensor2, correct);
+            assert_eq!(&tensor2 * &tensor1, correct);
+
+            // inner strides: [k], [j]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs * rhs).collect();
+            let correct = NdArray::new(correct);
+
+            assert_eq!(&tensor1 * &tensor2, correct);
+            assert_eq!(&tensor2 * &tensor1, correct);
+
+            // inner strides: [1], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::zero(), ten);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs * rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_eq!(&tensor1 * &tensor2, correct);
+            assert_eq!(&tensor2 * &tensor1, correct);
+
+            // inner strides: [k], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 2, 2], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs * rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_eq!(&tensor1 * &tensor2, correct);
+            assert_eq!(&tensor2 * &tensor1, correct);
+
+            // inner strides: [non-unif], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 3], T::zero(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0..2);
+
+            let tensor2 = NdArray::<T>::randint([n, 5], T::zero(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 2..4);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs * rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_eq!(&tensor1 * &tensor2, correct);
+            assert_eq!(&tensor2 * &tensor1, correct);
+        }
+    }
+);
+
 test_for_float_dtypes!(
     test_div, {
         for n in 1..23 {
@@ -186,6 +364,90 @@ test_for_float_dtypes!(
 
             let tensor1 = NdArray::arange(0, n).squeeze().astype::<T>();
             assert_eq!(tensor1 / tensor2, correct);
+        }
+    }
+);
+
+test_for_float_dtypes!(
+    test_div_non_contiguous, {
+        let ten = NumCast::from(10).unwrap();
+        let one = NdArray::scalar(T::one());
+
+        for n in 1..23 {
+            // inner strides: [k], [0]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::one(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::scalar(10).astype::<T>();
+
+            let correct: Vec<T> = tensor1.flatiter().map(|lhs| lhs / ten).collect();
+            let correct = NdArray::new(correct);
+
+            assert_almost_eq!(&tensor1 / &tensor2, correct);
+            assert_almost_eq!(&tensor2 / &tensor1, &one / &correct);
+
+            // inner strides: [k], [1]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::one(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n], T::one(), ten);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs / rhs).collect();
+            let correct = NdArray::new(correct);
+
+            assert_almost_eq!(&tensor1 / &tensor2, correct);
+            assert_almost_eq!(&tensor2 / &tensor1, &one / &correct);
+
+            // inner strides: [k], [j]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::one(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::one(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs / rhs).collect();
+            let correct = NdArray::new(correct);
+
+            assert_almost_eq!(&tensor1 / &tensor2, correct);
+            assert_almost_eq!(&tensor2 / &tensor1, &one / &correct);
+
+            // inner strides: [1], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 2], T::one(), ten);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::one(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs / rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_almost_eq!(&tensor1 / &tensor2, correct);
+            assert_almost_eq!(&tensor2 / &tensor1, &one / &correct);
+
+            // inner strides: [k], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 2, 2], T::one(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0);
+
+            let tensor2 = NdArray::<T>::randint([n, 3], T::one(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs / rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_almost_eq!(&tensor1 / &tensor2, correct);
+            assert_almost_eq!(&tensor2 / &tensor1, &one / &correct);
+
+            // inner strides: [non-unif], [non-unif]
+            let tensor1 = NdArray::<T>::randint([n, 3], T::one(), ten);
+            let tensor1 = tensor1.slice_along(Axis(-1), 0..2);
+
+            let tensor2 = NdArray::<T>::randint([n, 5], T::one(), ten);
+            let tensor2 = tensor2.slice_along(Axis(-1), 2..4);
+
+            let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs / rhs).collect();
+            let correct = NdArray::new(correct).reshape([n, 2]);
+
+            assert_almost_eq!(&tensor1 / &tensor2, correct);
+            assert_almost_eq!(&tensor2 / &tensor1, &one / &correct);
         }
     }
 );

@@ -166,15 +166,30 @@ test_for_signed_dtypes!(
     }
 );
 
-// TODO implement assert_almost_eq!
-// test_for_all_float_types!(
-//     test_float_arange, {
-//         let a = Tensor::<T>::arange(1.5, 6.4);
-//         let expected = Tensor::from([1.5, 2.5, 3.5, 4.5, 5.5]).astype::<T>();
-//         assert_almost_eq!(a, expected);
-//
-//         let b = Tensor::<T>::arange(-5.3 as T, 1.4 as T);
-//         let expected = Tensor::from([-5.3, -4.3, -3.3, -2.3, -1.3, 0.3, 1.3]).astype::<T>();
-//         assert_almost_eq!(b, expected);
-//     }
-// );
+test_for_float_dtypes!(
+    test_float_arange, {
+        let a = NdArray::<T>::arange(1.5, 6.4);
+        let expected = NdArray::<T>::new([1.5, 2.5, 3.5, 4.5, 5.5]);
+        assert_almost_eq!(a, expected);
+
+        let b = NdArray::<T>::arange(-5.3 as T, 1.4 as T);
+        let expected = NdArray::<T>::new([-5.3, -4.3, -3.3, -2.3, -1.3, 0.3, 1.3]);
+        assert_almost_eq!(b, expected);
+    }
+);
+
+test_for_float_dtypes!(
+    test_linspace, {
+        let a = NdArray::<T>::linspace_exclusive(1.0, 3.0, 5);
+        let expected = NdArray::<T>::new([1.0, 1.4, 1.8, 2.2, 2.6]);
+        assert_almost_eq!(a, expected);
+
+        let a = NdArray::<T>::linspace(1.0, 3.0, 5);
+        let expected = NdArray::<T>::new([1.0, 1.5, 2.0, 2.5, 3.0]);
+        assert_almost_eq!(a, expected);
+        
+        let a = NdArray::<T>::linspace(1.0, 3.0, 1);
+        let expected = NdArray::<T>::new([1.0]);
+        assert_almost_eq!(a, expected);
+    }
+);

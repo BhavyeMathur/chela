@@ -2,7 +2,7 @@ use crate::accumulate_grad::AccumulateGrad;
 use crate::gradient_function::GradientFunction;
 use crate::ndarray::flags::NdArrayFlags;
 use crate::{Constructors, NdArray, StridedMemory, Tensor, TensorDataType};
-
+use crate::none_backwards::NoneBackwards;
 
 impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// Checks if the tensor is a leaf.
@@ -65,6 +65,9 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
 
         if !required_grad && requires_grad {
             self.grad_fn = AccumulateGrad::new(self.shape().to_vec());
+        }
+        if required_grad && !requires_grad {
+            self.grad_fn = NoneBackwards::new();
         }
 
         self

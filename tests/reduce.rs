@@ -130,7 +130,8 @@ test_for_common_numeric_dtypes!(
             [[1, 5, 3], [2, 9, 4]],
             [[2, 6, 4], [3, 8, 3]],
             [[3, 7, 5], [4, 7, 2]],
-            [[4, 8, 6], [5, 6, 1]]
+            [[4, 8, 6], [5, 6, 1]],
+            [[1, 2, 3], [4, 5, 6]]
         ]).astype::<T>();
 
         // non-uniform stride and non-contiguous
@@ -147,15 +148,15 @@ test_for_common_numeric_dtypes!(
         // uniform stride but non-contiguous
         let slice = tensor.slice(s![.., .., 0]);
 
-        let correct = NdArray::scalar(2880).astype::<T>();
+        let correct = NdArray::scalar(11520).astype::<T>();
         let output = slice.product();
         assert_eq!(output, correct);
 
-        let correct = NdArray::new([2, 6, 12, 20]).astype::<T>();
+        let correct = NdArray::new([2, 6, 12, 20, 4]).astype::<T>();
         let output = slice.product_along([1]);
         assert_eq!(output, correct);
 
-        let correct = NdArray::new([24, 120]).astype::<T>();
+        let correct = NdArray::new([24, 480]).astype::<T>();
         let output = slice.product_along([0]);
         assert_eq!(output, correct);
     }
@@ -175,6 +176,26 @@ test_for_all_numeric_dtypes!(
     }
 );
 
+test_for_common_numeric_dtypes!(
+    test_reduce_min_big, {
+        let tensor = NdArray::new([12, 23, 3, 22, 4, 5, 1, 26, 3, 4, 51, 62, 0, 9, 1]).astype::<T>();
+        let output = tensor.min();
+        assert_eq!(output, NdArray::scalar(0).astype::<T>());
+
+        let tensor = NdArray::new([12, 2, 34, 28, 42, 54, 11, 2, 43, 4, 512, 6, 79, 91, 2, 3, 22]).astype::<T>();
+        let output = tensor.min();
+        assert_eq!(output, NdArray::scalar(2).astype::<T>());
+
+        let tensor = NdArray::new([1, 2, 3, 2, 4, 5, 1, 2, 3, 4, 5, 6, 2, 9, 2, 3, 2, 6, 2, 3]).astype::<T>();
+        let output = tensor.min();
+        assert_eq!(output, NdArray::scalar(1).astype::<T>());
+
+        let tensor = NdArray::new([1, 2, 3, 2, 4, 5, 1, 2, 3, 4, 1, 5, 0, 2, 2, 3, 2, 6, 2, 3, 3, 6, 4]).astype::<T>();
+        let output = tensor.min();
+        assert_eq!(output, NdArray::scalar(0).astype::<T>());
+    }
+);
+
 test_for_all_numeric_dtypes!(
     test_reduce_max, {
         let tensor = NdArray::new([[1, 3], [2, 4], [3, 5]]).astype::<T>();
@@ -189,13 +210,34 @@ test_for_all_numeric_dtypes!(
     }
 );
 
+test_for_common_numeric_dtypes!(
+    test_reduce_max_big, {
+        let tensor = NdArray::new([12, 23, 3, 22, 4, 5, 1, 26, 3, 4, 51, 62, 0, 9, 1]).astype::<T>();
+        let output = tensor.max();
+        assert_eq!(output, NdArray::scalar(62).astype::<T>());
+
+        let tensor = NdArray::new([12, 2, 34, 28, 42, 54, 11, 2, 43, 4, 512, 6, 79, 91, 2, 3, 22]).astype::<T>();
+        let output = tensor.max();
+        assert_eq!(output, NdArray::scalar(512).astype::<T>());
+
+        let tensor = NdArray::new([1, 2, 3, 2, 4, 5, 1, 2, 3, 4, 52, 6, 2, 9, 2, 3, 2, 6, 2, 3]).astype::<T>();
+        let output = tensor.max();
+        assert_eq!(output, NdArray::scalar(52).astype::<T>());
+
+        let tensor = NdArray::new([1, 2, 3, 2, 4, 5, 1, 2, 3, 4, 1, 5, 0, 200, 2, 3, 2, 6, 2, 3, 3, 6, 4]).astype::<T>();
+        let output = tensor.max();
+        assert_eq!(output, NdArray::scalar(200).astype::<T>());
+    }
+);
+
 test_for_signed_dtypes!(
     test_min_slice, {
         let tensor = NdArray::new([
             [[-1, 5, 36], [2, 9, -4]],
             [[12, 56, 47], [3, 8, -36]],
             [[23, -67, 5], [-4, 7, 2]],
-            [[-40, 80, 62], [5, 6, -90]]
+            [[-40, 80, 62], [5, 6, -90]],
+            [[-41, 8, 62], [50, 6, -92]]
         ]).astype::<T>();
 
         //  non-uniform stride and non-contiguous
@@ -212,15 +254,15 @@ test_for_signed_dtypes!(
         // uniform stride but non-contiguous
         let slice = tensor.slice(s![.., .., 0]);
 
-        let correct = NdArray::scalar(-40).astype::<T>();
+        let correct = NdArray::scalar(-41).astype::<T>();
         let output = slice.min();
         assert_eq!(output, correct);
 
-        let correct = NdArray::new([-1, 3, -4, -40]).astype::<T>();
+        let correct = NdArray::new([-1, 3, -4, -40, -41]).astype::<T>();
         let output = slice.min_along([1]);
         assert_eq!(output, correct);
 
-        let correct = NdArray::new([-40, -4]).astype::<T>();
+        let correct = NdArray::new([-41, -4]).astype::<T>();
         let output = slice.min_along([0]);
         assert_eq!(output, correct);
     }
@@ -232,7 +274,8 @@ test_for_signed_dtypes!(
             [[-1, 5, 36], [2, 9, -4]],
             [[12, 56, 47], [3, 8, -36]],
             [[23, -67, 5], [-4, 7, 2]],
-            [[-40, 80, 62], [5, 6, -90]]
+            [[-40, 80, 62], [5, 6, -90]],
+            [[-41, 8, 62], [50, 6, -92]]
         ]).astype::<T>();
 
         //  non-uniform stride and non-contiguous
@@ -249,15 +292,15 @@ test_for_signed_dtypes!(
         // uniform stride but non-contiguous
         let slice = tensor.slice(s![.., .., 0]);
 
-        let correct = NdArray::scalar(23).astype::<T>();
+        let correct = NdArray::scalar(50).astype::<T>();
         let output = slice.max();
         assert_eq!(output, correct);
 
-        let correct = NdArray::new([2, 12, 23, 5]).astype::<T>();
+        let correct = NdArray::new([2, 12, 23, 5, 50]).astype::<T>();
         let output = slice.max_along([1]);
         assert_eq!(output, correct);
 
-        let correct = NdArray::new([23, 5]).astype::<T>();
+        let correct = NdArray::new([23, 50]).astype::<T>();
         let output = slice.max_along([0]);
         assert_eq!(output, correct);
     }
@@ -309,6 +352,11 @@ test_for_signed_dtypes!(
             [[-40, -80, 62], [-45, 6, -90]]
         ]).astype::<T>();
 
+        // contiguous
+        let correct = NdArray::scalar(1).astype::<T>();
+        let output = tensor.min_magnitude();
+        assert_eq!(output, correct);
+
         // non-uniform stride and non-contiguous
         let slice = tensor.slice(s![1..3, .., 0..=1]);
 
@@ -345,6 +393,11 @@ test_for_signed_dtypes!(
             [[23, -67, 5], [-4, 7, 2]],
             [[-40, -80, 62], [-45, 6, -90]]
         ]).astype::<T>();
+
+        // contiguous
+        let correct = NdArray::scalar(90).astype::<T>();
+        let output = tensor.max_magnitude();
+        assert_eq!(output, correct);
         
         // non-uniform stride and non-contiguous
         let slice = tensor.slice(s![1..3, .., 0..=1]);

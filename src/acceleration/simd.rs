@@ -34,13 +34,17 @@ pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
 
 use num::traits::MulAdd;
 use num::{Bounded, One, Zero};
-#[cfg(neon_simd)]
-use std::arch::aarch64::*;
-use std::hint::assert_unchecked;
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 #[cfg(neon_simd)]
+use std::arch::aarch64::*;
+
+#[cfg(neon_simd)]
+use std::hint::assert_unchecked;
+
+#[cfg(neon_simd)]
 impl Simd for f32 {
+    
     const LANES: usize = 4;
     type SimdVec = float32x4_t;
 
