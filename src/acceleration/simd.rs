@@ -1,5 +1,5 @@
 pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
-+ MulAdd<Output=Self> + Add<Output=Self> + Mul<Output=Self>
++ MulAdd<Output=Self> + Add<Output=Self> + Sub<Output=Self> + Mul<Output=Self>
 + AddAssign + MulAssign
 {
     const LANES: usize;
@@ -14,6 +14,8 @@ pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
     unsafe fn simd_store(ptr: *mut Self, val: Self::SimdVec);
 
     unsafe fn simd_add(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec;
+
+    unsafe fn simd_sub(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec;
 
     unsafe fn simd_mul(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec;
 
@@ -34,7 +36,7 @@ pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
 
 use num::traits::MulAdd;
 use num::{Bounded, One, Zero};
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 #[cfg(neon_simd)]
 use std::arch::aarch64::*;
@@ -74,6 +76,10 @@ impl Simd for f32 {
 
     unsafe fn simd_add(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vaddq_f32(lhs, rhs)
+    }
+
+    unsafe fn simd_sub(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
+        vsubq_f32(lhs, rhs)   
     }
 
     unsafe fn simd_mul(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
@@ -139,6 +145,10 @@ impl Simd for f64 {
 
     unsafe fn simd_add(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vaddq_f64(lhs, rhs)
+    }
+
+    unsafe fn simd_sub(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
+        vsubq_f64(lhs, rhs)
     }
 
     unsafe fn simd_mul(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {

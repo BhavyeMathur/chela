@@ -38,6 +38,15 @@ extern "C" {
                               __N: vDSP_Length,
     );
 
+    // element-wise subtraction
+    pub(crate) fn vDSP_vsub(__A: *const c_float, __IA: isize,
+                            __B: *const c_float, __IB: isize,
+                            __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
+
+    pub(crate) fn vDSP_vsubD(__A: *const c_double, __IA: isize,
+                             __B: *const c_double, __IB: isize,
+                             __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
+
     
     // element-wise multiplication
     pub(crate) fn vDSP_vmul(__A: *const c_float, __IA: isize,

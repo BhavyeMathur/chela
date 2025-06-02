@@ -16,4 +16,4 @@ pub mod reduce_max_magnitude;
 pub mod binary_op;
 pub mod binary_op_addition;
 pub mod binary_op_multiplication;
-
+pub mod binary_op_subtraction;

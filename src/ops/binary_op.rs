@@ -1,4 +1,4 @@
-use std::ops::{BitAnd, BitOr, Div, Rem, Shl, Shr, Sub};
+use std::ops::{BitAnd, BitOr, Div, Rem, Shl, Shr};
 
 #[macro_export]
 macro_rules! impl_default_binary_op_trait {
@@ -159,7 +159,6 @@ macro_rules! define_binary_op_trait {
     }
 }
 
-pub(crate) trait BinaryOpSub: Sub<Output=Self> + Sized + Copy {}
 pub(crate) trait BinaryOpDiv: Div<Output=Self> + Sized + Copy {}
 pub(crate) trait BinaryOpRem: Rem<Output=Self> + Sized + Copy {}
 pub(crate) trait BinaryOpBitAnd: BitAnd<Output=Self> + Sized + Copy {}
@@ -167,10 +166,6 @@ pub(crate) trait BinaryOpBitOr: BitOr<Output=Self> + Sized + Copy {}
 pub(crate) trait BinaryOpShl: Shl<Output=Self> + Sized + Copy {}
 pub(crate) trait BinaryOpShr: Shr<Output=Self> + Sized + Copy {}
 
-impl_default_binary_op_trait!(BinaryOpSub,
-                              i8, i16, i32, i64, i128, isize,
-                              u8, u16, u32, u64, u128, usize,
-                              f32, f64);
 
 impl_default_binary_op_trait!(BinaryOpRem,
                               i8, i16, i32, i64, i128, isize,

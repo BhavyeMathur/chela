@@ -14,9 +14,10 @@ use rand::distributions::uniform::SampleUniform;
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Div, Neg, Sub, SubAssign};
-use crate::ops::binary_op::{BinaryOpDiv, BinaryOpSub};
+use crate::ops::binary_op::{BinaryOpDiv};
 use crate::ops::binary_op_addition::BinaryOpAdd;
 use crate::ops::binary_op_multiplication::BinaryOpMul;
+use crate::ops::binary_op_subtraction::BinaryOpSub;
 use crate::ops::fill::Fill;
 
 pub trait RawDataType: 'static + Default + Copy + Clone + Debug + Display + Sized
