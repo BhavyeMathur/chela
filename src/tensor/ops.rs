@@ -81,5 +81,4 @@ implement_binary_ops!(
     Sub, -, sub, SubBackwards, AddScalarBackwards;
     Mul, *, mul, MulBackwards, MulScalarBackwards;
     Div, /, div, DivBackwards, DivScalarBackwards;
-    // Rem, %, rem, RemBackwards;
 );

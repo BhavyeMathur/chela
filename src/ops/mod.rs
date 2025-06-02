@@ -13,4 +13,7 @@ pub mod reduce_max;
 pub mod reduce_min_magnitude;
 pub mod reduce_max_magnitude;
 
+pub mod binary_op;
 pub mod binary_op_addition;
+pub mod binary_op_multiplication;
+

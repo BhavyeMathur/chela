@@ -3,7 +3,7 @@ use std::env;
 
 use cpu_time::ProcessTime;
 
-const N: usize = 10000;
+const N: usize = 4096;
 type T = f32;
 
 

@@ -2,30 +2,33 @@ use crate::common::binary_ops::BinaryOps;
 use crate::{NdArray, RawDataType};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
-use paste::paste;
+use crate::ops::binary_op::*;
 use crate::ops::binary_op_addition::BinaryOpAdd;
+use crate::ops::binary_op_multiplication::BinaryOpMul;
+use paste::paste;
+
 
 macro_rules! implement_binary_ops {
-    ($object:ident, $($trait_: ident, $operator:tt, $method: ident;)* ) => { $(
-        impl<T: RawDataType + $trait_<Output=T>> $trait_<$object<'_, T>> for $object<'_, T> {
+    ($object:ident, $($trait_:ident, $binary_op_trait:ident, $operator:tt, $method: ident;)* ) => { $(
+        impl<T: RawDataType + $binary_op_trait> $trait_<$object<'_, T>> for $object<'_, T> {
             type Output = $object<'static, T>;
 
             fn $method(self, rhs: $object<T>) -> Self::Output { &self $operator &rhs }
         }
 
-        impl<T: RawDataType + $trait_<Output=T>> $trait_<&$object<'_, T>> for $object<'_, T> {
+        impl<T: RawDataType + $binary_op_trait> $trait_<&$object<'_, T>> for $object<'_, T> {
             type Output = $object<'static, T>;
 
             fn $method(self, rhs: &$object<T>) -> Self::Output { &self $operator rhs }
         }
         
-        impl<T: RawDataType + $trait_<Output=T>> $trait_<$object<'_, T>> for &$object<'_, T> {
+        impl<T: RawDataType + $binary_op_trait> $trait_<$object<'_, T>> for &$object<'_, T> {
             type Output = $object<'static, T>;
 
             fn $method(self, rhs: $object<T>) -> Self::Output { self $operator &rhs }
         }
 
-        impl<T: RawDataType + $trait_<Output=T>> $trait_<&$object<'_, T>> for &$object<'_, T> {
+        impl<T: RawDataType + $binary_op_trait> $trait_<&$object<'_, T>> for &$object<'_, T> {
             type Output = $object<'static, T>;
 
             fn $method(self, rhs: &$object<T>) -> Self::Output { <T as BinaryOps>::$method(self, rhs) }
@@ -56,51 +59,16 @@ macro_rules! implement_binary_ops {
     }
 }
 
+
 implement_binary_ops!(
     NdArray,
-    // Add, +, add;
-    Sub, -, sub;
-    Mul, *, mul;
-    Div, /, div;
-    Rem, %, rem;
-    BitAnd, &, bitand;
-    BitOr, |, bitor;
-    Shl, <<, shl;
-    Shr, >>, shr;
+    Add, BinaryOpAdd, +, add;
+    Sub, BinaryOpSub, -, sub;
+    Mul, BinaryOpMul, *, mul;
+    Div, BinaryOpDiv, /, div;
+    Rem, BinaryOpRem, %, rem;
+    BitAnd, BinaryOpBitAnd, &, bitand;
+    BitOr, BinaryOpBitOr, |, bitor;
+    Shl, BinaryOpShl, <<, shl;
+    Shr, BinaryOpShr, >>, shr;
 );
-
-impl<T: RawDataType + BinaryOpAdd> Add<NdArray<'_, T>> for NdArray<'_, T> {
-    type Output = NdArray<'static, T>;
-
-    fn add(self, rhs: NdArray<T>) -> Self::Output { &self + &rhs }
-}
-
-impl<T: RawDataType + BinaryOpAdd> Add<&NdArray<'_, T>> for NdArray<'_, T> {
-    type Output = NdArray<'static, T>;
-
-    fn add(self, rhs: &NdArray<T>) -> Self::Output { &self + rhs }
-}
-
-impl<T: RawDataType + BinaryOpAdd> Add<NdArray<'_, T>> for &NdArray<'_, T> {
-    type Output = NdArray<'static, T>;
-
-    fn add(self, rhs: NdArray<T>) -> Self::Output { self + &rhs }
-}
-
-impl<T: RawDataType + BinaryOpAdd> Add<&NdArray<'_, T>> for &NdArray<'_, T> {
-    type Output = NdArray<'static, T>;
-
-    fn add(self, rhs: &NdArray<T>) -> Self::Output { <T as BinaryOps>::add(self, rhs) }
-}
-
-impl<T: RawDataType + Add<Output=T>> Add<T> for NdArray<'_, T> {
-    type Output = NdArray<'static, T>;
-
-    fn add(self, rhs: T) -> Self::Output { &self + rhs }
-}
-
-impl<T: RawDataType + Add<Output=T>> Add<T> for &NdArray<'_, T> {
-    type Output = NdArray<'static, T>;
-
-    fn add(self, rhs: T) -> Self::Output { <T as BinaryOps>::add_scalar(self, rhs) }
-}

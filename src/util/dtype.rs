@@ -14,7 +14,9 @@ use rand::distributions::uniform::SampleUniform;
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Div, Neg, Sub, SubAssign};
+use crate::ops::binary_op::{BinaryOpDiv, BinaryOpSub};
 use crate::ops::binary_op_addition::BinaryOpAdd;
+use crate::ops::binary_op_multiplication::BinaryOpMul;
 use crate::ops::fill::Fill;
 
 pub trait RawDataType: 'static + Default + Copy + Clone + Debug + Display + Sized
@@ -43,7 +45,7 @@ impl RawDataType for bool {}
 pub trait NumericDataType: RawDataType + ToPrimitive + NumCast + From<bool>
 + Sum + Product + SubAssign + Sub<Output=Self> + Div<Output=Self> + MulAdd<Output=Self> + DotProduct
 + ReduceSum + ReduceProduct + ReduceMin + ReduceMax + ReduceMinMagnitude + ReduceMaxMagnitude
-+ BinaryOpAdd
++ BinaryOpAdd + BinaryOpSub + BinaryOpMul
 {
     type AsFloatType: FloatDataType;
 
@@ -149,7 +151,7 @@ impl IntegerDataType for i128 {}
 impl IntegerDataType for isize {}
 
 pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform + Neg<Output=Self>
-+ SumOfProductsType + MatrixOps {}
++ SumOfProductsType + MatrixOps + BinaryOpDiv {}
 
 impl FloatDataType for f32 {}
 impl FloatDataType for f64 {}

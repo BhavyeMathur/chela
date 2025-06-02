@@ -6,7 +6,7 @@ from perfprofiler import *
 NUMPY_DTYPE = np.float32
 TORCH_DTYPE = torch.float32
 
-N = 10000
+N = 4096
 
 
 class TensorBinaryOps(TimingSuite):
