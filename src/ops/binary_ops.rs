@@ -1,22 +1,15 @@
+use std::ptr::addr_of;
 use crate::collapse_contiguous::collapse_to_uniform_stride;
 use crate::flat_index_generator::FlatIndexGenerator;
 use paste::paste;
 use std::ops::{BitAnd, BitOr, Rem, Shl, Shr};
 
-#[macro_export]
-macro_rules! impl_default_binary_op_trait {
-    ($trait_name:ident, $($default_dtypes:ty),*) => {
-        $(
-            impl $trait_name for $default_dtypes {}
-        )*
-    };
-}
 
 #[macro_export]
 macro_rules! define_binary_op_trait {
     ($trait_name:ident, $required_trait:ident, $name:ident, $operator:tt; $($default_dtypes:ty),*) => {
         define_binary_op_trait!($trait_name, $required_trait, $name, $operator);
-        impl_default_binary_op_trait!($trait_name, $($default_dtypes),*);
+        impl_default_trait_for_dtypes!($trait_name, $($default_dtypes),*);
     };
 
     ($trait_name:ident, $required_trait:ident, $name:ident, $operator:tt) => {
@@ -139,6 +132,33 @@ macro_rules! define_binary_op_trait {
                     }
                 }
 
+                unsafe fn [<$name _scalar>](lhs: *const Self, lhs_shape: &[usize], lhs_stride: &[usize],
+                                            rhs: Self, dst: *mut Self) {
+                    // special case for scalar operands
+                    if lhs_stride.is_empty() {
+                        *dst = *lhs $operator rhs;
+                        return;
+                    }
+
+                    let rhs = addr_of!(rhs);
+
+                    let (lhs_shape, lhs_stride) = collapse_to_uniform_stride(lhs_shape, &lhs_stride);
+                    let lhs_dims = lhs_shape.len();
+                    let lhs_inner_stride = lhs_stride[lhs_dims - 1];
+
+                    if lhs_dims == 1 {
+                        if lhs_inner_stride == 1 {
+                            return Self::[<$name _stride_1_0>](lhs, rhs, dst, lhs_shape[0]);
+                        }
+                        else {
+                            return Self::[<$name _stride_n_0>](lhs, lhs_inner_stride, rhs, dst, lhs_shape[0]);
+                        }
+                    }
+
+                    let count = lhs_shape.iter().product();
+                    return Self::[<$name _nonunif_0>](lhs, &lhs_shape, &lhs_stride, rhs, dst, count);
+                }
+
                 unsafe fn $name(lhs: *const Self, lhs_stride: &[usize],
                                 rhs: *const Self, rhs_stride: &[usize],
                                 dst: *mut Self, shape: &[usize]) {
@@ -185,9 +205,9 @@ macro_rules! define_binary_op_trait {
                         if lhs_inner_stride == 1 {
                             return Self::[<$name _stride_1_n>](lhs, rhs, rhs_inner_stride, dst, lhs_shape[0]);
                         }
-                        // else if rhs_inner_stride == 1 {
-                        //     return Self::[<$name _stride_n_1>](lhs, lhs_inner_stride, rhs, dst, rhs_shape[0]);
-                        // }
+                        else if rhs_inner_stride == 1 {
+                            return Self::[<$name _stride_n_1>](lhs, lhs_inner_stride, rhs, dst, rhs_shape[0]);
+                        }
 
                         // neither element is contiguous
                         return Self::[<$name _stride_n_n>](lhs, lhs_inner_stride, rhs, rhs_inner_stride, dst, lhs_shape[0]);

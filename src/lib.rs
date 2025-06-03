@@ -4,6 +4,9 @@
 #![allow(clippy::new_ret_no_self)]
 #![allow(ambiguous_glob_reexports)]
 
+#[macro_use]
+pub mod macros;
+
 pub mod acceleration;
 
 pub mod ndarray;
@@ -22,6 +25,6 @@ pub mod util;
 pub use util::*;
 
 pub mod autograd;
-pub mod ops;
-
 pub use autograd::*;
+
+pub mod ops;

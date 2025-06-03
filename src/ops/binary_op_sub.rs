@@ -1,9 +1,10 @@
-use crate::{define_binary_op_trait, simd_binary_op_specializations};
 use crate::flat_index_generator::FlatIndexGenerator;
-use crate::impl_default_binary_op_trait;
+use crate::impl_default_trait_for_dtypes;
 use crate::ndarray::collapse_contiguous::collapse_to_uniform_stride;
+use crate::{define_binary_op_trait, simd_binary_op_specializations};
 use paste::paste;
 use std::ops::Sub;
+use std::ptr::addr_of;
 
 define_binary_op_trait!(BinaryOpSub, Sub, sub, -;
                         i8, i16, i32, i64, i128, isize,

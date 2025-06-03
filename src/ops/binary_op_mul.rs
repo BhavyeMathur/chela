@@ -1,9 +1,10 @@
-use crate::{impl_default_binary_op_trait, simd_binary_op_specializations};
 use crate::define_binary_op_trait;
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::ndarray::collapse_contiguous::collapse_to_uniform_stride;
+use crate::{impl_default_trait_for_dtypes, simd_binary_op_specializations};
 use paste::paste;
 use std::ops::Mul;
+use std::ptr::addr_of;
 
 define_binary_op_trait!(BinaryOpMul, Mul, mul, *;
                         i8, i16, i32, i64, i128, isize,
@@ -18,8 +19,8 @@ impl BinaryOpMul for f32 {
     }
 
     #[cfg(all(apple_vdsp, not(neon_simd)))]
-    unsafe fn mul_stride_0_n(lhs: *const Self, 
-                             rhs: *const Self, rhs_stride: usize, 
+    unsafe fn mul_stride_0_n(lhs: *const Self,
+                             rhs: *const Self, rhs_stride: usize,
                              dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_vsmul;
         vDSP_vsmul(rhs, rhs_stride as isize, lhs, dst, 1, count);

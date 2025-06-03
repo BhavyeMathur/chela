@@ -1,8 +1,9 @@
-use crate::{define_binary_op_trait, simd_binary_op_specializations};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::ndarray::collapse_contiguous::collapse_to_uniform_stride;
+use crate::{define_binary_op_trait, simd_binary_op_specializations};
 use paste::paste;
 use std::ops::Div;
+use std::ptr::addr_of;
 
 
 define_binary_op_trait!(BinaryOpDiv, Div, div, /);

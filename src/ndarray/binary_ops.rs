@@ -4,7 +4,7 @@ use crate::common::constructors::Constructors;
 use crate::{NdArray, RawDataType, StridedMemory};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
-use crate::ops::binary_op::*;
+use crate::ops::binary_ops::*;
 use crate::ops::binary_op_add::BinaryOpAdd;
 use crate::ops::binary_op_div::BinaryOpDiv;
 use crate::ops::binary_op_mul::BinaryOpMul;
@@ -45,25 +45,33 @@ macro_rules! implement_binary_ops {
                     <T as $binary_op_trait>::$method(self.ptr(), &lhs_stride,
                                                      rhs.ptr(), &rhs_stride,
                                                      data.as_mut_ptr(), &shape);
-                }
 
-                unsafe { NdArray::from_contiguous_owned_buffer(shape, data) }
+                    NdArray::from_contiguous_owned_buffer(shape, data)
+                }
             }
         }
         
-        impl<T: RawDataType + $binary_op<Output=T>> $binary_op<T> for NdArray<'_, T> {
+        impl<T: RawDataType + $binary_op_trait> $binary_op<T> for NdArray<'_, T> {
             type Output = NdArray<'static, T>;
 
             fn $method(self, rhs: T) -> Self::Output { paste! { &self $operator rhs } }
         }
 
-        impl<T: RawDataType + $binary_op<Output=T>> $binary_op<T> for &NdArray<'_, T> {
-            type Output = NdArray<'static, T>;
+        paste! {
+            impl<T: RawDataType + $binary_op_trait> $binary_op<T> for &NdArray<'_, T> {
+                type Output = NdArray<'static, T>;
 
-            fn $method(self, rhs: T) -> Self::Output { paste! {
-                let data = self.flatiter().map(|lhs| lhs $operator rhs).collect();
-                unsafe { NdArray::from_contiguous_owned_buffer(self.shape().to_vec(), data) }
-            } }
+                fn $method(self, rhs: T) -> Self::Output { paste! {
+                    let mut data = vec![T::default(); self.size()];
+
+                    unsafe {
+                        <T as $binary_op_trait>::[<$method _scalar>](self.ptr(), self.shape(), self.stride(),
+                                                                     rhs, data.as_mut_ptr());
+
+                        NdArray::from_contiguous_owned_buffer(self.shape().to_vec(), data)
+                    }
+                } }
+            }
         }
     )*};
 

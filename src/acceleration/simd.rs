@@ -4,7 +4,7 @@ pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
 {
     const LANES: usize;
     type SimdVec: Copy;
-    
+
     unsafe fn simd_vec_from_stride(ptr: *const Self, stride: usize) -> Self::SimdVec {
         if Self::LANES == 4 {
             let a = *ptr.add(0 * stride);
@@ -32,6 +32,8 @@ pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
     unsafe fn simd_load(ptr: *const Self) -> Self::SimdVec;
 
     unsafe fn simd_store(ptr: *mut Self, val: Self::SimdVec);
+
+    unsafe fn simd_neg(vec: Self::SimdVec) -> Self::SimdVec;
 
     unsafe fn simd_add(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec;
 
@@ -94,6 +96,10 @@ impl Simd for f32 {
 
     unsafe fn simd_store(ptr: *mut Self, val: Self::SimdVec) {
         vst1q_f32(ptr, val)
+    }
+
+    unsafe fn simd_neg(vec: Self::SimdVec) -> Self::SimdVec {
+        vnegq_f32(vec)
     }
 
     unsafe fn simd_add(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
@@ -167,6 +173,10 @@ impl Simd for f64 {
 
     unsafe fn simd_store(ptr: *mut Self, val: Self::SimdVec) {
         vst1q_f64(ptr, val)
+    }
+
+    unsafe fn simd_neg(vec: Self::SimdVec) -> Self::SimdVec {
+        vnegq_f64(vec)
     }
 
     unsafe fn simd_add(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {

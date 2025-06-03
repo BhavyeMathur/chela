@@ -11,6 +11,7 @@ use crate::ops::reduce_min::ReduceMin;
 use crate::ops::reduce_min_magnitude::ReduceMinMagnitude;
 use crate::ops::reduce_product::ReduceProduct;
 use crate::ops::reduce_sum::ReduceSum;
+use crate::ops::unary_ops::UnaryOps;
 use crate::sum_of_products::SumOfProductsType;
 use num::traits::MulAdd;
 use num::{Float, NumCast, ToPrimitive};
@@ -150,7 +151,7 @@ impl IntegerDataType for i128 {}
 impl IntegerDataType for isize {}
 
 pub trait FloatDataType: NumericDataType + Float + From<f32> + SampleUniform + Neg<Output=Self>
-+ SumOfProductsType + MatrixOps + BinaryOpDiv {}
++ SumOfProductsType + MatrixOps + BinaryOpDiv + UnaryOps {}
 
 impl FloatDataType for f32 {}
 impl FloatDataType for f64 {}

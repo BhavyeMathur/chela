@@ -95,22 +95,22 @@ fn test_reshape_requires_grad() {
     }
 }
 
-test_for_float_dtypes!(
- test_mean_requires_grad, {
-        for requires_grad in [false, true] {
-            let mut a = Tensor::<T>::zeros([4, 4, 2]);
-            a.set_requires_grad(requires_grad);
-            
-            // let b = a.mean();
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.mean_along(0);
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-        }
-    }
-);
+// test_for_float_dtypes!(
+//  test_mean_requires_grad, {
+//         for requires_grad in [false, true] {
+//             let mut a = Tensor::<T>::zeros([4, 4, 2]);
+//             a.set_requires_grad(requires_grad);
+
+// let b = a.mean();
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.mean_along(0);
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//         }
+//     }
+// );
 
 test_for_float_dtypes!(
  test_arithemtic_requires_grad, {
@@ -159,171 +159,171 @@ test_for_float_dtypes!(
     }
 );
 
-test_for_float_dtypes!(
- test_reduce_requires_grad, {
-        for requires_grad in [false, true] {
-            // let mut a = Tensor::<f32>::zeros([4, 4, 2]).astype::<T>();
-            // a.set_requires_grad(requires_grad);
-            //
-            // let b = a.sum();
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.sum_along(0);
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.min();
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.min_along(0);
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.max();
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.max_along(0);
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.product();
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.product_along(0);
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.min_magnitude();
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.min_magnitude_along(0);
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.max_magnitude();
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-            //
-            // let b = a.max_magnitude_along(0);
-            // assert_eq!(b.requires_grad(), requires_grad);
-            // assert!(!requires_grad || !b.is_leaf());
-        }
-    }
-);
+// test_for_float_dtypes!(
+//  test_reduce_requires_grad, {
+// for requires_grad in [false, true] {
+// let mut a = Tensor::<f32>::zeros([4, 4, 2]).astype::<T>();
+// a.set_requires_grad(requires_grad);
+//
+// let b = a.sum();
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.sum_along(0);
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.min();
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.min_along(0);
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.max();
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.max_along(0);
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.product();
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.product_along(0);
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.min_magnitude();
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.min_magnitude_along(0);
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.max_magnitude();
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//
+// let b = a.max_magnitude_along(0);
+// assert_eq!(b.requires_grad(), requires_grad);
+// assert!(!requires_grad || !b.is_leaf());
+//     }
+// }
+// );
 
 test_for_float_dtypes!(
- test_einsum_requires_grad, {
+    test_einsum_requires_grad, {
         // for requires_grad in [false, true] {
-        //     let mut a = Tensor::<f32>::zeros([4, 4, 2]).astype::<T>();
+        //     let mut a = Tensor::<T>::zeros([4, 4, 2]);
         //     a.set_requires_grad(requires_grad);
-        //
-        //     let mut b = Tensor::<f32>::zeros([4, 4]).astype::<T>();
-        //
+        // 
+        //     let mut b = Tensor::<T>::zeros([4, 4]);
+        // 
         //     let c = einsum([&a, &b], (["iij", "ii"], "ij"));
         //     assert_eq!(c.requires_grad(), requires_grad);
         //     assert!(!requires_grad || !c.is_leaf());
-        //
+        // 
         //     a.set_requires_grad(!requires_grad);
         //     b.set_requires_grad(requires_grad);
-        //
+        // 
         //     let c = einsum([&a, &b], (["iij", "ii"], "ij"));
         //     assert_eq!(c.requires_grad(), true);
         //     assert!(!c.is_leaf());
         // }
-        //
-        // let mut a = Tensor::<f32>::ones([4, 4]).astype::<T>();
-        // let mut b = Tensor::<f32>::ones([4, 4]).astype::<T>();
-        // let mut v = Tensor::<f32>::ones([4]).astype::<T>();
-
-        // let c = v.dot(&v);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        // // no requires grad
-        //
-        // let c = a.matmul(&b);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        // let c = b.matmul(&a);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        // let c = a.matmul(&v);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        // let c = b.matmul(&v);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        //
-        // // a requires grad
-        // a.set_requires_grad(true);
-        //
-        // let c = a.matmul(&b);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
-        //
-        // let c = b.matmul(&a);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
-        //
-        // let c = a.matmul(&v);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
-        //
-        // let c = b.matmul(&v);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        // // b requires grad
-        // a.set_requires_grad(false);
-        // b.set_requires_grad(true);
-        //
-        // let c = a.matmul(&b);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
-        //
-        // let c = b.matmul(&a);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
-        //
-        // let c = a.matmul(&v);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        // let c = b.matmul(&v);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
-        //
-        // // v requires grad
-        // b.set_requires_grad(false);
-        // v.set_requires_grad(true);
-        //
-        // let c = a.matmul(&b);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        // let c = b.matmul(&a);
-        // assert_eq!(c.requires_grad(), false);
-        // assert!(c.is_leaf());
-        //
-        // let c = a.matmul(&v);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
-        //
-        // let c = b.matmul(&v);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
-        //
-        // let c = v.dot(&v);
-        // assert_eq!(c.requires_grad(), true);
-        // assert!(!c.is_leaf());
+        
+        let mut a = Tensor::<T>::ones([4, 4]);
+        let mut b = Tensor::<T>::ones([4, 4]);
+        let mut v = Tensor::<T>::ones([4]);
+        
+        let c = v.dot(&v);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        // no requires grad
+        
+        let c = a.matmul(&b);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        let c = b.matmul(&a);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        let c = a.matmul(&v);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        let c = b.matmul(&v);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        
+        // a requires grad
+        a.set_requires_grad(true);
+        
+        let c = a.matmul(&b);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
+        
+        let c = b.matmul(&a);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
+        
+        let c = a.matmul(&v);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
+        
+        let c = b.matmul(&v);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        // b requires grad
+        a.set_requires_grad(false);
+        b.set_requires_grad(true);
+        
+        let c = a.matmul(&b);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
+        
+        let c = b.matmul(&a);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
+        
+        let c = a.matmul(&v);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        let c = b.matmul(&v);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
+        
+        // v requires grad
+        b.set_requires_grad(false);
+        v.set_requires_grad(true);
+        
+        let c = a.matmul(&b);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        let c = b.matmul(&a);
+        assert_eq!(c.requires_grad(), false);
+        assert!(c.is_leaf());
+        
+        let c = a.matmul(&v);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
+        
+        let c = b.matmul(&v);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
+        
+        let c = v.dot(&v);
+        assert_eq!(c.requires_grad(), true);
+        assert!(!c.is_leaf());
     }
 );

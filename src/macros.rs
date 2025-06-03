@@ -163,3 +163,12 @@ macro_rules! first_n_elements {
         &$arr[0..$n].try_into().unwrap()
     }};
 }
+
+#[macro_export]
+macro_rules! impl_default_trait_for_dtypes {
+    ($trait_name:ident, $($default_dtypes:ty),*) => {
+        $(
+            impl $trait_name for $default_dtypes {}
+        )*
+    };
+}
