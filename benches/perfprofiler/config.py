@@ -4,5 +4,5 @@ import numpy as np
 TORCH_DTYPE = torch.float32
 NUMPY_DTYPE = np.float32
 
-WARMUP = 5
-TRIALS = 15
+WARMUP = 2
+TRIALS = 10

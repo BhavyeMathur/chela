@@ -1,19 +1,9 @@
 use chela::*;
 use std::env;
-
 use chela::profiler::*;
 
 type T = i32;
 const K: usize = 4096;
-
-fn binary_ops10() {
-    let tensor1 = NdArray::<f32>::rand([K]).astype::<T>();
-    let tensor2 = NdArray::<f32>::rand([K]).astype::<T>();
-
-    let func = || { _ = &tensor1 + &tensor2; };
-    profile_func(func)
-}
-
 
 fn binary_ops0() {
     let tensor1 = NdArray::<f32>::rand([K]).astype::<T>();

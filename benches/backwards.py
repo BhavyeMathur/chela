@@ -60,6 +60,6 @@ class TensorBackwards1(TensorBackwardsTimingSuite):
 if __name__ == "__main__":
     results = profile_all([
         TensorBackwards0,
-        # TensorBackwards1
+        TensorBackwards1
     ])
     plot_barplot(results, "Autograd Backwards Benchmark", normalize="PyTorch CPU")

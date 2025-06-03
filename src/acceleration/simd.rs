@@ -5,6 +5,7 @@ pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
     const LANES: usize;
     type SimdVec: Copy;
 
+    #[inline(always)]
     unsafe fn simd_vec_from_stride(ptr: *const Self, stride: usize) -> Self::SimdVec {
         if Self::LANES == 4 {
             let a = *ptr.add(0 * stride);
@@ -109,6 +110,7 @@ impl Simd for f32 {
     #[cfg(not(neon_simd))]
     type SimdVec = bool;
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_from_array(vals: &[Self]) -> Self::SimdVec {
         assert_unchecked(vals.len() == Self::LANES);
@@ -122,77 +124,92 @@ impl Simd for f32 {
         vec
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_from_constant(val: Self) -> Self::SimdVec {
         vdupq_n_f32(val)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_load(ptr: *const Self) -> Self::SimdVec {
         vld1q_f32(ptr)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_store(ptr: *mut Self, val: Self::SimdVec) {
         vst1q_f32(ptr, val)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_neg(vec: Self::SimdVec) -> Self::SimdVec {
         vnegq_f32(vec)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_add(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vaddq_f32(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_sub(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vsubq_f32(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_mul(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vmulq_f32(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_div(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vdivq_f32(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_muladd(sum: Self::SimdVec, lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vfmaq_f32(sum, lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_min(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vminq_f32(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_max(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vmaxq_f32(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_horizontal_sum(val: Self::SimdVec) -> Self {
         vaddvq_f32(val)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_horizontal_mul(val: Self::SimdVec) -> Self {
         let tmp = vmul_f32(vget_low_f32(val), vget_high_f32(val));
         vget_lane_f32::<0>(tmp) * vget_lane_f32::<1>(tmp)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_horizontal_min(val: Self::SimdVec) -> Self {
         vminvq_f32(val)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_horizontal_max(val: Self::SimdVec) -> Self {
         vmaxvq_f32(val)
@@ -208,6 +225,7 @@ impl Simd for f64 {
     #[cfg(not(neon_simd))]
     type SimdVec = bool;
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_from_array(vals: &[Self]) -> Self::SimdVec {
         assert_unchecked(vals.len() == Self::LANES);
@@ -219,77 +237,92 @@ impl Simd for f64 {
         vec
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_from_constant(val: Self) -> Self::SimdVec {
         vdupq_n_f64(val)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_load(ptr: *const Self) -> Self::SimdVec {
         vld1q_f64(ptr)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_store(ptr: *mut Self, val: Self::SimdVec) {
         vst1q_f64(ptr, val)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_neg(vec: Self::SimdVec) -> Self::SimdVec {
         vnegq_f64(vec)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_add(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vaddq_f64(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_sub(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vsubq_f64(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_mul(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vmulq_f64(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_div(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vdivq_f64(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_muladd(sum: Self::SimdVec, lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vfmaq_f64(sum, lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_min(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vminq_f64(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_max(lhs: Self::SimdVec, rhs: Self::SimdVec) -> Self::SimdVec {
         vmaxq_f64(lhs, rhs)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_horizontal_sum(val: Self::SimdVec) -> Self {
         vaddvq_f64(val)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_horizontal_mul(val: Self::SimdVec) -> Self {
         let tmp = vmul_f64(vget_low_f64(val), vget_high_f64(val));
         vget_lane_f64::<0>(tmp)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_horizontal_min(val: Self::SimdVec) -> Self {
         vminvq_f64(val)
     }
 
+    #[inline(always)]
     #[cfg(neon_simd)]
     unsafe fn simd_horizontal_max(val: Self::SimdVec) -> Self {
         vmaxvq_f64(val)
