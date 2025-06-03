@@ -20,7 +20,7 @@ impl<T: TensorDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
     ///
     /// - `grad`: the gradient of the function being differentiated with respect to `self`.
     fn backward(&mut self, grad: &NdArray<T>) {
-        self.gradient += grad;
+        self.gradient = &self.gradient + grad;
     }
 
     fn gradient(&self) -> Option<NdArray<T>> {
