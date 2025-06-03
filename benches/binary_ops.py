@@ -15,7 +15,7 @@ class TensorBinaryOps(TimingSuite):
     tensors: list
     ndarrays: list[np.ndarray]
 
-    operation = "Addition"
+    operation = "Subtraction"
 
     def __init__(self, shapes, slices=None):
         self.ndarrays = rand_ndarrays_with_shape(shapes, slices=slices, dtype=NUMPY_DTYPE)
@@ -27,11 +27,11 @@ class TensorBinaryOps(TimingSuite):
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        _ = self.tensors[0] + self.tensors[1]
+        _ = self.tensors[0] - self.tensors[1]
 
     @measure_performance("NumPy")
     def run(self):
-        _ = self.ndarrays[0] + self.ndarrays[1]
+        _ = self.ndarrays[0] - self.ndarrays[1]
 
 
 class TensorBinaryOps0(TensorBinaryOps):
@@ -110,4 +110,4 @@ if __name__ == "__main__":
         TensorBinaryOps6,
         TensorBinaryOps7
     ], n=20)
-    plot_barplot(results, f"{TensorBinaryOps.operation} Benchmark", normalize="NumPy")
+    plot_barplot(results, f"{TensorBinaryOps.operation} Benchmark ({N=})", normalize="NumPy")

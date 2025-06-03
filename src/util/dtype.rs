@@ -1,6 +1,10 @@
-use crate::common::binary_ops::BinaryOps;
 use crate::linalg::matrix_ops::MatrixOps;
+use crate::ops::binary_op_add::BinaryOpAdd;
+use crate::ops::binary_op_div::BinaryOpDiv;
+use crate::ops::binary_op_mul::BinaryOpMul;
+use crate::ops::binary_op_sub::BinaryOpSub;
 use crate::ops::dot_product::DotProduct;
+use crate::ops::fill::Fill;
 use crate::ops::reduce_max::ReduceMax;
 use crate::ops::reduce_max_magnitude::ReduceMaxMagnitude;
 use crate::ops::reduce_min::ReduceMin;
@@ -8,21 +12,15 @@ use crate::ops::reduce_min_magnitude::ReduceMinMagnitude;
 use crate::ops::reduce_product::ReduceProduct;
 use crate::ops::reduce_sum::ReduceSum;
 use crate::sum_of_products::SumOfProductsType;
-use num::traits::{MulAdd};
+use num::traits::MulAdd;
 use num::{Float, NumCast, ToPrimitive};
 use rand::distributions::uniform::SampleUniform;
 use std::fmt::{Debug, Display};
 use std::iter::{Product, Sum};
 use std::ops::{Div, Neg, Sub, SubAssign};
-use crate::ops::binary_op_add::BinaryOpAdd;
-use crate::ops::binary_op_div::BinaryOpDiv;
-use crate::ops::binary_op_mul::BinaryOpMul;
-use crate::ops::binary_op_sub::BinaryOpSub;
-use crate::ops::fill::Fill;
 
 pub trait RawDataType: 'static + Default + Copy + Clone + Debug + Display + Sized
-+ PartialEq + BinaryOps + Fill
-+ Send + Sync {}
++ PartialEq + Fill + Send + Sync {}
 
 impl RawDataType for u8 {}
 impl RawDataType for u16 {}

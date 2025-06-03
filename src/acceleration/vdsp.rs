@@ -24,12 +24,12 @@ extern "C" {
                              __C: *mut c_int, __IC: vDSP_Stride, __N: vDSP_Length);
 
     // element-wise subtraction
-    pub(crate) fn vDSP_vsub(__A: *const c_float, __IA: isize,
-                            __B: *const c_float, __IB: isize,
+    pub(crate) fn vDSP_vsub(__B: *const c_float, __IB: isize,
+                            __A: *const c_float, __IA: isize,
                             __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
 
-    pub(crate) fn vDSP_vsubD(__A: *const c_double, __IA: isize,
-                             __B: *const c_double, __IB: isize,
+    pub(crate) fn vDSP_vsubD(__B: *const c_double, __IB: isize,
+                             __A: *const c_double, __IA: isize,
                              __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
 
 
@@ -44,16 +44,16 @@ extern "C" {
 
 
     // element-wise division
-    pub(crate) fn vDSP_vdiv(__A: *const c_float, __IA: isize,
-                            __B: *const c_float, __IB: isize,
+    pub(crate) fn vDSP_vdiv(__B: *const c_float, __IB: isize,
+                            __A: *const c_float, __IA: isize,
                             __C: *mut c_float, __IC: vDSP_Stride, __N: vDSP_Length);
 
-    pub(crate) fn vDSP_vdivD(__A: *const c_double, __IA: isize,
-                             __B: *const c_double, __IB: isize,
+    pub(crate) fn vDSP_vdivD(__B: *const c_double, __IB: isize,
+                             __A: *const c_double, __IA: isize,
                              __C: *mut c_double, __IC: vDSP_Stride, __N: vDSP_Length);
 
-    pub(crate) fn vDSP_vdivi(__A: *const c_int, __IA: isize,
-                             __B: *const c_int, __IB: isize,
+    pub(crate) fn vDSP_vdivi(__B: *const c_int, __IB: isize,
+                             __A: *const c_int, __IA: isize,
                              __C: *mut c_int, __IC: vDSP_Stride, __N: vDSP_Length);
 
 

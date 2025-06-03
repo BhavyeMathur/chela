@@ -39,3 +39,4 @@ overflow-checks = false
 [features]
 default = []
 apple_accelerate = []
+neon_simd = []

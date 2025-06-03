@@ -12,7 +12,7 @@ fn binary_ops0() -> u128 {
     let tensor2 = NdArray::<f32>::rand([N]).astype::<T>();
 
     let start = ProcessTime::now();
-    _ = tensor1 + tensor2;
+    _ = tensor1 - tensor2;
     start.elapsed().as_nanos()
 }
 
@@ -21,7 +21,7 @@ fn binary_ops1() -> u128 {
     let tensor2 = NdArray::<f32>::rand([1]).astype::<T>();
 
     let start = ProcessTime::now();
-    _ = tensor1 + tensor2;
+    _ = tensor1 - tensor2;
     start.elapsed().as_nanos()
 }
 
@@ -32,7 +32,7 @@ fn binary_ops2() -> u128 {
     let tensor2 = NdArray::<f32>::rand([N]).astype::<T>();
 
     let start = ProcessTime::now();
-    _ = tensor1 + tensor2;
+    _ = tensor1 - tensor2;
     start.elapsed().as_nanos()
 }
 
@@ -44,7 +44,7 @@ fn binary_ops3() -> u128 {
     let tensor2 = NdArray::<f32>::rand([1]).astype::<T>();
 
     let start = ProcessTime::now();
-    _ = tensor1 + tensor2;
+    _ = tensor1 - tensor2;
     start.elapsed().as_nanos()
 }
 
@@ -55,7 +55,7 @@ fn binary_ops4() -> u128 {
     let tensor2 = NdArray::<f32>::rand([N, 2]).astype::<T>();
 
     let start = ProcessTime::now();
-    _ = tensor1 + tensor2;
+    _ = tensor1 - tensor2;
     start.elapsed().as_nanos()
 }
 
@@ -66,7 +66,7 @@ fn binary_ops5() -> u128 {
     let tensor2 = NdArray::<f32>::rand([1]).astype::<T>();
 
     let start = ProcessTime::now();
-    _ = tensor1 + tensor2;
+    _ = tensor1 - tensor2;
     start.elapsed().as_nanos()
 }
 
@@ -78,7 +78,7 @@ fn binary_ops6() -> u128 {
     let tensor2 = tensor2.slice_along(Axis(-1), 0);
 
     let start = ProcessTime::now();
-    _ = tensor1 + tensor2;
+    _ = tensor1 - tensor2;
     start.elapsed().as_nanos()
 }
 
@@ -90,7 +90,7 @@ fn binary_ops7() -> u128 {
     let tensor2 = tensor2.slice_along(Axis(-1), 0..2);
 
     let start = ProcessTime::now();
-    _ = tensor1 + tensor2;
+    _ = tensor1 - tensor2;
     start.elapsed().as_nanos()
 }
 

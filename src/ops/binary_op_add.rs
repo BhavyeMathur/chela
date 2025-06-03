@@ -17,7 +17,7 @@ impl BinaryOpAdd for f32 {
         vDSP_vsadd(lhs, lhs_stride as isize, rhs, dst, 1, count);
     }
 
-    #[cfg(all(neon_simd, not(apple_vdsp)))]
+    #[cfg(neon_simd)]
     unsafe fn add_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
         use crate::ops::simd_binary_ops::SimdBinaryOps;
         Self::simd_add_stride_1_1(lhs, rhs, dst, count);
@@ -40,7 +40,7 @@ impl BinaryOpAdd for f64 {
         vDSP_vsaddD(lhs, lhs_stride as isize, rhs, dst, 1, count);
     }
 
-    #[cfg(all(neon_simd, not(apple_vdsp)))]
+    #[cfg(neon_simd)]
     unsafe fn add_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
         use crate::ops::simd_binary_ops::SimdBinaryOps;
         Self::simd_add_stride_1_1(lhs, rhs, dst, count);

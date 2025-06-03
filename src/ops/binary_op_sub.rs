@@ -10,7 +10,7 @@ define_binary_op_trait!(BinaryOpSub, Sub, sub, -;
                         u8, u16, u32, u64, u128, usize);
 
 impl BinaryOpSub for f32 {
-    #[cfg(all(neon_simd, not(apple_vdsp)))]
+    #[cfg(neon_simd)]
     unsafe fn sub_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
         use crate::ops::simd_binary_ops::SimdBinaryOps;
         Self::simd_sub_stride_1_1(lhs, rhs, dst, count);
@@ -21,12 +21,12 @@ impl BinaryOpSub for f32 {
                              rhs: *const Self, rhs_stride: usize,
                              dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_vsub;
-        vDSP_vsub(lhs, lhs_stride as isize, rhs, rhs_stride as isize, dst, 1, count);
+        vDSP_vsub(rhs, rhs_stride as isize, lhs, lhs_stride as isize, dst, 1, count);
     }
 }
 
 impl BinaryOpSub for f64 {
-    #[cfg(all(neon_simd, not(apple_vdsp)))]
+    #[cfg(neon_simd)]
     unsafe fn sub_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
         use crate::ops::simd_binary_ops::SimdBinaryOps;
         Self::simd_sub_stride_1_1(lhs, rhs, dst, count);
@@ -37,6 +37,6 @@ impl BinaryOpSub for f64 {
                              rhs: *const Self, rhs_stride: usize,
                              dst: *mut Self, count: usize) {
         use crate::acceleration::vdsp::vDSP_vsubD;
-        vDSP_vsubD(lhs, lhs_stride as isize, rhs, rhs_stride as isize, dst, 1, count);
+        vDSP_vsubD(rhs, rhs_stride as isize, lhs, lhs_stride as isize, dst, 1, count);
     }
 }

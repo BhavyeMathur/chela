@@ -1,3 +1,6 @@
+use crate::collapse_contiguous::collapse_to_uniform_stride;
+use crate::flat_index_generator::FlatIndexGenerator;
+use paste::paste;
 use std::ops::{BitAnd, BitOr, Rem, Shl, Shr};
 
 #[macro_export]
@@ -21,8 +24,13 @@ macro_rules! define_binary_op_trait {
             pub(crate) trait $trait_name: $required_trait<Output=Self> + Sized + Copy {
                 unsafe fn [<$name _stride_n_0>](lhs: *const Self, lhs_stride: usize,
                                                 rhs: *const Self, dst: *mut Self, count: usize) {
-                    // TODO SIMD kernel for this
                     Self::[<$name _stride_n_n>](lhs, lhs_stride, rhs, 0, dst, count)
+                }
+
+                unsafe fn [<$name _stride_0_n>](lhs: *const Self,
+                                                rhs: *const Self, rhs_stride: usize,
+                                                dst: *mut Self, count: usize) {
+                    Self::[<$name _stride_n_n>](lhs, 0, rhs, rhs_stride, dst, count)
                 }
 
                 unsafe fn [<$name _stride_n_1>](lhs: *const Self, lhs_stride: usize,
@@ -30,6 +38,7 @@ macro_rules! define_binary_op_trait {
                     Self::[<$name _stride_n_n>](lhs, lhs_stride, rhs, 1, dst, count)
                 }
 
+                #[inline(never)]
                 unsafe fn [<$name _stride_1_1>](lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
                     Self::[<$name _stride_n_n>](lhs, 1, rhs, 1, dst, count)
                 }
@@ -53,10 +62,22 @@ macro_rules! define_binary_op_trait {
                     Self::[<$name _nonunif_n>](lhs, lhs_shape, lhs_stride, rhs, 0, dst, count)
                 }
 
+                unsafe fn [<$name _0_nonunif>](lhs: *const Self,
+                                               rhs: *const Self, rhs_shape: &[usize], rhs_stride: &[usize],
+                                               dst: *mut Self, count: usize) {
+                    Self::[<$name _n_nonunif>](lhs, 0, rhs, rhs_shape, rhs_stride, dst, count)
+                }
+
                 unsafe fn [<$name _nonunif_1>](lhs: *const Self, lhs_shape: &[usize], lhs_stride: &[usize],
                                                rhs: *const Self,
                                                dst: *mut Self, count: usize) {
                     Self::[<$name _nonunif_n>](lhs, lhs_shape, lhs_stride, rhs, 1, dst, count)
+                }
+
+                unsafe fn [<$name _1_nonunif>](lhs: *const Self,
+                                               rhs: *const Self, rhs_shape: &[usize], rhs_stride: &[usize],
+                                               dst: *mut Self, count: usize) {
+                    Self::[<$name _n_nonunif>](lhs, 1, rhs, rhs_shape, rhs_stride, dst, count)
                 }
 
                 unsafe fn [<$name _nonunif_n>](lhs: *const Self, lhs_shape: &[usize], lhs_stride: &[usize],
@@ -71,6 +92,21 @@ macro_rules! define_binary_op_trait {
                         count -= 1;
                         dst = dst.add(1);
                         rhs = rhs.add(rhs_stride);
+                    }
+                }
+
+                unsafe fn [<$name _n_nonunif>](mut lhs: *const Self, lhs_stride: usize,
+                                               rhs: *const Self, rhs_shape: &[usize], rhs_stride: &[usize],
+                                               mut dst: *mut Self, mut count: usize) {
+                    let mut rhs_indices = FlatIndexGenerator::from(rhs_shape, rhs_stride);
+
+                    while count != 0 {
+                        let rhs_index = rhs_indices.next().unwrap_unchecked();
+                        *dst = *lhs $operator *rhs.add(rhs_index);
+
+                        count -= 1;
+                        dst = dst.add(1);
+                        lhs = lhs.add(lhs_stride);
                     }
                 }
 
@@ -110,8 +146,7 @@ macro_rules! define_binary_op_trait {
                         if rhs_inner_stride == 0 {
                             return Self::[<$name _stride_n_0>](lhs, lhs_inner_stride, rhs, dst, lhs_shape[0]);
                         } else if lhs_inner_stride == 0 {
-                            // TODO shouldn't this only work if the operation is commutative?
-                            return Self::[<$name _stride_n_0>](rhs, rhs_inner_stride, lhs, dst, lhs_shape[0]);
+                            return Self::[<$name _stride_0_n>](lhs, rhs, rhs_inner_stride, dst, rhs_shape[0]);
                         }
 
                         // both operands are contiguous
@@ -128,18 +163,18 @@ macro_rules! define_binary_op_trait {
                         return Self::[<$name _nonunif_0>](lhs, &lhs_shape, &lhs_stride,
                                                           rhs, dst, rhs_shape[0]);
                     } else if lhs_dims == 1 && lhs_inner_stride == 0 {
-                        // TODO shouldn't this only work if the operation is commutative?
-                        return Self::[<$name _nonunif_0>](rhs, &rhs_shape, &rhs_stride,
-                                                          lhs, dst, lhs_shape[0]);
+                        return Self::[<$name _0_nonunif>](lhs,
+                                                          rhs, &rhs_shape, &rhs_stride,
+                                                          dst, lhs_shape[0]);
                     }
 
                     if rhs_dims == 1 && rhs_inner_stride == 1 {
                         return Self::[<$name _nonunif_1>](lhs, &lhs_shape, &lhs_stride,
                                                           rhs, dst, rhs_shape[0]);
                     } else if lhs_dims == 1 && lhs_inner_stride == 1 {
-                        // TODO shouldn't this only work if the operation is commutative?
-                        return Self::[<$name _nonunif_1>](rhs, &rhs_shape, &rhs_stride,
-                                                          lhs, dst, lhs_shape[0]);
+                        return Self::[<$name _1_nonunif>](lhs,
+                                                          rhs, &rhs_shape, &rhs_stride,
+                                                          dst, lhs_shape[0]);
                     }
 
                     if rhs_dims == 1 {
@@ -147,9 +182,8 @@ macro_rules! define_binary_op_trait {
                                                           rhs, rhs_inner_stride,
                                                           dst, rhs_shape[0]);
                     } else if lhs_dims == 1 {
-                        // TODO shouldn't this only work if the operation is commutative?
-                        return Self::[<$name _nonunif_n>](rhs, &rhs_shape, &rhs_stride,
-                                                          lhs, lhs_inner_stride,
+                        return Self::[<$name _n_nonunif>](lhs, lhs_inner_stride,
+                                                          rhs, &rhs_shape, &rhs_stride,
                                                           dst, lhs_shape[0]);
                     }
 
@@ -163,30 +197,23 @@ macro_rules! define_binary_op_trait {
     }
 }
 
-pub(crate) trait BinaryOpRem: Rem<Output=Self> + Sized + Copy {}
-pub(crate) trait BinaryOpBitAnd: BitAnd<Output=Self> + Sized + Copy {}
-pub(crate) trait BinaryOpBitOr: BitOr<Output=Self> + Sized + Copy {}
-pub(crate) trait BinaryOpShl: Shl<Output=Self> + Sized + Copy {}
-pub(crate) trait BinaryOpShr: Shr<Output=Self> + Sized + Copy {}
+define_binary_op_trait!(BinaryOpRem, Rem, rem, %;
+                        i8, i16, i32, i64, i128, isize,
+                        u8, u16, u32, u64, u128, usize,
+                        f32, f64);
 
+define_binary_op_trait!(BinaryOpBitAnd, BitAnd, bitand, &;
+                        i8, i16, i32, i64, i128, isize,
+                        u8, u16, u32, u64, u128, usize);
 
-impl_default_binary_op_trait!(BinaryOpRem,
-                              i8, i16, i32, i64, i128, isize,
-                              u8, u16, u32, u64, u128, usize,
-                              f32, f64);
+define_binary_op_trait!(BinaryOpBitOr, BitOr, bitor, |;
+                        i8, i16, i32, i64, i128, isize,
+                        u8, u16, u32, u64, u128, usize);
 
-impl_default_binary_op_trait!(BinaryOpBitAnd,
-                              i8, i16, i32, i64, i128, isize,
-                              u8, u16, u32, u64, u128, usize);
+define_binary_op_trait!(BinaryOpShl, Shl, shl, <<;
+                        i8, i16, i32, i64, i128, isize,
+                        u8, u16, u32, u64, u128, usize);
 
-impl_default_binary_op_trait!(BinaryOpBitOr,
-                              i8, i16, i32, i64, i128, isize,
-                              u8, u16, u32, u64, u128, usize);
-
-impl_default_binary_op_trait!(BinaryOpShl,
-                              i8, i16, i32, i64, i128, isize,
-                              u8, u16, u32, u64, u128, usize);
-
-impl_default_binary_op_trait!(BinaryOpShr,
-                              i8, i16, i32, i64, i128, isize,
-                              u8, u16, u32, u64, u128, usize);
+define_binary_op_trait!(BinaryOpShr, Shr, shr, >>;
+                        i8, i16, i32, i64, i128, isize,
+                        u8, u16, u32, u64, u128, usize);

@@ -436,7 +436,7 @@ test_for_common_numeric_dtypes!(
             let tensor1 = tensor1.slice_along(Axis(-1), 0..2);
 
             let correct: Vec<T> = tensor1.flatiter().map(|lhs| lhs * five).collect();
-            let correct = NdArray::new(correct).reshape([n, 2]);;
+            let correct = NdArray::new(correct).reshape([n, 2]);
 
             assert_almost_eq!(&tensor1 * &tensor2, correct);
             assert_almost_eq!(&tensor2 * &tensor1, correct);
@@ -573,7 +573,7 @@ test_for_float_dtypes!(
             let tensor1 = tensor1.slice_along(Axis(-1), 0..2);
 
             let correct: Vec<T> = tensor1.flatiter().map(|lhs| lhs / five).collect();
-            let correct = NdArray::new(correct).reshape([n, 2]);;
+            let correct = NdArray::new(correct).reshape([n, 2]);
 
             assert_almost_eq!(&tensor1 / &tensor2, correct);
             assert_almost_eq!(&tensor2 / &tensor1, &one / &correct);

@@ -52,6 +52,7 @@ pub(crate) trait SimdBinaryOps: Simd {
     simd_operation_stride_1_1!(add, simd_add, +);
     simd_operation_stride_1_1!(sub, simd_sub, -);
     simd_operation_stride_1_1!(mul, simd_mul, *);
+    simd_operation_stride_1_1!(div, simd_div, /);
 }
 
 impl<T: Simd> SimdBinaryOps for T {}

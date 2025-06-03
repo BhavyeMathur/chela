@@ -1,50 +1,69 @@
-use crate::common::binary_ops::BinaryOps;
-use crate::{NdArray, RawDataType};
+use crate::broadcast::broadcast_shapes;
+use crate::broadcast::broadcast_stride;
+use crate::common::constructors::Constructors;
+use crate::{NdArray, RawDataType, StridedMemory};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Shl, Shr, Sub};
 
 use crate::ops::binary_op::*;
 use crate::ops::binary_op_add::BinaryOpAdd;
+use crate::ops::binary_op_div::BinaryOpDiv;
 use crate::ops::binary_op_mul::BinaryOpMul;
 use crate::ops::binary_op_sub::BinaryOpSub;
 use paste::paste;
-use crate::ops::binary_op_div::BinaryOpDiv;
 
 macro_rules! implement_binary_ops {
-    ($object:ident, $($trait_:ident, $binary_op_trait:ident, $operator:tt, $method: ident;)* ) => { $(
-        impl<T: RawDataType + $binary_op_trait> $trait_<$object<'_, T>> for $object<'_, T> {
-            type Output = $object<'static, T>;
+    ($($binary_op:ident, $binary_op_trait:ident, $operator:tt, $method: ident;)* ) => { $(
+        impl<T: RawDataType + $binary_op_trait> $binary_op<NdArray<'_, T>> for NdArray<'_, T> {
+            type Output = NdArray<'static, T>;
 
-            fn $method(self, rhs: $object<T>) -> Self::Output { &self $operator &rhs }
+            fn $method(self, rhs: NdArray<T>) -> Self::Output { &self $operator &rhs }
         }
 
-        impl<T: RawDataType + $binary_op_trait> $trait_<&$object<'_, T>> for $object<'_, T> {
-            type Output = $object<'static, T>;
+        impl<T: RawDataType + $binary_op_trait> $binary_op<&NdArray<'_, T>> for NdArray<'_, T> {
+            type Output = NdArray<'static, T>;
 
-            fn $method(self, rhs: &$object<T>) -> Self::Output { &self $operator rhs }
-        }
-        
-        impl<T: RawDataType + $binary_op_trait> $trait_<$object<'_, T>> for &$object<'_, T> {
-            type Output = $object<'static, T>;
-
-            fn $method(self, rhs: $object<T>) -> Self::Output { self $operator &rhs }
-        }
-
-        impl<T: RawDataType + $binary_op_trait> $trait_<&$object<'_, T>> for &$object<'_, T> {
-            type Output = $object<'static, T>;
-
-            fn $method(self, rhs: &$object<T>) -> Self::Output { <T as BinaryOps>::$method(self, rhs) }
+            fn $method(self, rhs: &NdArray<T>) -> Self::Output { &self $operator rhs }
         }
         
-        impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for $object<'_, T> {
-            type Output = $object<'static, T>;
+        impl<T: RawDataType + $binary_op_trait> $binary_op<NdArray<'_, T>> for &NdArray<'_, T> {
+            type Output = NdArray<'static, T>;
+
+            fn $method(self, rhs: NdArray<T>) -> Self::Output { self $operator &rhs }
+        }
+
+        impl<T: RawDataType + $binary_op_trait> $binary_op<&NdArray<'_, T>> for &NdArray<'_, T> {
+            type Output = NdArray<'static, T>;
+
+            fn $method(self, rhs: &NdArray<T>) -> Self::Output {
+                let shape = broadcast_shapes(self.shape(), rhs.shape());
+                let lhs_stride = broadcast_stride(self.stride(), &shape, self.shape());
+                let rhs_stride = broadcast_stride(rhs.stride(), &shape, rhs.shape());
+
+                let mut data = vec![T::default(); shape.iter().product()];
+
+                unsafe {
+                    <T as $binary_op_trait>::$method(self.ptr(), &lhs_stride,
+                                                     rhs.ptr(), &rhs_stride,
+                                                     data.as_mut_ptr(), &shape);
+                }
+
+                unsafe { NdArray::from_contiguous_owned_buffer(shape, data) }
+            }
+        }
+        
+        impl<T: RawDataType + $binary_op<Output=T>> $binary_op<T> for NdArray<'_, T> {
+            type Output = NdArray<'static, T>;
 
             fn $method(self, rhs: T) -> Self::Output { paste! { &self $operator rhs } }
         }
 
-        impl<T: RawDataType + $trait_<Output=T>> $trait_<T> for &$object<'_, T> {
-            type Output = $object<'static, T>;
+        impl<T: RawDataType + $binary_op<Output=T>> $binary_op<T> for &NdArray<'_, T> {
+            type Output = NdArray<'static, T>;
 
-            fn $method(self, rhs: T) -> Self::Output { paste! { <T as BinaryOps>::[<$method _scalar>](self, rhs) } }
+            fn $method(self, rhs: T) -> Self::Output { paste! {
+                let data = self.flatiter().map(|lhs| lhs $operator rhs).collect();
+                unsafe { NdArray::from_contiguous_owned_buffer(self.shape().to_vec(), data) }
+            } }
         }
     )*};
 
@@ -62,7 +81,6 @@ macro_rules! implement_binary_ops {
 
 
 implement_binary_ops!(
-    NdArray,
     Add, BinaryOpAdd, +, add;
     Sub, BinaryOpSub, -, sub;
     Mul, BinaryOpMul, *, mul;
