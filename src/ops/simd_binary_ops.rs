@@ -326,14 +326,14 @@ macro_rules! simd_binary_op_specializations {
             #[cfg(neon_simd)]
             unsafe fn [<$name _stride_0_1>](lhs: *const Self, rhs: *const Self,
                                             dst: *mut Self, count: usize) {
-                use crate::ops::simd_binary_ops::SimdBinaryOps;
+                use $crate::ops::simd_binary_ops::SimdBinaryOps;
                 Self::[<simd_ $name _stride_0_1>](lhs, rhs, dst, count);
             }
 
             #[cfg(neon_simd)]
             unsafe fn [<$name _stride_1_0>](lhs: *const Self, rhs: *const Self,
                                             dst: *mut Self, count: usize) {
-                use crate::ops::simd_binary_ops::SimdBinaryOps;
+                use $crate::ops::simd_binary_ops::SimdBinaryOps;
                 Self::[<simd_ $name _stride_1_0>](lhs, rhs, dst, count);
             }
 
@@ -341,7 +341,7 @@ macro_rules! simd_binary_op_specializations {
             unsafe fn [<$name _stride_0_n>](lhs: *const Self,
                                             rhs: *const Self, rhs_stride: usize,
                                             dst: *mut Self, count: usize) {
-                use crate::ops::simd_binary_ops::SimdBinaryOps;
+                use $crate::ops::simd_binary_ops::SimdBinaryOps;
                 Self::[<simd_ $name _stride_0_n>](lhs, rhs, rhs_stride, dst, count);
             }
 
@@ -349,14 +349,14 @@ macro_rules! simd_binary_op_specializations {
             unsafe fn [<$name _stride_n_0>](lhs: *const Self, lhs_stride: usize,
                                             rhs: *const Self,
                                             dst: *mut Self, count: usize) {
-                use crate::ops::simd_binary_ops::SimdBinaryOps;
+                use $crate::ops::simd_binary_ops::SimdBinaryOps;
                 Self::[<simd_ $name _stride_n_0>](lhs, lhs_stride, rhs, dst, count);
             }
 
             #[cfg(neon_simd)]
             unsafe fn [<$name _stride_1_1>](lhs: *const Self, rhs: *const Self,
                                             dst: *mut Self, count: usize) {
-                use crate::ops::simd_binary_ops::SimdBinaryOps;
+                use $crate::ops::simd_binary_ops::SimdBinaryOps;
                 Self::[<simd_ $name _stride_1_1>](lhs, rhs, dst, count);
             }
 
@@ -364,7 +364,7 @@ macro_rules! simd_binary_op_specializations {
             unsafe fn [<$name _stride_1_n>](lhs: *const Self,
                                             rhs: *const Self, rhs_stride: usize,
                                             dst: *mut Self, count: usize) {
-                use crate::ops::simd_binary_ops::SimdBinaryOps;
+                use $crate::ops::simd_binary_ops::SimdBinaryOps;
                 Self::[<simd_ $name _stride_1_n>](lhs, rhs, rhs_stride, dst, count);
             }
 
@@ -372,7 +372,7 @@ macro_rules! simd_binary_op_specializations {
             unsafe fn [<$name _stride_n_1>](lhs: *const Self, lhs_stride: usize,
                                             rhs: *const Self,
                                             dst: *mut Self, count: usize) {
-                use crate::ops::simd_binary_ops::SimdBinaryOps;
+                use $crate::ops::simd_binary_ops::SimdBinaryOps;
                 Self::[<simd_ $name _stride_n_1>](lhs, lhs_stride, rhs, dst, count);
             }
 
@@ -380,7 +380,7 @@ macro_rules! simd_binary_op_specializations {
             unsafe fn [<$name _stride_n_n>](lhs: *const Self, lhs_stride: usize,
                                             rhs: *const Self, rhs_stride: usize,
                                             dst: *mut Self, count: usize) {
-                use crate::ops::simd_binary_ops::SimdBinaryOps;
+                use $crate::ops::simd_binary_ops::SimdBinaryOps;
                 Self::[<simd_ $name _stride_n_n>](lhs, lhs_stride, rhs, rhs_stride, dst, count);
             }
         }

@@ -1,6 +1,3 @@
-#![allow(clippy::erasing_op)]
-#![allow(clippy::identity_op)]
-
 use crate::acceleration::simd::Simd;
 use std::ops::Neg;
 

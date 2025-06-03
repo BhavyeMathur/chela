@@ -1,5 +1,6 @@
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::iterator::collapse_contiguous::collapse_to_uniform_stride;
+use crate::ops::simd_neg::SimdNeg;
 use crate::FloatDataType;
 use std::ops::Neg;
 
@@ -36,7 +37,7 @@ pub(crate) trait UnaryOps: Neg<Output=Self> + Sized + Copy {
 
     unsafe fn neg(operand: *const Self, shape: &[usize], stride: &[usize], dst: *mut Self) {
         // special case for scalar tensor
-        if shape.len() == 0 {
+        if shape.is_empty() {
             *dst = -*operand;
             return;
         }
@@ -62,8 +63,6 @@ pub(crate) trait UnaryOps: Neg<Output=Self> + Sized + Copy {
 
 impl_default_trait_for_dtypes!(UnaryOps, i8, i16, i32, i64, i128, isize);
 
-#[cfg(neon_simd)]
-use crate::ops::simd_neg::SimdNeg;
 
 impl<T: FloatDataType + SimdNeg> UnaryOps for T {
     #[cfg(neon_simd)]

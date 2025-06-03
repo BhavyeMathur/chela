@@ -238,8 +238,6 @@ macro_rules! simd_sum_of_products_kernels {
     ($ptrs:ident, $strides:ident, $count:ident, $dst:ident, $($func_name:ident, { $($body:tt)* };)+) => {
         $(
             #[cfg(neon_simd)]
-            #[allow(clippy::erasing_op)]
-            #[allow(clippy::identity_op)]
             unsafe fn $func_name<const N: usize>($ptrs: &[*mut Self; N], $strides: &[usize; N], mut $count: usize) {
                 use crate::ops::simd_sum_of_products::SIMDSumOfProducts;
 

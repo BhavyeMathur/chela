@@ -70,7 +70,7 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
         let mut acc = self.stride()[self.ndims() - 1];
         for (i, &dim) in new_shape.iter().rev().enumerate() {
             new_stride[new_shape.len() - 1 - i] = acc;
-            acc *= dim * (dim / dim);
+            acc *= dim;
         }
 
         unsafe { self.reshaped_view(new_shape, new_stride) }

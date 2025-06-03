@@ -1,6 +1,3 @@
-#![allow(clippy::erasing_op)]
-#![allow(clippy::identity_op)]
-
 use crate::acceleration::simd::Simd;
 #[cfg(neon_simd)]
 use crate::util::partial_ord::{partial_max, partial_min};

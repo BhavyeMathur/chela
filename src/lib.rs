@@ -2,6 +2,8 @@
 #![allow(clippy::needless_range_loop)]
 #![allow(clippy::manual_map)]
 #![allow(clippy::new_ret_no_self)]
+#![allow(clippy::erasing_op)]
+#![allow(clippy::identity_op)]
 #![allow(ambiguous_glob_reexports)]
 
 #[macro_use]
