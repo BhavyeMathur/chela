@@ -13,9 +13,12 @@ pub(crate) trait GradientFuncTrait<T: TensorDataType> {
 
     /// Returns the gradient of the function being differentiated with respect to `self`
     /// if this function is a leaf. Otherwise, returns `None`.
-    fn gradient<'a>(&'a self) -> Option<NdArray<'a, T>> {
+    fn gradient(&self) -> Option<NdArray<T>> {
         None
     }
+
+    /// Sets the gradient of this tensor to zero.
+    fn zero_gradient(&mut self) {}
 }
 
 

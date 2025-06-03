@@ -5,3 +5,4 @@
 
 countlines.py
 test.py
+**/*.trace/

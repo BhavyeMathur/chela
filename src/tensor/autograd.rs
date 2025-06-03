@@ -124,9 +124,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// assert_eq!(a.gradient().unwrap(), Tensor::scalar(0.0));
     /// ```
     pub fn zero_gradient(&self) {
-        if let Some(mut grad) = self.gradient() {
-            grad.zero();
-        }
+        self.grad_fn.borrow_mut().zero_gradient();
     }
 
     /// Computes the gradient of the `self` with respect to its leaf tensors.

@@ -23,8 +23,12 @@ impl<T: TensorDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
         self.gradient += grad;
     }
 
-    fn gradient<'a>(&'a self) -> Option<NdArray<'a, T>> {
+    fn gradient(&self) -> Option<NdArray<T>> {
         Some((&self.gradient).view())
+    }
+
+    fn zero_gradient(&mut self) {
+        self.gradient.zero();
     }
 }
 
