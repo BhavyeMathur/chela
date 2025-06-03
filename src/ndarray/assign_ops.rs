@@ -24,13 +24,24 @@ macro_rules! define_binary_iop {
                     if !self.flags.contains(NdArrayFlags::Writeable) {
                         panic!("tensor is readonly.");
                     }
-
-                    let rhs = rhs.broadcast_to(&self.shape);
-    
-                    unsafe {
+                    
+                    if rhs.shape() == self.shape() {
+                        unsafe {
+                            <T as $binary_op_trait>::$method(self.ptr(), &self.stride(),
+                                                             rhs.ptr(), &rhs.stride(),
+                                                             self.mut_ptr(), self.shape());
+                        }
+                    }
+                    
+                    // right-hand term needs broadcasting
+                    else {
+                        let rhs = rhs.broadcast_to(&self.shape);
+                        
+                        unsafe {
                         <T as $binary_op_trait>::$method(self.ptr(), &self.stride(),
                                                          rhs.ptr(), &rhs.stride(),
                                                          self.mut_ptr(), self.shape());
+                        }
                     }
                 }
             }

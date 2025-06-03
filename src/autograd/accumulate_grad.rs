@@ -1,6 +1,7 @@
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{Constructors, NdArray, Reshape, TensorDataType};
+use crate::{Constructors, NdArray, Reshape, StridedMemory, TensorDataType};
 use std::cell::RefCell;
+use std::hint::assert_unchecked;
 use std::rc::Rc;
 
 
@@ -20,7 +21,10 @@ impl<T: TensorDataType> GradientFuncTrait<T> for AccumulateGrad<T> {
     ///
     /// - `grad`: the gradient of the function being differentiated with respect to `self`.
     fn backward(&mut self, grad: &NdArray<T>) {
-        self.gradient += grad; // TODO change this to AddAssign after implementing accelerated inplace operations
+        // hint that we don't need broadcasting
+        unsafe { assert_unchecked(self.gradient.shape() == grad.shape()) }
+        
+        self.gradient += grad;
     }
 
     fn gradient(&self) -> Option<NdArray<T>> {
