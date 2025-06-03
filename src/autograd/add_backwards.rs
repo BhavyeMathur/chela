@@ -1,7 +1,7 @@
 use crate::autograd::util::reduce_gradient;
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
 use crate::identity_backwards::IdentityBackwards;
-use crate::{FloatDataType, NdArray, StridedMemory, Tensor};
+use crate::{call_next_backward, FloatDataType, NdArray, StridedMemory, Tensor};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -22,11 +22,8 @@ pub(crate) struct AddScalarBackwards {}
 
 impl<T: FloatDataType> GradientFuncTrait<T> for AddBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = reduce_gradient(grad, &self.lhs_shape);
-        self.next_functions[0].borrow_mut().backward(&lhs_grad);
-        
-        let rhs_grad = reduce_gradient(grad, &self.rhs_shape);
-        self.next_functions[1].borrow_mut().backward(&rhs_grad);
+        call_next_backward!(grad, &self.lhs_shape, self.next_functions[0]);
+        call_next_backward!(grad, &self.rhs_shape, self.next_functions[1]);
     }
 }
 

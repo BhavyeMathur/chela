@@ -1,5 +1,5 @@
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{FloatDataType, NdArray, Reshape, Tensor};
+use crate::{call_next_backward, FloatDataType, NdArray, Reshape, Tensor};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -14,11 +14,11 @@ pub(crate) struct BMMBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for BMMBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let grad_lhs = grad.bmm(self.rhs.as_ref().transpose(1, 2));
-        let grad_rhs = self.lhs.as_ref().transpose(1, 2).bmm(grad);
+        let lhs_grad = grad.bmm(self.rhs.as_ref().transpose(1, 2));
+        let rhs_grad = self.lhs.as_ref().transpose(1, 2).bmm(grad);
 
-        self.next_functions[0].borrow_mut().backward(&grad_lhs);
-        self.next_functions[1].borrow_mut().backward(&grad_rhs);
+        call_next_backward!(lhs_grad, self.next_functions[0]);
+        call_next_backward!(rhs_grad, self.next_functions[1]);
     }
 }
 

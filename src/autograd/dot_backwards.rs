@@ -1,5 +1,5 @@
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{FloatDataType, NdArray, Tensor};
+use crate::{call_next_backward, FloatDataType, NdArray, Tensor};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -17,8 +17,8 @@ impl<T: FloatDataType> GradientFuncTrait<T> for DotBackwards<T> {
         let lhs_grad = self.rhs.as_ref() * grad;
         let rhs_grad = self.lhs.as_ref() * grad;
 
-        self.next_functions[0].borrow_mut().backward(&lhs_grad);
-        self.next_functions[1].borrow_mut().backward(&rhs_grad);
+        call_next_backward!(lhs_grad, self.next_functions[0]);
+        call_next_backward!(rhs_grad, self.next_functions[1]);
     }
 }
 

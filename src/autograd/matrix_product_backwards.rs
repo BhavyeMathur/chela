@@ -1,5 +1,5 @@
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{FloatDataType, NdArray, Reshape, Tensor};
+use crate::{call_next_backward, FloatDataType, NdArray, Reshape, Tensor};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -14,11 +14,11 @@ pub(crate) struct MatrixProductBackwards<'a, T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for MatrixProductBackwards<'_, T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let grad_lhs = grad.matmul(&self.rhs_transpose);
-        let grad_rhs = self.lhs_transpose.matmul(grad);
+        let lhs_grad = grad.matmul(&self.rhs_transpose);
+        let rhs_grad = self.lhs_transpose.matmul(grad);
 
-        self.next_functions[0].borrow_mut().backward(&grad_lhs);
-        self.next_functions[1].borrow_mut().backward(&grad_rhs);
+        call_next_backward!(lhs_grad, self.next_functions[0]);
+        call_next_backward!(rhs_grad, self.next_functions[1]);
     }
 }
 

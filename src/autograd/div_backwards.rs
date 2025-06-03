@@ -1,6 +1,6 @@
 use crate::autograd::util::reduce_gradient;
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{Constructors, FloatDataType, NdArray, StridedMemory, Tensor};
+use crate::{call_next_backward, Constructors, FloatDataType, NdArray, StridedMemory, Tensor};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -21,23 +21,18 @@ pub(crate) struct DivScalarBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for DivBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = grad * NdArray::scalar(T::one()) / self.rhs.as_ref();
-        let rhs_grad = grad * -self.lhs.as_ref() / (self.rhs.as_ref() * self.rhs.as_ref());
+        let lhs_grad = grad * (NdArray::scalar(T::one()) / self.rhs.as_ref());
+        let rhs_grad = (&lhs_grad / self.rhs.as_ref()) * -self.lhs.as_ref();
 
-        let lhs_grad = reduce_gradient(&lhs_grad, self.lhs.shape());
-        let rhs_grad = reduce_gradient(&rhs_grad, self.rhs.shape());
-
-        self.next_functions[0].borrow_mut().backward(&lhs_grad);
-        self.next_functions[1].borrow_mut().backward(&rhs_grad);
+        call_next_backward!(lhs_grad, self.lhs.shape(), self.next_functions[0]);
+        call_next_backward!(rhs_grad, self.rhs.shape(), self.next_functions[1]);
     }
 }
 
 impl<T: FloatDataType> GradientFuncTrait<T> for DivScalarBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
         let grad = grad * self.one_by_rhs;
-        let grad = reduce_gradient(&grad, &self.lhs_shape);
-
-        self.next_function.borrow_mut().backward(&grad);
+        call_next_backward!(grad, &self.lhs_shape, self.next_function);
     }
 }
 

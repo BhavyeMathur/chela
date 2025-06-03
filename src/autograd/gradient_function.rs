@@ -23,3 +23,19 @@ pub(crate) trait GradientFuncTrait<T: TensorDataType> {
 
 
 pub(crate) type GradientFunction<T> = Rc<RefCell<dyn GradientFuncTrait<T>>>;
+
+#[macro_export]
+macro_rules! call_next_backward {
+    ($grad:ident, $next:expr) => {
+        $next.borrow_mut().backward(&$grad);
+    };
+    
+    ($grad:ident, $shape:expr, $next:expr) => {
+        if $shape == $grad.shape() {
+            $next.borrow_mut().backward(&$grad);
+        } else { 
+            let next_grad = reduce_gradient(&$grad, $shape);
+            $next.borrow_mut().backward(&next_grad);
+        };
+    };
+}

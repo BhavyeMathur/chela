@@ -64,8 +64,8 @@ impl<T: RawDataType> Reshape<T> for NdArray<'_, T> {
 
         NdArray {
             ptr: self.ptr,
-            len: shape.iter().product(),
-            capacity: self.capacity,
+            len: self.len,
+            capacity: 0,
 
             shape,
             stride,
