@@ -1,11 +1,4 @@
-import torch
-import numpy as np
-
 from perfprofiler import *
-
-
-TORCH_DTYPE = torch.float32
-NUMPY_DTYPE = np.float32
 
 
 class TensorOpTimingSuite(TimingSuite):
@@ -27,7 +20,7 @@ class TensorOpTimingSuite(TimingSuite):
 
     @measure_rust_performance("Chela CPU", target="einsum")
     def run(self, executable):
-        return run_rust(executable, self.ID)
+        return run_rust(executable, self.ID, TRIALS, WARMUP)
 
 
 class TensorOp1(TensorOpTimingSuite):
@@ -236,5 +229,5 @@ if __name__ == "__main__":
         TensorOp6,  # trace
         TensorOp9,  # diagonal
         TensorOp14,  # star contraction
-    ], n=20)
+    ])
     plot_barplot(results, "Tensor Operations Benchmark")

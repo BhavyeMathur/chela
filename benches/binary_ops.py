@@ -1,10 +1,4 @@
-import torch
-import numpy as np
-
 from perfprofiler import *
-
-NUMPY_DTYPE = np.int32
-TORCH_DTYPE = torch.int32
 
 N = 4096
 
@@ -23,7 +17,7 @@ class TensorBinaryOps(TimingSuite):
 
     @measure_rust_performance("Chela CPU", target="binary_ops")
     def run(self, executable):
-        return run_rust(executable, self.ID)
+        return run_rust(executable, self.ID, TRIALS, WARMUP)
 
     @measure_performance("PyTorch CPU")
     def run(self):
@@ -118,5 +112,5 @@ if __name__ == "__main__":
         TensorBinaryOps5,
         TensorBinaryOps6,
         TensorBinaryOps7
-    ], n=20)
+    ])
     plot_barplot(results, f"{TensorBinaryOps.operation} Benchmark ({N=})", normalize="NumPy")

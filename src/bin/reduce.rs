@@ -1,139 +1,125 @@
 use chela::*;
 use std::env;
 
-use cpu_time::ProcessTime;
-
+use chela::profiler::profile_func;
 
 const N: usize = 1000000;
 
 type T = f32;
 
 
-fn reduce0() -> u128 {
+fn reduce0() {
     let tensor = NdArray::<f32>::rand([N]).astype::<T>();
 
-    let start = ProcessTime::now();
-    _ = tensor.sum();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.sum(); };
+    profile_func(func)
 }
 
-fn reduce1() -> u128 {
+fn reduce1() {
     let tensor = NdArray::<f32>::rand([N]).astype::<T>();
 
-    let start = ProcessTime::now();
-    _ = tensor.product();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.product(); };
+    profile_func(func)
 }
 
-fn reduce2() -> u128 {
+fn reduce2() {
     let tensor = NdArray::<f32>::rand([N]).astype::<T>();
 
-    let start = ProcessTime::now();
-    _ = tensor.min();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.min(); };
+    profile_func(func)
 }
 
-fn reduce3() -> u128 {
+fn reduce3() {
     let tensor = NdArray::<f32>::rand([N]).astype::<T>();
 
-    let start = ProcessTime::now();
-    _ = tensor.max();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.max(); };
+    profile_func(func)
 }
 
-fn reduce10() -> u128 {
+fn reduce10() {
     let tensor = NdArray::<f32>::rand([N, 2]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0);
 
-    let start = ProcessTime::now();
-    _ = tensor.sum();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.sum(); };
+    profile_func(func)
 }
 
-fn reduce11() -> u128 {
+fn reduce11() {
     let tensor = NdArray::<f32>::rand([N, 2]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0);
 
-    let start = ProcessTime::now();
-    _ = tensor.product();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.product(); };
+    profile_func(func)
 }
 
-fn reduce12() -> u128 {
+fn reduce12() {
     let tensor = NdArray::<f32>::rand([N, 2]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0);
 
-    let start = ProcessTime::now();
-    _ = tensor.min();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.min(); };
+    profile_func(func)
 }
 
-fn reduce13() -> u128 {
+fn reduce13() {
     let tensor = NdArray::<f32>::rand([N, 2]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0);
 
-    let start = ProcessTime::now();
-    _ = tensor.max();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.max(); };
+    profile_func(func)
 }
 
-fn reduce20() -> u128 {
+fn reduce20() {
     let tensor = NdArray::<f32>::rand([N, 3]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0..2);
 
-    let start = ProcessTime::now();
-    _ = tensor.sum();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.sum(); };
+    profile_func(func)
 }
 
-fn reduce21() -> u128 {
+fn reduce21() {
     let tensor = NdArray::<f32>::rand([N, 3]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0..2);
 
-    let start = ProcessTime::now();
-    _ = tensor.product();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.product(); };
+    profile_func(func)
 }
 
-fn reduce22() -> u128 {
+fn reduce22() {
     let tensor = NdArray::<f32>::rand([N, 3]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0..2);
 
-    let start = ProcessTime::now();
-    _ = tensor.min();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.min(); };
+    profile_func(func)
 }
 
-fn reduce23() -> u128 {
+fn reduce23() {
     let tensor = NdArray::<f32>::rand([N, 3]).astype::<T>();
     let tensor = tensor.slice_along(Axis(1), 0..2);
 
-    let start = ProcessTime::now();
-    _ = tensor.max();
-    start.elapsed().as_nanos()
+    let func = || { _ = tensor.max(); };
+    profile_func(func)
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let id = args[1].parse::<usize>().unwrap();
 
-    let time =
-        if id == 0 { reduce0() }
-        else if id == 1 { reduce1() }
-        else if id == 2 { reduce2() }
-        else if id == 3 { reduce3() }
+    match id {
+        0 => { reduce0() },
+        1 => { reduce1() },
+        2 => { reduce2() },
+        3 => { reduce3() },
 
-        else if id == 10 { reduce10() }
-        else if id == 11 { reduce11() }
-        else if id == 12 { reduce12() }
-        else if id == 13 { reduce13() }
+        10 => { reduce10() },
+        11 => { reduce11() },
+        12 => { reduce12() },
+        13 => { reduce13() },
 
-        else if id == 20 { reduce20() }
-        else if id == 21 { reduce21() }
-        else if id == 22 { reduce22() }
-        else if id == 23 { reduce23() }
+        20 => { reduce20() },
+        21 => { reduce21() },
+        22 => { reduce22() },
+        23 => { reduce23() },
 
-        else { panic!("invalid ID") };
-
-    println!("{}", time);
+        _ => { panic!("invalid ID") }
+    }
 }

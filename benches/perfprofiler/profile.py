@@ -4,6 +4,7 @@ from typing import Callable, Type
 from collections import defaultdict
 import time
 
+from .config import WARMUP, TRIALS
 from .result import Result
 from .util import compile_rust, get_class_from_method
 
@@ -13,19 +14,22 @@ rust_methods = defaultdict(dict)
 
 # noinspection PyDecorator
 @classmethod
-def cls_profile(cls, *args, n: int = 10, verbose: bool = True, **kwargs) -> dict[str, Result]:
+def cls_profile(cls, *args, verbose: bool = True, **kwargs) -> dict[str, Result]:
     total_time = defaultdict(list)
     if verbose:
         print("\033[31m", cls.__name__, f"– \"{cls.name}\"" if cls.name else "", "\033[0m")
 
-    for _ in range(n):
-        suite_obj = cls(*args, **kwargs)
+    suite_obj = cls(*args, **kwargs)
 
-        for label, function in cls.rust_methods.items():
-            elapsed = function(suite_obj)
-            total_time[label].append(elapsed)
+    for label, function in cls.rust_methods.items():
+        elapsed = function(suite_obj)
+        total_time[label] = elapsed
 
-        for label, function in cls.perf_methods.items():
+    for label, function in cls.perf_methods.items():
+        for _ in range(WARMUP):
+            function(suite_obj)
+
+        for _ in range(TRIALS):
             start = time.process_time_ns()
             function(suite_obj)
             end = time.process_time_ns()
@@ -44,13 +48,13 @@ def cls_profile(cls, *args, n: int = 10, verbose: bool = True, **kwargs) -> dict
 
 
 # noinspection PyUnresolvedReferences
-def profile(suite: Type["TimingSuite"], *args, n: int = 10, **kwargs) -> dict[str, Result]:
-    return suite.profile(*args, n=n, **kwargs)
+def profile(suite: Type["TimingSuite"], *args, **kwargs) -> dict[str, Result]:
+    return suite.profile(*args, **kwargs)
 
 
 # noinspection PyUnresolvedReferences
-def profile_all(suites: list[Type["TimingSuite"]], *args, n: int = 10, **kwargs) -> dict[str, dict[str, Result]]:
-    return {suite.name: profile(suite, *args, n=n, **kwargs) for suite in suites}
+def profile_all(suites: list[Type["TimingSuite"]], *args, **kwargs) -> dict[str, dict[str, Result]]:
+    return {suite.name: profile(suite, *args, **kwargs) for suite in suites}
 
 
 """

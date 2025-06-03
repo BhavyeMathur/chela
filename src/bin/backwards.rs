@@ -1,40 +1,39 @@
 use chela::*;
 use std::env;
 
-use cpu_time::ProcessTime;
-
+use chela::profiler::profile_func;
 
 type T = f32;
+const M: usize = 100;
 
 
-fn backward0() -> u128 {
+fn backward0() {
     let n = 1000;
 
     let mut tensor_a = Tensor::<T>::rand([n]);
     let mut tensor_b = Tensor::<T>::rand([n]);
     let mut tensor_c = Tensor::<T>::rand([n]);
-    
+
     tensor_a.set_requires_grad(true);
     tensor_b.set_requires_grad(true);
     tensor_c.set_requires_grad(true);
 
     let ones = NdArray::<T>::ones([n]);
 
-    let start = ProcessTime::now();
+    let func = || {
+        for _ in 0..M {
+            let result = (&tensor_a * &tensor_b) / (&tensor_c + 1.0);
+            result.backward_with(&ones);
 
-    for _ in 0..1000 {
-        let result = (&tensor_a * &tensor_b) / (&tensor_c + 1.0);
-        result.backward_with(&ones);
-
-        tensor_a.zero_gradient();
-        tensor_b.zero_gradient();
-        tensor_c.zero_gradient();
-    }
-
-    start.elapsed().as_nanos()
+            tensor_a.zero_gradient();
+            tensor_b.zero_gradient();
+            tensor_c.zero_gradient();
+        }
+    };
+    profile_func(func)
 }
 
-fn backward1() -> u128 {
+fn backward1() {
     let i = 1000;
     let j = 500;
 
@@ -47,28 +46,25 @@ fn backward1() -> u128 {
 
     let ones = NdArray::<T>::ones([i]);
 
-    let start = ProcessTime::now();
+    let func = || {
+        for _ in 0..M {
+            let result = a.matmul(&x) + &b;
+            result.backward_with(&ones);
 
-    for _ in 0..100 {
-        let result = a.matmul(&x) + &b;
-        result.backward_with(&ones);
-
-        a.zero_gradient();
-        b.zero_gradient();
-    }
-
-    start.elapsed().as_nanos()
+            a.zero_gradient();
+            b.zero_gradient();
+        }
+    };
+    profile_func(func)
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let id = args[1].parse::<usize>().unwrap();
+    let test_id = args[1].parse::<usize>().unwrap();
 
-    let time =
-        if id == 0 { backward0() }
-        else if id == 1 { backward1() }
-
-        else { panic!("invalid ID") };
-
-    println!("{}", time);
+    match test_id {
+        0 => { backward0() },
+        1 => { backward1() },
+        _ => { panic!("invalid ID") },
+    }
 }

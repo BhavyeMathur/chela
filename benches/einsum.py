@@ -1,6 +1,3 @@
-import numpy as np
-import torch
-
 from perfprofiler import *
 
 
@@ -149,5 +146,5 @@ if __name__ == "__main__":
         TensorEinsum6,  # trace
         TensorEinsum9,  # diagonal
         TensorEinsum10,  # reshape
-    ], n=20)
+    ])
     plot_barplot(results, "Einstein Summation Benchmark")

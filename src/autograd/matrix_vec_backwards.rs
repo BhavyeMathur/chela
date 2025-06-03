@@ -14,7 +14,7 @@ pub(crate) struct MatrixVecBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for MatrixVecBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        call_next_backward!(grad.unsqueeze(1) * self.vector.as_ref().unsqueeze(0),
+        call_next_backward!(grad.unsqueeze(1) * self.vector.as_ref(),
                             self.next_functions[0]);
 
         call_next_backward!(self.matrix.as_ref().T().matmul(grad),

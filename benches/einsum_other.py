@@ -1,4 +1,5 @@
 from perfprofiler import *
+
 from einsum import EinsumTimingSuite
 
 I = 100
@@ -58,5 +59,5 @@ if __name__ == "__main__":
         Einsum3Operands0,
         Einsum3Operands1,
         Einsum4Operands0,
-    ], n=10)
+    ])
     plot_barplot(results, "Einstein Summation Benchmark")

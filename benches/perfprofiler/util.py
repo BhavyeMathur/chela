@@ -1,8 +1,7 @@
 import subprocess
 import json
 
-import numpy as np
-import torch
+from .config import *
 
 
 def merge_dicts(list_of_dicts):
@@ -25,9 +24,9 @@ def compile_rust(target: str) -> str:
     return target_to_executable[target]
 
 
-def run_rust(executable, *argv) -> float:
-    value = subprocess.check_output(f"{executable} {''.join(map(str, argv))}", shell=True)
-    return int(value)
+def run_rust(executable, *argv) -> list[float]:
+    value = subprocess.check_output(f"{executable} {' '.join(map(str, argv))} {TRIALS} {WARMUP}", shell=True, text=True)
+    return [int(val) for val in value.split("\n") if val != ""]
 
 
 def get_class_from_method(method) -> str:

@@ -30,3 +30,4 @@ pub mod autograd;
 pub use autograd::*;
 
 pub mod ops;
+pub mod profiler;

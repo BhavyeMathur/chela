@@ -1,8 +1,6 @@
-import torch
-
 from perfprofiler import *
 
-TORCH_DTYPE = torch.float32
+m = 100
 
 
 class TensorBackwardsTimingSuite(TimingSuite):
@@ -10,7 +8,7 @@ class TensorBackwardsTimingSuite(TimingSuite):
 
     @measure_rust_performance("Chela CPU", target="backwards")
     def run(self, executable):
-        return run_rust(executable, self.ID)
+        return run_rust(executable, self.ID, TRIALS, WARMUP)
 
 
 class TensorBackwards0(TensorBackwardsTimingSuite):
@@ -18,16 +16,16 @@ class TensorBackwards0(TensorBackwardsTimingSuite):
     name = "Arithmetic Backwards"
 
     def __init__(self):
-        n = 1000
-        self.tensor_a = torch.rand(n, dtype=TORCH_DTYPE, requires_grad=True)
-        self.tensor_b = torch.rand(n, dtype=TORCH_DTYPE, requires_grad=True)
-        self.tensor_c = torch.rand(n, dtype=TORCH_DTYPE, requires_grad=True)
+        k = 1000
+        self.tensor_a = torch.rand(k, dtype=TORCH_DTYPE, requires_grad=True)
+        self.tensor_b = torch.rand(k, dtype=TORCH_DTYPE, requires_grad=True)
+        self.tensor_c = torch.rand(k, dtype=TORCH_DTYPE, requires_grad=True)
 
-        self.ones = torch.ones(n, dtype=TORCH_DTYPE)
+        self.ones = torch.ones(k, dtype=TORCH_DTYPE)
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        for _ in range(1000):
+        for _ in range(m):
             result = (self.tensor_a * self.tensor_b) / (self.tensor_c + 1)
             result.backward(self.ones)
 
@@ -51,7 +49,7 @@ class TensorBackwards1(TensorBackwardsTimingSuite):
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        for _ in range(100):
+        for _ in range(m):
             result = (self.a @ self.x) + self.b
             result.backward(self.ones)
 
@@ -61,7 +59,7 @@ class TensorBackwards1(TensorBackwardsTimingSuite):
 
 if __name__ == "__main__":
     results = profile_all([
-        # TensorBackwards0,
-        TensorBackwards1
-    ], n=20)
+        TensorBackwards0,
+        # TensorBackwards1
+    ])
     plot_barplot(results, "Autograd Backwards Benchmark", normalize="PyTorch CPU")

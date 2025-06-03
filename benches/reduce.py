@@ -1,10 +1,4 @@
-import numpy as np
-import torch
-
 from perfprofiler import *
-
-NUMPY_DTYPE = np.float32
-TORCH_DTYPE = torch.float32
 
 N = 1000000
 
@@ -23,11 +17,11 @@ class TensorReduceTimingSuite(TimingSuite):
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        self.tensor.sum()
+        getattr(self.tensor, self.method)()
 
     @measure_rust_performance("Chela CPU", target="reduce")
     def run(self, executable):
-        return run_rust(executable, self.ID)
+        return run_rust(executable, self.ID, TRIALS, WARMUP)
 
 
 
@@ -160,5 +154,5 @@ if __name__ == "__main__":
         TensorReduce3,
         TensorReduce13,
         TensorReduce23,
-    ], n=10)
+    ])
     plot_barplot(results, "Tensor Reduction Benchmark")
