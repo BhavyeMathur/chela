@@ -11,8 +11,8 @@ pub(crate) struct ReshapeBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for ReshapeBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let grad = grad.reshape(&self.shape);
-        call_next_backward!(grad, self.next_function);
+        call_next_backward!(grad.reshape(&self.shape),
+                            self.next_function);
     }
 }
 

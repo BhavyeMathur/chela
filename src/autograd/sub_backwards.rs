@@ -15,10 +15,8 @@ pub(crate) struct SubBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for SubBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let rhs_grad = -grad;
-
         call_next_backward!(grad, &self.lhs_shape, self.next_functions[0]);
-        call_next_backward!(rhs_grad, &self.rhs_shape, self.next_functions[1]);
+        call_next_backward!(-grad, &self.rhs_shape, self.next_functions[1]);
     }
 }
 

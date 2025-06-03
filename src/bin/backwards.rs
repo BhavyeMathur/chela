@@ -34,12 +34,39 @@ fn backward0() -> u128 {
     start.elapsed().as_nanos()
 }
 
+fn backward1() -> u128 {
+    let i = 1000;
+    let j = 500;
+
+    let x = Tensor::<T>::rand([j]);
+    let mut a = Tensor::<T>::rand([i, j]);
+    let mut b = Tensor::<T>::rand([i]);
+
+    a.set_requires_grad(true);
+    b.set_requires_grad(true);
+
+    let ones = NdArray::<T>::ones([i]);
+
+    let start = ProcessTime::now();
+
+    for _ in 0..100 {
+        let result = a.matmul(&x) + &b;
+        result.backward_with(&ones);
+
+        a.zero_gradient();
+        b.zero_gradient();
+    }
+
+    start.elapsed().as_nanos()
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let id = args[1].parse::<usize>().unwrap();
 
     let time =
         if id == 0 { backward0() }
+        else if id == 1 { backward1() }
 
         else { panic!("invalid ID") };
 

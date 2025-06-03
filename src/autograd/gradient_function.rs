@@ -19,6 +19,11 @@ pub(crate) trait GradientFuncTrait<T: TensorDataType> {
 
     /// Sets the gradient of this tensor to zero.
     fn zero_gradient(&mut self) {}
+
+    /// Whether the gradient function is NoneBackwards
+    fn is_none(&self) -> bool {
+        false
+    }
 }
 
 
@@ -26,16 +31,21 @@ pub(crate) type GradientFunction<T> = Rc<RefCell<dyn GradientFuncTrait<T>>>;
 
 #[macro_export]
 macro_rules! call_next_backward {
-    ($grad:ident, $next:expr) => {
-        $next.borrow_mut().backward(&$grad);
+    ($grad:expr, $next:expr) => {
+        if !$next.borrow().is_none() {
+            $next.borrow_mut().backward(&$grad);
+        }
     };
     
-    ($grad:ident, $shape:expr, $next:expr) => {
-        if $shape == $grad.shape() {
-            $next.borrow_mut().backward(&$grad);
-        } else { 
-            let next_grad = reduce_gradient(&$grad, $shape);
-            $next.borrow_mut().backward(&next_grad);
-        };
+    ($grad:expr, $shape:expr, $next:expr) => {
+        if !$next.borrow().is_none() {
+            if $shape == $grad.shape() {
+                $next.borrow_mut().backward(&$grad);
+            } else {
+                let grad = $grad;
+                let next_grad = reduce_gradient(&grad, $shape);
+                $next.borrow_mut().backward(&next_grad);
+            };
+        }
     };
 }

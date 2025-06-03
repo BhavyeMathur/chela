@@ -10,6 +10,10 @@ pub(crate) struct NoneBackwards {}
 impl<T: TensorDataType> GradientFuncTrait<T> for NoneBackwards {
     /// Backwards method for ndarray with `requires_grad = false`, does nothing.
     fn backward(&mut self, _: &NdArray<T>) {}
+
+    fn is_none(&self) -> bool {
+        true
+    }
 }
 
 impl NoneBackwards {

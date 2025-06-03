@@ -14,11 +14,11 @@ pub(crate) struct DotBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for DotBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = self.rhs.as_ref() * grad;
-        let rhs_grad = self.lhs.as_ref() * grad;
-
-        call_next_backward!(lhs_grad, self.next_functions[0]);
-        call_next_backward!(rhs_grad, self.next_functions[1]);
+        call_next_backward!(self.rhs.as_ref() * grad,
+                            self.next_functions[0]);
+        
+        call_next_backward!(self.lhs.as_ref() * grad,
+                            self.next_functions[1]);
     }
 }
 

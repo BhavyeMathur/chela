@@ -21,11 +21,17 @@ pub(crate) struct DivScalarBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for DivBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = grad * (NdArray::scalar(T::one()) / self.rhs.as_ref());
-        let rhs_grad = (&lhs_grad / self.rhs.as_ref()) * -self.lhs.as_ref();
+        if self.next_functions[0].borrow().is_none() {
+            call_next_backward!(grad * -self.lhs.as_ref() / (self.rhs.as_ref() * self.rhs.as_ref()), 
+                                self.rhs.shape(), self.next_functions[1]);
+        } else {
+            let lhs_grad = grad * (NdArray::scalar(T::one()) / self.rhs.as_ref());
 
-        call_next_backward!(lhs_grad, self.lhs.shape(), self.next_functions[0]);
-        call_next_backward!(rhs_grad, self.rhs.shape(), self.next_functions[1]);
+            call_next_backward!(&lhs_grad, self.lhs.shape(), self.next_functions[0]);
+            
+            call_next_backward!((&lhs_grad / self.rhs.as_ref()) * -self.lhs.as_ref(), 
+                                self.rhs.shape(), self.next_functions[1]);
+        }
     }
 }
 

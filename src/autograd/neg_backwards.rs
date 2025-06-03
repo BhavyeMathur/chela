@@ -11,8 +11,7 @@ pub(crate) struct NegBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for NegBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let grad = -grad;
-        call_next_backward!(grad, &self.shape, self.next_function);
+        call_next_backward!(-grad, &self.shape, self.next_function);
     }
 }
 

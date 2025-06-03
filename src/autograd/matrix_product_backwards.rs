@@ -14,11 +14,11 @@ pub(crate) struct MatrixProductBackwards<'a, T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for MatrixProductBackwards<'_, T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = grad.matmul(&self.rhs_transpose);
-        let rhs_grad = self.lhs_transpose.matmul(grad);
+        call_next_backward!(grad.matmul(&self.rhs_transpose),
+                            self.next_functions[0]);
 
-        call_next_backward!(lhs_grad, self.next_functions[0]);
-        call_next_backward!(rhs_grad, self.next_functions[1]);
+        call_next_backward!(self.lhs_transpose.matmul(grad),
+                            self.next_functions[1]);
     }
 }
 

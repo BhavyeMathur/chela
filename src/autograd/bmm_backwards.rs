@@ -14,11 +14,11 @@ pub(crate) struct BMMBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for BMMBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = grad.bmm(self.rhs.as_ref().transpose(1, 2));
-        let rhs_grad = self.lhs.as_ref().transpose(1, 2).bmm(grad);
-
-        call_next_backward!(lhs_grad, self.next_functions[0]);
-        call_next_backward!(rhs_grad, self.next_functions[1]);
+        call_next_backward!(grad.bmm(self.rhs.as_ref().transpose(1, 2)), 
+                            self.next_functions[0]);
+        
+        call_next_backward!(self.lhs.as_ref().transpose(1, 2).bmm(grad), 
+                            self.next_functions[1]);
     }
 }
 

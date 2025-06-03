@@ -1,5 +1,5 @@
 use crate::gradient_function::{GradientFuncTrait, GradientFunction};
-use crate::{AxisType, FloatDataType, NdArray, Reshape, Tensor};
+use crate::{call_next_backward, AxisType, FloatDataType, NdArray, Reshape, Tensor};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -12,8 +12,8 @@ pub(crate) struct TransposeBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for TransposeBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let grad = grad.transpose(self.axis1, self.axis2);
-        self.next_function.borrow_mut().backward(&grad);
+        call_next_backward!(grad.transpose(self.axis1, self.axis2),
+                            self.next_function);
     }
 }
 

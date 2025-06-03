@@ -22,18 +22,18 @@ pub(crate) struct MulScalarBackwards<T: FloatDataType> {
 
 impl<T: FloatDataType> GradientFuncTrait<T> for MulBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let lhs_grad = self.rhs.as_ref() * grad;
-        let rhs_grad = self.lhs.as_ref() * grad;
+        call_next_backward!(self.rhs.as_ref() * grad,
+                            self.lhs.shape(), self.next_functions[0]);
 
-        call_next_backward!(lhs_grad, self.lhs.shape(), self.next_functions[0]);
-        call_next_backward!(rhs_grad, self.rhs.shape(), self.next_functions[1]);
+        call_next_backward!(self.lhs.as_ref() *
+                            grad, self.rhs.shape(), self.next_functions[1]);
     }
 }
 
 impl<T: FloatDataType> GradientFuncTrait<T> for MulScalarBackwards<T> {
     fn backward(&mut self, grad: &NdArray<T>) {
-        let grad = grad * self.scalar;
-        call_next_backward!(grad, &self.shape, self.next_function);
+        call_next_backward!(grad * self.scalar,
+                            &self.shape, self.next_function);
     }
 }
 
