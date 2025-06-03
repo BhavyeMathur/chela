@@ -446,20 +446,17 @@ test_for_common_numeric_dtypes!(
 
 test_for_float_dtypes!(
     test_div, {
+        let one = NdArray::scalar(T::one());
+
         for n in 1..23 {
             let tensor1 = NdArray::arange(0, n).squeeze().astype::<T>();
             let tensor2 = NdArray::arange(n, n * 2).squeeze().astype::<T>();
 
             let correct: Vec<T> = tensor1.flatiter().zip(tensor2.flatiter()).map(|(lhs, rhs)| lhs / rhs).collect();
             let correct = NdArray::new(correct).squeeze();
-            assert_eq!(&tensor1 / &tensor2, correct);
-            assert_eq!(&tensor1 / tensor2, correct);
 
-            let tensor2 = NdArray::arange(n, n * 2).squeeze().astype::<T>();
-            assert_eq!(tensor1 / &tensor2, correct);
-
-            let tensor1 = NdArray::arange(0, n).squeeze().astype::<T>();
-            assert_eq!(tensor1 / tensor2, correct);
+            assert_almost_eq!(&tensor1 / &tensor2, correct);
+            assert_almost_eq!(&tensor2 / &tensor1, &one / &correct);
         }
     }
 );

@@ -1,4 +1,4 @@
-use crate::define_binary_op_trait;
+use crate::{define_binary_op_trait, simd_binary_op_specializations};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::ndarray::collapse_contiguous::collapse_to_uniform_stride;
 use paste::paste;
@@ -8,20 +8,16 @@ use std::ops::Div;
 define_binary_op_trait!(BinaryOpDiv, Div, div, /);
 
 impl BinaryOpDiv for f32 {
-    // #[cfg(apple_vdsp)]
-    // unsafe fn div_stride_n_0(lhs: *const Self, lhs_stride: usize,
-    //                          rhs: *const Self, dst: *mut Self, count: usize) {
-    //     use crate::acceleration::vdsp::vDSP_vsdiv;
-    //     vDSP_vsdiv(lhs, lhs_stride as isize, rhs, dst, 1, count);
-    // }
-    
-    #[cfg(neon_simd)]
-    unsafe fn div_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
-        use crate::ops::simd_binary_ops::SimdBinaryOps;
-        Self::simd_div_stride_1_1(lhs, rhs, dst, count);
+    #[cfg(all(apple_vdsp, not(neon_simd)))]
+    unsafe fn div_stride_n_0(lhs: *const Self, lhs_stride: usize,
+                             rhs: *const Self, dst: *mut Self, count: usize) {
+        use crate::acceleration::vdsp::vDSP_vsdiv;
+        vDSP_vsdiv(lhs, lhs_stride as isize, rhs, dst, 1, count);
     }
-    
-    #[cfg(apple_vdsp)]
+
+    simd_binary_op_specializations!(div);
+
+    #[cfg(all(apple_vdsp, not(neon_simd)))]
     unsafe fn div_stride_n_n(lhs: *const Self, lhs_stride: usize,
                              rhs: *const Self, rhs_stride: usize,
                              dst: *mut Self, count: usize) {
@@ -31,20 +27,16 @@ impl BinaryOpDiv for f32 {
 }
 
 impl BinaryOpDiv for f64 {
-    // #[cfg(apple_vdsp)]
-    // unsafe fn div_stride_n_0(lhs: *const Self, lhs_stride: usize,
-    //                          rhs: *const Self, dst: *mut Self, count: usize) {
-    //     use crate::acceleration::vdsp::vDSP_vsdivD;
-    //     vDSP_vsdivD(rhs, lhs_stride as isize, rhs, dst, 1, count);
-    // }
-
-    #[cfg(neon_simd)]
-    unsafe fn div_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
-        use crate::ops::simd_binary_ops::SimdBinaryOps;
-        Self::simd_div_stride_1_1(lhs, rhs, dst, count);
+    #[cfg(all(apple_vdsp, not(neon_simd)))]
+    unsafe fn div_stride_n_0(lhs: *const Self, lhs_stride: usize,
+                             rhs: *const Self, dst: *mut Self, count: usize) {
+        use crate::acceleration::vdsp::vDSP_vsdivD;
+        vDSP_vsdivD(lhs, lhs_stride as isize, rhs, dst, 1, count);
     }
-    
-    #[cfg(apple_vdsp)]
+
+    simd_binary_op_specializations!(div);
+
+    #[cfg(all(apple_vdsp, not(neon_simd)))]
     unsafe fn div_stride_n_n(lhs: *const Self, lhs_stride: usize,
                              rhs: *const Self, rhs_stride: usize,
                              dst: *mut Self, count: usize) {

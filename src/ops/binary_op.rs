@@ -22,6 +22,17 @@ macro_rules! define_binary_op_trait {
     ($trait_name:ident, $required_trait:ident, $name:ident, $operator:tt) => {
         paste! {
             pub(crate) trait $trait_name: $required_trait<Output=Self> + Sized + Copy {
+                unsafe fn [<$name _stride_0_1>](lhs: *const Self,
+                                                rhs: *const Self,
+                                                dst: *mut Self, count: usize) {
+                    Self::[<$name _stride_n_n>](lhs, 0, rhs, 1, dst, count)
+                }
+
+                unsafe fn [<$name _stride_1_0>](lhs: *const Self,
+                                                rhs: *const Self, dst: *mut Self, count: usize) {
+                    Self::[<$name _stride_n_n>](lhs, 1, rhs, 0, dst, count)
+                }
+
                 unsafe fn [<$name _stride_n_0>](lhs: *const Self, lhs_stride: usize,
                                                 rhs: *const Self, dst: *mut Self, count: usize) {
                     Self::[<$name _stride_n_n>](lhs, lhs_stride, rhs, 0, dst, count)
@@ -33,16 +44,22 @@ macro_rules! define_binary_op_trait {
                     Self::[<$name _stride_n_n>](lhs, 0, rhs, rhs_stride, dst, count)
                 }
 
+                unsafe fn [<$name _stride_1_1>](lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
+                    Self::[<$name _stride_n_n>](lhs, 1, rhs, 1, dst, count)
+                }
+
                 unsafe fn [<$name _stride_n_1>](lhs: *const Self, lhs_stride: usize,
                                                 rhs: *const Self, dst: *mut Self, count: usize) {
                     Self::[<$name _stride_n_n>](lhs, lhs_stride, rhs, 1, dst, count)
                 }
 
-                #[inline(never)]
-                unsafe fn [<$name _stride_1_1>](lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
-                    Self::[<$name _stride_n_n>](lhs, 1, rhs, 1, dst, count)
+                unsafe fn [<$name _stride_1_n>](lhs: *const Self,
+                                                rhs: *const Self, rhs_stride: usize,
+                                                dst: *mut Self, count: usize) {
+                    Self::[<$name _stride_n_n>](lhs, 1, rhs, rhs_stride, dst, count)
                 }
 
+                #[inline(never)]
                 unsafe fn [<$name _stride_n_n>](mut lhs: *const Self, lhs_stride: usize,
                                                 mut rhs: *const Self, rhs_stride: usize,
                                                 mut dst: *mut Self, mut count: usize) {
@@ -144,15 +161,33 @@ macro_rules! define_binary_op_trait {
 
                         // one operand is a scalar
                         if rhs_inner_stride == 0 {
-                            return Self::[<$name _stride_n_0>](lhs, lhs_inner_stride, rhs, dst, lhs_shape[0]);
+                            if lhs_inner_stride == 1 {
+                                return Self::[<$name _stride_1_0>](lhs, rhs, dst, lhs_shape[0]);
+                            }
+                            else {
+                                return Self::[<$name _stride_n_0>](lhs, lhs_inner_stride, rhs, dst, lhs_shape[0]);
+                            }
+
                         } else if lhs_inner_stride == 0 {
-                            return Self::[<$name _stride_0_n>](lhs, rhs, rhs_inner_stride, dst, rhs_shape[0]);
+                            if rhs_inner_stride == 1 {
+                                return Self::[<$name _stride_0_1>](lhs, rhs, dst, rhs_shape[0]);
+                            }
+                            else {
+                                return Self::[<$name _stride_0_n>](lhs, rhs, rhs_inner_stride, dst, rhs_shape[0]);
+                            }
                         }
 
                         // both operands are contiguous
                         if lhs_inner_stride == 1 && rhs_inner_stride == 1 {
                             return Self::[<$name _stride_1_1>](lhs, rhs, dst, lhs_shape[0]);
                         }
+
+                        if lhs_inner_stride == 1 {
+                            return Self::[<$name _stride_1_n>](lhs, rhs, rhs_inner_stride, dst, lhs_shape[0]);
+                        }
+                        // else if rhs_inner_stride == 1 {
+                        //     return Self::[<$name _stride_n_1>](lhs, lhs_inner_stride, rhs, dst, rhs_shape[0]);
+                        // }
 
                         // neither element is contiguous
                         return Self::[<$name _stride_n_n>](lhs, lhs_inner_stride, rhs, rhs_inner_stride, dst, lhs_shape[0]);

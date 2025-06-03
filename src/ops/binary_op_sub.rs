@@ -1,4 +1,4 @@
-use crate::define_binary_op_trait;
+use crate::{define_binary_op_trait, simd_binary_op_specializations};
 use crate::flat_index_generator::FlatIndexGenerator;
 use crate::impl_default_binary_op_trait;
 use crate::ndarray::collapse_contiguous::collapse_to_uniform_stride;
@@ -10,13 +10,9 @@ define_binary_op_trait!(BinaryOpSub, Sub, sub, -;
                         u8, u16, u32, u64, u128, usize);
 
 impl BinaryOpSub for f32 {
-    #[cfg(neon_simd)]
-    unsafe fn sub_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
-        use crate::ops::simd_binary_ops::SimdBinaryOps;
-        Self::simd_sub_stride_1_1(lhs, rhs, dst, count);
-    }
+    simd_binary_op_specializations!(sub);
 
-    #[cfg(apple_vdsp)]
+    #[cfg(all(apple_vdsp, not(neon_simd)))]
     unsafe fn sub_stride_n_n(lhs: *const Self, lhs_stride: usize,
                              rhs: *const Self, rhs_stride: usize,
                              dst: *mut Self, count: usize) {
@@ -26,13 +22,9 @@ impl BinaryOpSub for f32 {
 }
 
 impl BinaryOpSub for f64 {
-    #[cfg(neon_simd)]
-    unsafe fn sub_stride_1_1(lhs: *const Self, rhs: *const Self, dst: *mut Self, count: usize) {
-        use crate::ops::simd_binary_ops::SimdBinaryOps;
-        Self::simd_sub_stride_1_1(lhs, rhs, dst, count);
-    }
+    simd_binary_op_specializations!(sub);
 
-    #[cfg(apple_vdsp)]
+    #[cfg(all(apple_vdsp, not(neon_simd)))]
     unsafe fn sub_stride_n_n(lhs: *const Self, lhs_stride: usize,
                              rhs: *const Self, rhs_stride: usize,
                              dst: *mut Self, count: usize) {

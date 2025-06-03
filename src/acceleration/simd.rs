@@ -4,6 +4,26 @@ pub(crate) trait Simd: Copy + One + Zero + Bounded + PartialOrd
 {
     const LANES: usize;
     type SimdVec: Copy;
+    
+    unsafe fn simd_vec_from_stride(ptr: *const Self, stride: usize) -> Self::SimdVec {
+        if Self::LANES == 4 {
+            let a = *ptr.add(0 * stride);
+            let b = *ptr.add(1 * stride);
+            let c = *ptr.add(2 * stride);
+            let d = *ptr.add(3 * stride);
+
+            Self::simd_from_array(&[a, b, c, d])
+        } else if Self::LANES == 2 {
+            let a = *ptr.add(0 * stride);
+            let b = *ptr.add(1 * stride);
+
+            Self::simd_from_array(&[a, b])
+        } else if Self::LANES == 1 {
+            Self::simd_from_array(&[*ptr])
+        } else {
+            panic!("unimplemented SIMD sum uniform")
+        }
+    }
 
     unsafe fn simd_from_array(vals: &[Self]) -> Self::SimdVec;
 

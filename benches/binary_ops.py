@@ -3,8 +3,8 @@ import numpy as np
 
 from perfprofiler import *
 
-NUMPY_DTYPE = np.float32
-TORCH_DTYPE = torch.float32
+NUMPY_DTYPE = np.int32
+TORCH_DTYPE = torch.int32
 
 N = 4096
 
@@ -15,7 +15,7 @@ class TensorBinaryOps(TimingSuite):
     tensors: list
     ndarrays: list[np.ndarray]
 
-    operation = "Subtraction"
+    operation = "Addition"
 
     def __init__(self, shapes, slices=None):
         self.ndarrays = rand_ndarrays_with_shape(shapes, slices=slices, dtype=NUMPY_DTYPE)
@@ -27,11 +27,11 @@ class TensorBinaryOps(TimingSuite):
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        _ = self.tensors[0] - self.tensors[1]
+        _ = self.tensors[0] + self.tensors[1]
 
     @measure_performance("NumPy")
     def run(self):
-        _ = self.ndarrays[0] - self.ndarrays[1]
+        _ = self.ndarrays[0] + self.ndarrays[1]
 
 
 class TensorBinaryOps0(TensorBinaryOps):
@@ -98,12 +98,21 @@ class TensorBinaryOps7(TensorBinaryOps):
         super().__init__([(N, 3), (N, 3)], slices=((Ellipsis, slice(0, 2)), (Ellipsis, slice(0, 2))))
 
 
+class TensorBinaryOps8(TensorBinaryOps):
+    ID = 8
+    name = "[n], [n]"
+
+    def __init__(self):
+        super().__init__([(N, 3), (N, 3)], slices=((Ellipsis, 0), (Ellipsis, 0)))
+
 
 if __name__ == "__main__":
     results = profile_all([
         TensorBinaryOps0,
         TensorBinaryOps1,
         TensorBinaryOps2,
+        TensorBinaryOps8,
+
         TensorBinaryOps3,
         TensorBinaryOps4,
         TensorBinaryOps5,

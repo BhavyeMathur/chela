@@ -7,27 +7,6 @@ use crate::util::partial_ord::{partial_max, partial_min};
 
 pub(crate) trait SimdReduceOps: Simd {
     #[cfg(neon_simd)]
-    unsafe fn simd_vec_from_stride(ptr: *const Self, stride: usize) -> Self::SimdVec {
-        if Self::LANES == 4 {
-            let a = *ptr.add(0 * stride);
-            let b = *ptr.add(1 * stride);
-            let c = *ptr.add(2 * stride);
-            let d = *ptr.add(3 * stride);
-
-            Self::simd_from_array(&[a, b, c, d])
-        } else if Self::LANES == 2 {
-            let a = *ptr.add(0 * stride);
-            let b = *ptr.add(1 * stride);
-
-            Self::simd_from_array(&[a, b])
-        } else if Self::LANES == 1 {
-            Self::simd_from_array(&[*ptr])
-        } else {
-            panic!("unimplemented SIMD sum uniform")
-        }
-    }
-
-    #[cfg(neon_simd)]
     unsafe fn simd_sum_uniform(mut ptr: *const Self, mut count: usize, stride: usize) -> Self {
         let mut acc = Self::simd_from_constant(Self::zero());
 

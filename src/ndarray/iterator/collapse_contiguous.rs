@@ -195,8 +195,8 @@ mod tests {
         let shape = [];
         let stride = [];
         let (a, b) = collapse_to_uniform_stride(&shape, &stride);
-        assert_eq!(a, []);
-        assert_eq!(b, []); // Should handle empty inputs correctly.
+        assert_eq!(a.len(), 0);
+        assert_eq!(b.len(), 0); // Should handle empty inputs correctly.
         assert_eq!(has_uniform_stride(&shape, &stride), Some(0));
         
         let shape = [10];
