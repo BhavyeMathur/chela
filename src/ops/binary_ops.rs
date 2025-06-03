@@ -171,8 +171,8 @@ macro_rules! define_binary_op_trait {
                     let (lhs_shape, lhs_stride) = collapse_to_uniform_stride(shape, &lhs_stride);
                     let (rhs_shape, rhs_stride) = collapse_to_uniform_stride(shape, &rhs_stride);
 
-                    let lhs_dims = lhs_shape.len();
-                    let rhs_dims = rhs_shape.len();
+                    let mut lhs_dims = lhs_shape.len();
+                    let mut rhs_dims = rhs_shape.len();
 
                     let lhs_inner_stride = lhs_stride[lhs_dims - 1];
                     let rhs_inner_stride = rhs_stride[rhs_dims - 1];
