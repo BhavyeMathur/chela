@@ -1,3 +1,5 @@
+import torch.cpu
+
 from perfprofiler import *
 
 
@@ -187,7 +189,7 @@ class TensorOp13(TensorOpTimingSuite):
     @measure_performance("PyTorch CPU")
     def run(self):
         if TORCH_DTYPE not in {torch.float32, torch.float64, torch.complex64, torch.complex128}:
-            np.einsum("bi,bi->b", *self.ndarrays)
+            torch.einsum("bi,bi->b", *self.ndarrays)
         else:
             torch.linalg.vecdot(self.tensors[0], self.tensors[1])
 
@@ -206,7 +208,7 @@ class TensorOp14(TensorOpTimingSuite):
 
     @measure_performance("PyTorch CPU")
     def run(self):
-        torch.einsum("ij,ik,il->jkl", *self.tensors)
+        a = torch.einsum("ij,ik,il->jkl", *self.tensors)
 
     @measure_performance("NumPy")
     def run(self):

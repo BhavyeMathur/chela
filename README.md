@@ -45,7 +45,7 @@ fn main() {
 
 Internally, Chela speeds up its operations using custom ARM NEON kernels, BLAS, and vDSP on supported architectures. This makes it blazing fast! The benchmark below is for Apple Silicon.
 
-![tensor_operations_f32.png](assets/tensor_operations_f32.png)
+![tensor_operations.png](assets/tensor_operations.png)
 
 ## Automatic Differentiation with Chela
 

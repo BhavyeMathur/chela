@@ -1,6 +1,7 @@
-use cpu_time::ProcessTime;
 use std::env;
 use std::hint::black_box;
+use std::time::Instant;
+// use cpu_time::ProcessTime;
 
 pub fn profile_func(func: impl Fn()) {
     let args: Vec<String> = env::args().collect();
@@ -13,8 +14,10 @@ pub fn profile_func(func: impl Fn()) {
     }
 
     for _ in 0..trials {
-        let start = ProcessTime::now();
+        let start = Instant::now();
+        // let start = ProcessTime::now();
         black_box(func());
+        // println!("{}", start.elapsed().as_nanos());
         println!("{}", start.elapsed().as_nanos());
     }
 }

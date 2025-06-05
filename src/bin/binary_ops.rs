@@ -2,8 +2,8 @@ use chela::*;
 use std::env;
 use chela::profiler::*;
 
-type T = i32;
-const K: usize = 4096;
+type T = f32;
+const K: usize = 1000000;
 
 fn binary_ops0() {
     let tensor1 = NdArray::<f32>::rand([K]).astype::<T>();

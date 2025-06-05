@@ -4,6 +4,8 @@ from typing import Callable, Type
 from collections import defaultdict
 import time
 
+import torch
+
 from .config import WARMUP, TRIALS
 from .result import Result
 from .util import compile_rust, get_class_from_method
@@ -30,9 +32,11 @@ def cls_profile(cls, *args, verbose: bool = True, **kwargs) -> dict[str, Result]
             function(suite_obj)
 
         for _ in range(TRIALS):
-            start = time.process_time_ns()
+            start = time.perf_counter_ns()
+            # start = time.process_time_ns()
             function(suite_obj)
-            end = time.process_time_ns()
+            # end = time.process_time_ns()
+            end = time.perf_counter_ns()
 
             total_time[label].append(end - start)
 
@@ -54,6 +58,8 @@ def profile(suite: Type["TimingSuite"], *args, **kwargs) -> dict[str, Result]:
 
 # noinspection PyUnresolvedReferences
 def profile_all(suites: list[Type["TimingSuite"]], *args, **kwargs) -> dict[str, dict[str, Result]]:
+    print("PyTorch Interop Threads:", torch.get_num_interop_threads())
+    print("PyTorch Intraop Threads:", torch.get_num_threads())
     return {suite.name: profile(suite, *args, **kwargs) for suite in suites}
 
 

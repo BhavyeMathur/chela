@@ -1,6 +1,6 @@
 from perfprofiler import *
 
-N = 4096
+N = 1000000
 
 
 class TensorBinaryOps(TimingSuite):
