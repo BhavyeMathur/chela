@@ -11,7 +11,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::<f64>::randn([2, 3]);
     /// println!("{:?}", ndarray);
@@ -38,7 +38,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::<f64>::rand([2, 3]);
     /// println!("{:?}", ndarray);
@@ -64,7 +64,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::<f64>::uniform([2, 3], -5.0, 3.0);
     /// println!("{:?}", ndarray);
@@ -90,7 +90,7 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::<isize>::randint([2, 3], -5, 3);
     /// println!("{:?}", ndarray);

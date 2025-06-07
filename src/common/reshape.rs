@@ -17,7 +17,7 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::new(vec![1, 2, 3, 4]);
     /// let view = (&ndarray).view();
@@ -41,7 +41,7 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     /// # Example
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::new([[4, 5], [6, 7], [8, 9]]);  // shape is [3, 2]
     /// let reshaped_array = ndarray.reshape([1, 2, 3]);
@@ -82,7 +82,7 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::new([[[[1], [3]], [[1], [4]]]]);  // shape [1, 2, 2, 1]
     /// let squeezed = ndarray.squeeze();
@@ -112,7 +112,7 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     /// # Example
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::new([2, 3]);  // shape is [2]
     /// let unsqueezed = ndarray.unsqueeze(-1);  // add dimension after the last axis
@@ -147,7 +147,7 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let array = NdArray::new([[2, 3, 4], [10, 20, 30]]);
     ///
@@ -166,7 +166,7 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let array = NdArray::new([[2, 3, 4], [10, 20, 30]]);
     ///

@@ -12,7 +12,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let tensor = Tensor::scalar(50.0);
     /// let value = tensor.value();
@@ -51,7 +51,7 @@ impl<'a, T: TensorDataType> StridedMemory for Tensor<'a, T> {
     /// Returns the dimensions of the tensor along each axis.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let a = Tensor::new([3.0, 4.0, 5.0]);
     /// assert_eq!(a.shape(), &[3]);
@@ -72,7 +72,7 @@ impl<'a, T: TensorDataType> StridedMemory for Tensor<'a, T> {
     /// The stride represents the distance in memory between elements in a tensor along each axis.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let a = Tensor::new([[3.0, 4.0], [5.0, 6.0]]);
     /// assert_eq!(a.stride(), &[2, 1]);
@@ -94,7 +94,7 @@ impl<T: TensorDataType> StridedMemory for &Tensor<'_, T> {
     /// Returns the dimensions of the tensor along each axis.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let a = Tensor::new([3.0, 4.0, 5.0]);
     /// assert_eq!(a.shape(), &[3]);
@@ -115,7 +115,7 @@ impl<T: TensorDataType> StridedMemory for &Tensor<'_, T> {
     /// The stride represents the distance in memory between elements in a tensor along each axis.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let a = Tensor::new([[3.0, 4.0], [5.0, 6.0]]);
     /// assert_eq!(a.stride(), &[2, 1]);

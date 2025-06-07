@@ -1,4 +1,4 @@
-use redstone::*;
+use redstone_ml::*;
 
 macro_rules! test_astype_from {
     ($src_ty:ty) => {

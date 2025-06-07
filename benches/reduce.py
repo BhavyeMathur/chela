@@ -19,7 +19,7 @@ class TensorReduceTimingSuite(TimingSuite):
     def run(self):
         getattr(self.tensor, self.method)()
 
-    @measure_rust_performance("Chela CPU", target="reduce")
+    @measure_rust_performance("Redstone CPU", target="reduce")
     def run(self, executable):
         return run_rust(executable, self.ID, TRIALS, WARMUP)
 

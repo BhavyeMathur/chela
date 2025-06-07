@@ -34,7 +34,7 @@ This struct is heavily modeled after NumPy's `ndarray` and supports many of the 
 Example:
 
 ```rust
-use redstone::*;
+use redstone_ml::*;
 
 let matrix_a = NdArray::new([[1, 3, 2], [-1, 0, -1]]); // shape [2, 3]
 let matrix_b = NdArray::randint([3, 7], -5, 3);

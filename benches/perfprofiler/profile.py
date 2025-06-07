@@ -75,7 +75,7 @@ class TensorEinsum(TimingSuite):
     def run(self):
         np.einsum(self.einsum_string, *self.ndarrays)
         
-    @measure_rust_performance("Chela CPU", target="einsum")
+    @measure_rust_performance("Redstone CPU", target="einsum")
     def run(self, executable):
         return self.run_rust(executable, self.ID)
 """

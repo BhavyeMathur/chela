@@ -115,7 +115,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use redstone::*;
+    /// use redstone_ml::*;
     ///
     /// let array = NdArray::new(vec![1, 2, 3, 4]);
     /// let sum = array.sum();
@@ -134,7 +134,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use redstone::*;
+    /// use redstone_ml::*;
     ///
     /// let array = NdArray::new(vec![1, 2, 3, 4]);
     /// let prod = array.product();
@@ -153,7 +153,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use redstone::*;
+    /// use redstone_ml::*;
     ///
     /// let array = NdArray::new(vec![-1, 3, -7, 8]);
     /// let min = array.min();
@@ -172,7 +172,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use redstone::*;
+    /// use redstone_ml::*;
     ///
     /// let array = NdArray::new(vec![-1, 3, -7, 8]);
     /// let max = array.max();
@@ -191,7 +191,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use redstone::*;
+    /// use redstone_ml::*;
     ///
     /// let array = NdArray::new(vec![-1, 3, -7, 8]);
     /// let min = array.min_magnitude();
@@ -210,7 +210,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use redstone::*;
+    /// use redstone_ml::*;
     ///
     /// let array = NdArray::new(vec![-1, 3, -9, 8]);
     /// let max = array.max_magnitude();
@@ -229,7 +229,7 @@ impl<T: NumericDataType> NdArray<'_, T> {
     ///
     /// # Example
     /// ```
-    /// use redstone::*;
+    /// use redstone_ml::*;
     ///
     /// let array = NdArray::new(vec![1.0, 3.0, 5.0, 7.0]);
     /// let mean = array.mean();

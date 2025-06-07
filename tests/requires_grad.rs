@@ -1,4 +1,4 @@
-use redstone::*;
+use redstone_ml::*;
 use paste::paste;
 
 #[test]

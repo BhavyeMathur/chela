@@ -6,7 +6,7 @@ pub trait StridedMemory: Sized {
     /// Returns the dimensions of the ndarray along each axis.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.shape(), &[3]);
@@ -24,7 +24,7 @@ pub trait StridedMemory: Sized {
     /// The stride represents the distance in memory between elements in an ndarray along each axis.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let a = NdArray::new([[3, 4], [5, 6]]);
     /// assert_eq!(a.stride(), &[2, 1]);
@@ -34,7 +34,7 @@ pub trait StridedMemory: Sized {
     /// Returns the number of dimensions in the ndarray.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.ndims(), 1);
     ///
@@ -54,7 +54,7 @@ pub trait StridedMemory: Sized {
     /// # Examples
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.len(), 3);
     ///
@@ -76,7 +76,7 @@ pub trait StridedMemory: Sized {
     /// Returns the total number of elements in the ndarray.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let a = NdArray::new([3, 4, 5]);
     /// assert_eq!(a.size(), 3);
     ///
@@ -97,7 +97,7 @@ pub trait StridedMemory: Sized {
     /// Returns whether this ndarray is stored contiguously in memory.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let a = NdArray::new([[3, 4], [5, 6]]);
     /// assert!(a.is_contiguous());
     ///
@@ -112,7 +112,7 @@ pub trait StridedMemory: Sized {
     /// Returns whether this ndarray is slice of another ndarray.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let a = NdArray::new([[3, 4], [5, 6]]);
     /// assert!(!a.is_view());
     ///
@@ -129,7 +129,7 @@ pub trait StridedMemory: Sized {
     /// Contiguous arrays are always uniformly strided. Views may sometimes be uniformly strided.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let a = NdArray::new([[3, 4, 5], [6, 7, 8]]);
     /// assert!(a.is_uniformly_strided());
     ///
@@ -151,7 +151,7 @@ pub trait StridedMemory: Sized {
     /// NdArray views may sometimes be uniformly strided.
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let a = NdArray::new([[3, 4, 5], [6, 7, 8]]);
     /// assert_eq!(a.has_uniform_stride(), Some(1));
     ///

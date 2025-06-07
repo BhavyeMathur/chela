@@ -14,7 +14,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let tensor1 = Tensor::new([1.0, 2.0, 3.0]);
     /// let tensor2 = Tensor::new([4.0, 5.0, 6.0]);
     /// let result = tensor1.dot(tensor2);
@@ -40,7 +40,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let a = Tensor::new(vec![
     ///     [1.0, 2.0, 3.0],
@@ -93,7 +93,7 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let arr1 = Tensor::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
     /// let arr2 = Tensor::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices

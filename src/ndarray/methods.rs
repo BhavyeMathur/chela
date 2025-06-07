@@ -12,7 +12,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::scalar(50f32);
     /// let value = ndarray.value();
@@ -32,7 +32,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::new([[50, 60], [-5, -10]]);
     /// let data = ndarray.data_slice();
@@ -50,7 +50,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::new([[50, 60], [-5, -10]]);
     /// let data = ndarray.into_data_vector();

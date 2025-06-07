@@ -1,4 +1,4 @@
-use redstone::*;
+use redstone_ml::*;
 
 fn main() {
     let _grad = {

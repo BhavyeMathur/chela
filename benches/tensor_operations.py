@@ -20,7 +20,7 @@ class TensorOpTimingSuite(TimingSuite):
         labels = einsum_string.split(",") if shapes is None else shapes
         return [tuple(dimensions[char] for char in label) for label in labels]
 
-    @measure_rust_performance("Chela CPU", target="einsum")
+    @measure_rust_performance("Redstone CPU", target="einsum")
     def run(self, executable):
         return run_rust(executable, self.ID, TRIALS, WARMUP)
 

@@ -1,4 +1,4 @@
-use redstone::*;
+use redstone_ml::*;
 use num::NumCast;
 use paste::paste;
 

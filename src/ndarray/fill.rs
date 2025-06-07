@@ -9,7 +9,7 @@ impl<T: RawDataType> NdArray<'_, T> {
     /// # Example
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let mut arr = NdArray::new([1, 2, 4]);
     /// arr.fill(10);
@@ -26,7 +26,7 @@ impl<T: RawDataType + From<bool>> NdArray<'_, T> {
     /// # Example
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let mut arr = NdArray::new([1, 2, 4]);
     /// arr.zero();

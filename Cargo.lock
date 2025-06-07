@@ -253,8 +253,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "redstone"
-version = "0.0.2"
+name = "redstone-ml"
+version = "0.0.0"
 dependencies = [
  "bitflags",
  "cpu-time",

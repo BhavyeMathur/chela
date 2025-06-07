@@ -12,7 +12,7 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::new([[1, 2, 3], [4, 5, 6]]);
     /// let flat_array = ndarray.flatten();

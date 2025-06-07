@@ -1,6 +1,6 @@
-use redstone::*;
+use redstone_ml::*;
 use std::env;
-use redstone::profiler::*;
+use redstone_ml::profiler::*;
 
 type T = f32;
 const K: usize = 1000000;

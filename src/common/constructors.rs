@@ -29,7 +29,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray : NdArray<i32> = NdArray::new([[1, 2], [3, 4]]);
     /// assert_eq!(ndarray.shape(), &[2, 2]);
@@ -61,7 +61,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     /// # Examples
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::full(5i32, [2, 3]); // creates a 2x3 ndarray filled with the value 5.
     /// let ndarray = NdArray::full(true, [2, 3, 5]); // creates a 2x3x5 ndarray filled with 'true'
@@ -85,7 +85,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::<i32>::zeros([2, 3]);
     /// let ndarray = NdArray::<bool>::zeros([2, 3]);  // creates an ndarray filled with 'false'
@@ -107,7 +107,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let ndarray = NdArray::<i32>::ones([2, 3]);
     /// let ndarray = NdArray::<bool>::ones([2, 3]);  // creates an ndarray filled with 'true'
@@ -126,7 +126,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let scalar_array = NdArray::scalar(42);
     /// assert_eq!(scalar_array.shape(), []);
@@ -151,7 +151,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     /// # Examples
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let ndarray = NdArray::arange(0i32, 5); // [0, 1, 2, 3, 4].
     /// ```
     fn arange(start: T, stop: T) -> Self
@@ -172,7 +172,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     /// # Examples
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let ndarray = NdArray::arange_with_step(0i32, 5, 2); // [0, 2, 4].
     /// ```
     fn arange_with_step(start: T, stop: T, step: T) -> Self
@@ -206,7 +206,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     /// # Example
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let result = NdArray::linspace(0f32, 1.0, 5);  // [0.0, 0.25, 0.5, 0.75, 1.0]
     /// assert_eq!(result, NdArray::new([0f32, 0.25, 0.5, 0.75, 1.0]));
     /// ```
@@ -242,7 +242,7 @@ pub trait Constructors<T: RawDataType>: StridedMemory {
     /// # Example
     ///
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     /// let result = NdArray::linspace_exclusive(0.0f32, 1.0, 5);
     /// assert_eq!(result, NdArray::new([0f32, 0.2, 0.4, 0.6, 0.8]));
     /// ```

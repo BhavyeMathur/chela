@@ -6,7 +6,7 @@ m = 100
 class TensorBackwardsTimingSuite(TimingSuite):
     ID: int
 
-    @measure_rust_performance("Chela CPU", target="backwards")
+    @measure_rust_performance("Redstone CPU", target="backwards")
     def run(self, executable):
         return run_rust(executable, self.ID, TRIALS, WARMUP)
 

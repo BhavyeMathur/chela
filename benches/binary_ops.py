@@ -15,7 +15,7 @@ class TensorBinaryOps(TimingSuite):
         self.ndarrays = rand_ndarrays_with_shape(shapes, slices=slices, dtype=NUMPY_DTYPE)
         self.tensors = rand_tensors_with_shape(shapes, slices=slices, dtype=TORCH_DTYPE)
 
-    @measure_rust_performance("Chela CPU", target="binary_ops")
+    @measure_rust_performance("Redstone CPU", target="binary_ops")
     def run(self, executable):
         return run_rust(executable, self.ID, TRIALS, WARMUP)
 

@@ -31,7 +31,7 @@ impl<'a, T: TensorDataType> Reshape<T> for &'a Tensor<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let tensor = Tensor::new([1.0, 2.0, 3.0, 4.0]);
     /// let view = (&tensor).view();
@@ -59,7 +59,7 @@ impl<'a, T: TensorDataType> Reshape<T> for &'a Tensor<'a, T> {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let array = Tensor::new([[2.0, 3.0, 4.0], [10.0, 20.0, 30.0]]);
     ///
@@ -108,7 +108,7 @@ impl<T: TensorDataType> Reshape<T> for Tensor<'_, T> {
     ///
     /// # Example
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let tensor = Tensor::new([1.0, 2.0, 3.0, 4.0]);
     /// let view = (&tensor).view();
@@ -129,7 +129,7 @@ impl<T: TensorDataType> Reshape<T> for Tensor<'_, T> {
     ///
     /// # Examples
     /// ```
-    /// # use redstone::*;
+    /// # use redstone_ml::*;
     ///
     /// let array = Tensor::new([[2.0, 3.0, 4.0], [10.0, 20.0, 30.0]]);
     ///

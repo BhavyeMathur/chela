@@ -26,8 +26,8 @@ colors = {
     "NumPy":        "#4dabcf",
     "PyTorch CPU":  "#f2765d",
     "PyTorch MPS":  "#812ce5",
-    "Chela CPU":    "#ce422b",
-    "Chela Einsum": "#ba2323"
+    "Redstone CPU":    "#ce422b",
+    "Redstone Einsum": "#ba2323"
 }
 
 

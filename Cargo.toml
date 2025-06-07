@@ -1,6 +1,6 @@
 [package]
-name = "redstone"
-version = "0.0.2"
+name = "redstone-ml"
+version = "0.0.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "High-performance Machine Learning, Auto-Differentiation and Tensor Algebra crate for Rust"

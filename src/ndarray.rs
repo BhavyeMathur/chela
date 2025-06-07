@@ -13,7 +13,7 @@
 //! Example:
 //!
 //! ```rust
-//! use redstone::*;
+//! use redstone_ml::*;
 //!
 //! let matrix_a = NdArray::new([[1, 3, 2], [-1, 0, -1]]); // shape [2, 3]
 //! let matrix_b = NdArray::randint([3, 7], -5, 3);
@@ -28,17 +28,17 @@
 //!
 //! There are 2 ways we can create NdArray views: by borrowing or by consuming:
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! let data = NdArray::<f64>::rand([9]);
 //! let matrix = (&data).reshape([3, 3]); // by borrowing (data remains alive after)
-//! 
+//!
 //! let data = NdArray::<f64>::rand([9]);
 //! let matrix = data.reshape([3, 3]); // by consuming data
 //! ```
 //!
 //! The consuming syntax allows us to chain operations without worrying about lifetimes
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! // a reshaped and transposed random matrix
 //! let matrix = NdArray::<f64>::rand([9]).reshape([3, 3]).T();
 //! ```
@@ -56,7 +56,7 @@
 //! matrix-vector and matrix-matrix multiplications, batched matrix multiplications, and trace.
 //!
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! # let matrix = NdArray::<f64>::randn([3, 3]);
 //! # let matrix1 = NdArray::<f64>::randn([3, 3]);
 //! # let matrix2 = NdArray::<f64>::randn([3, 3]);
@@ -80,7 +80,7 @@
 //! including vDSP, Arm64 NEON SIMD, and BLAS.
 //!
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! # let ndarray = NdArray::<f64>::zeros([5, 5, 5]);
 //! let sum = ndarray.sum();
 //! let sum_along = ndarray.sum_along([0, -1]); // sum along first and last axes
@@ -91,7 +91,7 @@
 //! and bitwise operations (`&`, `|`, `<<`, `>>`).
 //!
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! # let arr1 = NdArray::<f64>::zeros([2, 2, 2]);
 //! # let arr2 = NdArray::<f64>::zeros([2, 2, 2]);
 //! let result = &arr1 + &arr2; // non-consuming
@@ -99,8 +99,8 @@
 //! # let arr2 = NdArray::<f64>::zeros([2, 2, 2]);
 //! let result = arr1 + arr2;   // consumes both
 //! ```
-//! 
-//! `NdArrays` are automatically broadcast using the exact same rules as NumPy 
+//!
+//! `NdArrays` are automatically broadcast using the exact same rules as NumPy
 //! to perform efficient computations with different-dimensional (yet compatible) data.
 //!
 //! ## Slicing, Indexing, and Iterating
@@ -109,7 +109,7 @@
 //! elements of vectors, columns/rows of matrices, and more.
 //!
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! let arr = NdArray::<f32>::rand([2, 4, 3, 5]); // 4D NdArray
 //! let slice1 = arr.slice(s![.., 0, ..=2]);      // use s! to specify a slice
 //! let slice2 = arr.slice_along(Axis(-2), 0);    // 0th element along second-to-last axis
@@ -118,7 +118,7 @@
 //!
 //! One can also iterate over an `NdArray` in various ways:
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! # let arr = NdArray::<f32>::rand([2, 4, 3, 5]); // 4D NdArray
 //! for subarray in arr.iter() { /* 4x3x5 subarrays */ }
 //! for subarray in arr.iter_along(Axis(2)) { /* 2x4x5 subarrays */ }
@@ -128,13 +128,13 @@
 //! ## Other Constructors
 //!
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! let ndarray = NdArray::arange(0i32, 5); // [0, 1, 2, 3, 4]
 //! let ndarray = NdArray::linspace(0f32, 1.0, 5); // [0.0, 0.25, 0.5, 0.75, 1.0]
 //! ```
 //!
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! let ndarray = NdArray::full(5.0, [5, 4, 2]);
 //! let falses = NdArray::<bool>::zeros([5, 4, 2]);
 //! ```
@@ -142,13 +142,13 @@
 //! A scalar `NdArray` is dimensionless and contains a single value.
 //! It is often the return value for reduction methods like `sum`, `product`, `min`, and `max`.
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! let ten = NdArray::scalar(10u8);
 //! ```
 //!
 //! In many cases, one desires randomized multidimensional arrays with a specified shape.
 //! ```rust
-//! # use redstone::*;
+//! # use redstone_ml::*;
 //! let rand = NdArray::<f32>::randn([3, 4]);
 //! let rand = NdArray::<f32>::rand([3, 4]);
 //! let rand = NdArray::randint([3, 4], -5, 3);

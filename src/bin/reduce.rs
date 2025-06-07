@@ -1,7 +1,7 @@
-use redstone::*;
+use redstone_ml::*;
 use std::env;
 
-use redstone::profiler::profile_func;
+use redstone_ml::profiler::profile_func;
 
 const N: usize = 1000000;
 
