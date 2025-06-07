@@ -69,10 +69,13 @@
 //!
 //! matrix.trace(); // also trace_along/offset_trace
 //! matrix.diagonal(); // also diagonal_along/offset_diagonal
-//! matrix.matmul(vector);
-//! matrix1.matmul(matrix2);
+//! matrix.matmul(&vector);
+//! matrix1.matmul(&matrix2);
 //!
 //! batch_matrices1.bmm(batch_matrices2);
+//! 
+//! // generic einsums 
+//! einsum([&matrix1, &matrix2, &vector], (["ij", "kj", "i"], "ik"));
 //! ```
 //!
 //! We can also perform various reductions including `sum`, `product`, `min`, `max`,
