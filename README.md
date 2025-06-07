@@ -83,6 +83,9 @@ matrix.matmul(vector);
 matrix1.matmul(matrix2);
 
 batch_matrices1.bmm(batch_matrices2);
+
+// generic einsums
+einsum([&matrix1, &matrix2, &vector], (["ij", "kj", "i"], "ik"));
 ```
 
 We can also perform various reductions including `sum`, `product`, `min`, `max`,
@@ -137,14 +140,14 @@ The `Tensor` API is nearly identical to `NdArray` with the following differences
 ```rust
 fn main() {
     let mut a = Tensor::new([[7.5, 12.0], [5.0, 6.25]]);
-    let b = Tensor::new([[0.5, -2.0]]);
+    let mut b = Tensor::new([[0.5, -2.0]]);
     let c = Tensor::scalar(10.0);
     
     a.set_requires_grad(true); 
     b.set_requires_grad(true);
     
     let matrix_2x2 = (&a / &b) * (c + 5.0);
-    let result = matrix_2x2.matmul(b);
+    let result = matrix_2x2.matmul(&b);
     result.backward();
 
     println!("{:?}", a.gradient().unwrap());
