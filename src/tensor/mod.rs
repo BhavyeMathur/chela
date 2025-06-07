@@ -10,7 +10,7 @@
 //! ```rust
 //! # use redstone_ml::*;
 //!  let mut a = Tensor::new([[7.5, 12.0], [5.0, 6.25]]);
-//!  let mut b = Tensor::new([[0.5, -2.0]]);
+//!  let mut b = Tensor::new([0.5, -2.0]);
 //!  let c = Tensor::scalar(10.0);
 //!
 //!  a.set_requires_grad(true);
