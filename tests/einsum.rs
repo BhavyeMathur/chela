@@ -1,4 +1,4 @@
-use chela::*;
+use redstone::*;
 use paste::paste;
 use rand_distr::num_traits::NumCast;
 
@@ -65,13 +65,13 @@ test_for_common_numeric_dtypes!(
             // sum
             let a = NdArray::arange(0, n).astype::<T>();
             let expected = a.sum();
-            let result = chela::einsum([&a], (["i"], ""));
+            let result = redstone::einsum([&a], (["i"], ""));
             assert_almost_eq!(result, expected);
 
             // trace
             let a = NdArray::arange(0, n * n).astype::<T>();
             let a = a.reshape([n, n]);
-            let result = chela::einsum([&a], (["ii"], ""));
+            let result = redstone::einsum([&a], (["ii"], ""));
             let expected = a.trace();
             assert_almost_eq!(result, expected);
         }
@@ -87,7 +87,7 @@ test_for_common_numeric_dtypes!(
             let a = a.reshape([n]);
 
             let expected = a.sum();
-            let result = chela::einsum([&a], (["i"], ""));
+            let result = redstone::einsum([&a], (["i"], ""));
             assert_almost_eq!(result, expected);
         }
 
@@ -97,15 +97,15 @@ test_for_common_numeric_dtypes!(
             let a = a.slice_along(Axis(1), 0);
 
             let expected = a.sum();
-            let result = chela::einsum([&a], (["ij"], ""));
+            let result = redstone::einsum([&a], (["ij"], ""));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(0));
-            let result = chela::einsum([&a], (["ij"], "j"));
+            let result = redstone::einsum([&a], (["ij"], "j"));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(1));
-            let result = chela::einsum([&a], (["ij"], "i"));
+            let result = redstone::einsum([&a], (["ij"], "i"));
             assert_almost_eq!(result, expected);
         }
 
@@ -115,15 +115,15 @@ test_for_common_numeric_dtypes!(
             let a = a.slice(s!(.., 0, .., 0));
 
             let expected = a.sum();
-            let result = chela::einsum([&a], (["ij"], ""));
+            let result = redstone::einsum([&a], (["ij"], ""));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(0));
-            let result = chela::einsum([&a], (["ij"], "j"));
+            let result = redstone::einsum([&a], (["ij"], "j"));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(1));
-            let result = chela::einsum([&a], (["ij"], "i"));
+            let result = redstone::einsum([&a], (["ij"], "i"));
             assert_almost_eq!(result, expected);
         }
 
@@ -133,34 +133,34 @@ test_for_common_numeric_dtypes!(
             let a = a.slice(s!(.., .., .., 0));
 
             let expected = a.sum();
-            let result = chela::einsum([&a], (["ijk"], ""));
+            let result = redstone::einsum([&a], (["ijk"], ""));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(0));
-            let result = chela::einsum([&a], (["ijk"], "jk"));
+            let result = redstone::einsum([&a], (["ijk"], "jk"));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(1));
-            let result = chela::einsum([&a], (["ijk"], "ik"));
+            let result = redstone::einsum([&a], (["ijk"], "ik"));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(2));
-            let result = chela::einsum([&a], (["ijk"], "ij"));
+            let result = redstone::einsum([&a], (["ijk"], "ij"));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(2));
             let expected = expected.sum_along(Axis(1));
-            let result = chela::einsum([&a], (["ijk"], "i"));
+            let result = redstone::einsum([&a], (["ijk"], "i"));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(2));
             let expected = expected.sum_along(Axis(0));
-            let result = chela::einsum([&a], (["ijk"], "j"));
+            let result = redstone::einsum([&a], (["ijk"], "j"));
             assert_almost_eq!(result, expected);
 
             let expected = a.sum_along(Axis(1));
             let expected = expected.sum_along(Axis(0));
-            let result = chela::einsum([&a], (["ijk"], "k"));
+            let result = redstone::einsum([&a], (["ijk"], "k"));
             assert_almost_eq!(result, expected);
         }
     }
@@ -172,7 +172,7 @@ test_for_common_numeric_dtypes!(
         let b = NdArray::new([[5, 6], [7, 8]]).astype::<T>();
 
         let expected = NdArray::new([[19, 22], [43, 50]]).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "jk"], "ik"));
+        let result = redstone::einsum([&a, &b], (["ij", "jk"], "ik"));
         assert_almost_eq!(result, expected);
 
         // bigger matmul
@@ -196,7 +196,7 @@ test_for_common_numeric_dtypes!(
         let expected = NdArray::new(expected_data);
         let expected = expected.reshape([n, n]);
 
-        let result = chela::einsum(&[&a, &b], (&["ij", "jk"], "ik"));
+        let result = redstone::einsum(&[&a, &b], (&["ij", "jk"], "ik"));
         assert_almost_eq!(result, expected);
     }
 );
@@ -220,7 +220,7 @@ test_for_common_numeric_dtypes!(
             NdArray::new(out)
         };
 
-        let result = chela::einsum(&[&a, &b], (&["ij", "j"], "i"));
+        let result = redstone::einsum(&[&a, &b], (&["ij", "j"], "i"));
         assert_almost_eq!(result, expected);
     }
 );
@@ -231,7 +231,7 @@ test_for_all_numeric_dtypes!(
         let b = NdArray::new([[5, 6, 7], [10, 20, 30], [3, 6, 9]]).astype::<T>();
 
         let expected = NdArray::new([[5, 12, 21], [0, 20, 60], [12, 30, 54]]).astype::<T>();
-        let result = chela::einsum([&a, &b], (&["ij", "ij"], "ij"));
+        let result = redstone::einsum([&a, &b], (&["ij", "ij"], "ij"));
         assert_almost_eq!(result, expected);
 
         // larger pointwise multiplication
@@ -244,7 +244,7 @@ test_for_all_numeric_dtypes!(
         let expected = NdArray::new(expected_data);
         let expected = expected.reshape([2, 10]);
 
-        let result = chela::einsum(&[&a, &b], (["ij", "ij"], "ij"));
+        let result = redstone::einsum(&[&a, &b], (["ij", "ij"], "ij"));
         assert_almost_eq!(result, expected);
     }
 );
@@ -270,7 +270,7 @@ test_for_common_numeric_dtypes!(
             NdArray::new(out)
         };
 
-        let result = chela::einsum(&[&a, &b], (["ij", "ki"], "j"));
+        let result = redstone::einsum(&[&a, &b], (["ij", "ki"], "j"));
         assert_almost_eq!(result, expected);
     }
 );
@@ -296,7 +296,7 @@ test_for_common_numeric_dtypes!(
             NdArray::new(out)
         };
 
-        let result = chela::einsum(&[&a, &b], (["ij", "ki"], "i"));
+        let result = redstone::einsum(&[&a, &b], (["ij", "ki"], "i"));
         assert_almost_eq!(result, expected);
     }
 );
@@ -307,11 +307,11 @@ test_for_all_numeric_dtypes!(
         let b = NdArray::new([[5, 6], [10, 20]]).astype::<T>();
 
         let expected = NdArray::new([71, 30]).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "jk"], "i"));
+        let result = redstone::einsum([&a, &b], (["ij", "jk"], "i"));
         assert_almost_eq!(result, expected);
 
         let expected = NdArray::new([11, 90]).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "jk"], "j"));
+        let result = redstone::einsum([&a, &b], (["ij", "jk"], "j"));
         assert_almost_eq!(result, expected);
 
         let a = NdArray::new([[1, 2, 3], [4, 5, 6]]).astype::<T>();
@@ -343,7 +343,7 @@ test_for_common_numeric_dtypes!(
             NdArray::new(out)
         };
 
-        let result = chela::einsum([&a, &b], (["ij", "jk"], "i"));
+        let result = redstone::einsum([&a, &b], (["ij", "jk"], "i"));
         assert_almost_eq!(result, expected);
     }
 );
@@ -354,19 +354,19 @@ test_for_all_numeric_dtypes!(
         let b = NdArray::new([[5, 6], [10, 20]]).astype::<T>();
 
         let expected = NdArray::scalar(63).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "ik"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "ik"], ""));
         assert_almost_eq!(result, expected);
 
         let expected = NdArray::scalar(101).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "jk"], ""));
         assert_almost_eq!(result, expected);
 
         let expected = NdArray::scalar(71).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "ki"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "ki"], ""));
         assert_almost_eq!(result, expected);
 
         let expected = NdArray::scalar(93).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "kj"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "kj"], ""));
         assert_almost_eq!(result, expected);
     }
 );
@@ -396,7 +396,7 @@ test_for_common_integer_dtypes!(
 
             NdArray::scalar(out)
         };
-        let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "jk"], ""));
         assert_almost_eq!(result, expected);
     }
 );
@@ -426,7 +426,7 @@ test_for_float_dtypes!(
 
             NdArray::scalar(out)
         };
-        let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "jk"], ""));
         assert_almost_eq!(result, expected, 0.01);
     }
 );
@@ -486,7 +486,7 @@ test_for_common_integer_dtypes!(
             NdArray::scalar(out)
         };
 
-        let result = chela::einsum([&a, &b], (["ij", "jk"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "jk"], ""));
         assert_almost_eq!(result, expected);
     }
 );
@@ -513,7 +513,7 @@ test_for_common_integer_dtypes!(
             NdArray::scalar(out)
         };
 
-        let result = chela::einsum([&a, &b], (["ij", "kj"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "kj"], ""));
         assert_almost_eq!(result, expected);
     }
 );
@@ -540,7 +540,7 @@ test_for_float_dtypes!(
             NdArray::scalar(out)
         };
 
-        let result = chela::einsum([&a, &b], (["ij", "kj"], ""));
+        let result = redstone::einsum([&a, &b], (["ij", "kj"], ""));
         assert_almost_eq!(result, expected, 0.2);
     }
 );
@@ -551,11 +551,11 @@ test_for_all_numeric_dtypes!(
         let b = NdArray::new([[5, 6], [10, 20]]).astype::<T>();
 
         let expected = NdArray::new([[[5, 10], [12, 40]], [[0, 0], [6, 20]]]).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "kj"], "ijk"));
+        let result = redstone::einsum([&a, &b], (["ij", "kj"], "ijk"));
         assert_almost_eq!(result, expected);
 
         let expected = NdArray::new([[[5, 6], [10, 12]], [[0, 0], [10, 20]]]).astype::<T>();
-        let result = chela::einsum([&a, &b], (["ij", "ik"], "ijk"));
+        let result = redstone::einsum([&a, &b], (["ij", "ik"], "ijk"));
         assert_almost_eq!(result, expected);
     }
 );
@@ -592,7 +592,7 @@ test_for_all_numeric_dtypes!(
             [[[15, 18], [21, 24]], [[20, 24], [28, 32]]]
         ]).astype::<T>();
 
-        let result = chela::einsum([&a, &b], (["ij", "kl"], "ijkl"));
+        let result = redstone::einsum([&a, &b], (["ij", "kl"], "ijkl"));
         assert_almost_eq!(result, expected);
     }
 );

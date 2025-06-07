@@ -24,8 +24,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let ndarray = NdArray::new([1, 2, 3]);  // shape is [3]
     /// let broadcasted_array = ndarray.broadcast_to(&[2, 3]);
     ///

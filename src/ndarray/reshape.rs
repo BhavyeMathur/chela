@@ -11,8 +11,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// See `NdArray::ravel()`.
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::new([[1, 2, 3], [4, 5, 6]]);
     /// let flat_array = ndarray.flatten();

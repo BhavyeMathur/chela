@@ -1,4 +1,4 @@
-use chela::*;
+use redstone::*;
 use paste::paste;
 
 test_for_all_numeric_dtypes!(

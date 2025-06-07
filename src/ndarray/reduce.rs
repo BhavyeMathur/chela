@@ -114,8 +114,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     /// Computes the sum of all elements in the array.
     ///
     /// # Example
-    /// ```ignore
-    /// use chela::*;
+    /// ```
+    /// use redstone::*;
     ///
     /// let array = NdArray::new(vec![1, 2, 3, 4]);
     /// let sum = array.sum();
@@ -133,8 +133,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     /// Computes the product of all elements in the array.
     ///
     /// # Example
-    /// ```ignore
-    /// use chela::*;
+    /// ```
+    /// use redstone::*;
     ///
     /// let array = NdArray::new(vec![1, 2, 3, 4]);
     /// let prod = array.product();
@@ -152,8 +152,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     /// Computes the minimum of all elements in the array.
     ///
     /// # Example
-    /// ```ignore
-    /// use chela::*;
+    /// ```
+    /// use redstone::*;
     ///
     /// let array = NdArray::new(vec![-1, 3, -7, 8]);
     /// let min = array.min();
@@ -171,8 +171,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     /// Computes the maximum of all elements in the array.
     ///
     /// # Example
-    /// ```ignore
-    /// use chela::*;
+    /// ```
+    /// use redstone::*;
     ///
     /// let array = NdArray::new(vec![-1, 3, -7, 8]);
     /// let max = array.max();
@@ -190,8 +190,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     /// Computes the minimum absolute value of all elements in the array.
     ///
     /// # Example
-    /// ```ignore
-    /// use chela::*;
+    /// ```
+    /// use redstone::*;
     ///
     /// let array = NdArray::new(vec![-1, 3, -7, 8]);
     /// let min = array.min_magnitude();
@@ -209,8 +209,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     /// Computes the maximum absolute value of all elements in the array.
     ///
     /// # Example
-    /// ```ignore
-    /// use chela::*;
+    /// ```
+    /// use redstone::*;
     ///
     /// let array = NdArray::new(vec![-1, 3, -9, 8]);
     /// let max = array.max_magnitude();
@@ -228,8 +228,8 @@ impl<T: NumericDataType> NdArray<'_, T> {
     /// Computes the mean of all elements in the array.
     ///
     /// # Example
-    /// ```ignore
-    /// use chela::*;
+    /// ```
+    /// use redstone::*;
     ///
     /// let array = NdArray::new(vec![1.0, 3.0, 5.0, 7.0]);
     /// let mean = array.mean();

@@ -27,20 +27,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "chela"
-version = "0.0.2"
-dependencies = [
- "bitflags",
- "cpu-time",
- "num",
- "paste",
- "pkg-config",
- "rand",
- "rand_distr",
- "trybuild",
-]
-
-[[package]]
 name = "cpu-time"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -264,6 +250,20 @@ checksum = "32cb0b9bc82b0a0876c2dd994a7e7a2683d3e7390ca40e6886785ef0c7e3ee31"
 dependencies = [
  "num-traits",
  "rand",
+]
+
+[[package]]
+name = "redstone"
+version = "0.0.2"
+dependencies = [
+ "bitflags",
+ "cpu-time",
+ "num",
+ "paste",
+ "pkg-config",
+ "rand",
+ "rand_distr",
+ "trybuild",
 ]
 
 [[package]]

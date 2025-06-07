@@ -1,4 +1,4 @@
-use chela::*;
+use redstone::*;
 
 macro_rules! test_astype_from {
     ($src_ty:ty) => {

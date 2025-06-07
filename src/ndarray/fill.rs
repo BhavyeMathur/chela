@@ -8,8 +8,8 @@ impl<T: RawDataType> NdArray<'_, T> {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut arr = NdArray::new([1, 2, 4]);
     /// arr.fill(10);
@@ -25,8 +25,8 @@ impl<T: RawDataType + From<bool>> NdArray<'_, T> {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut arr = NdArray::new([1, 2, 4]);
     /// arr.zero();

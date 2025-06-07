@@ -1,70 +1,155 @@
-# Chela
+# Redstone ML
 
-Chela is a crate built for Tensor Computations, Linear Algebra, and Machine Learning natively in Rust. Modeled after PyTorch and NumPy, it provides the following features:
+High-performance Tensor Computations and Machine Learning with Dynamic Auto-Differentiation natively in Rust.
+Modeled after PyTorch and NumPy, it provides the following features:
 
-1. N-dimensional arrays (`NdArray`) for tensor computations.
-2. CPU-accelerated linear algebra routines.
-3. Reverse-mode automatic differentiation (autograd) for machine learning.
+1. [N-dimensional Arrays](#n-dimensional-array-for-tensor-computations) (`NdArray`) for tensor computations.
+2. [Linear Algebra & Operations](#linear-algebra-broadcasting-and-reductions) with GPU and CPU acceleration
+3. [Dynamic Automatic Differentiation](#automatic-differentiation-with-redstone) (reverse-mode autograd) for machine learning.
+ 
+To install either do `cargo install redstone-ml` or add this library to `Cargo.toml`.
 
-See [crates.io](https://crates.io/crates/chela) for installation details.
-
-This project is still in its early stage, so feature requests, bugs, and other contributions are very welcome. Please contact me if you need help using Chela!
-
-## Tensor Computations with Chela
-
-We can easily define multidimensional arrays and operate on them as follows:
-
-```rust
-use chela::*;
-
-fn main() {
-    let matrix = NdArray::new([[7, 12, 3], [5, 6, 4], [0, 0, 1]]);
-    let vector = NdArray::new(vec![5, 10, -5]);
-    
-    let result = matrix.matmul(vector);
-    println!("{result:?}");
-}
-```
-Use `NdArray::scalar`, `NdArray::ones/zeros`, `NdArray::arange` or `NdArray::linspace` to construct different kinds of ndarrays. We can add, subtract, multiply, and divide `NdArrays` using the usual operators. Chela automatically broadcasts tensor operations like NumPy and PyTorch too.
-
-With `NdArray::slice` or `NdArray::slice_along`, we can index into these multidimensional arrays.
-
-```rust
-fn main() {
-    // random 5x5 matrix with zeros along diagonal
-    let mut matrix = NdArray::rand([5, 5]);
-    matrix.diagonal().zero();
-    
-    let vector = NdArray::linspace(-5.0, 7.5, 5);
-
-    // can also do matrix.slice_along(Axis(0), 2)
-    let mut result = matrix.slice([2]).dot(vector);
-    result *= 2.0;
-}
-```
-
-Internally, Chela speeds up its operations using custom ARM NEON kernels, BLAS, and vDSP on supported architectures. This makes it blazing fast! The benchmark below is for Apple Silicon.
+Internally, Redstone speeds up its operations using custom ARM NEON kernels, BLAS, and vDSP on supported architectures. This makes it blazing fast! The benchmark below is for single-threaded Apple Silicon.
 
 ![tensor_operations.png](assets/tensor_operations.png)
 
-## Automatic Differentiation with Chela
+This project is still in its early stage, so feature requests, bugs, and other contributions are very welcome. Please contact me if you are interested!
 
-Chela provides a wrapper around `NdArray` called `Tensor` (only for floating point types) that supports reverse-mode automatic differentiation for a subset of functions.
+# Documentation
+
+More detailed documentation is available [here]().
+
+# N-dimensional Array for Tensor Computations
+
+An `NdArray` is a fixed-size multidimensional array container defined by its `shape`
+and datatype. 1D (vectors) and 2D (matrices) arrays are often of special interest
+and can be used in various linear algebra computations
+including dot products, matrix products, batch matrix multiplications, einsums, and more.
+
+`NdArrays` can be iterated over (along configurable dimensions), reshaped, sliced, and indexed,
+reduced, and more.
+
+This struct is heavily modeled after NumPy's `ndarray` and supports many of the same methods.
+
+Example:
+
+```rust
+use redstone::*;
+
+let matrix_a = NdArray::new([[1, 3, 2], [-1, 0, -1]]); // shape [2, 3]
+let matrix_b = NdArray::randint([3, 7], -5, 3);
+
+let matrix_view = matrix_b.slice_along(Axis(1), 0..2); // shape [3, 2]
+let matrix_c = matrix_a.matmul(matrix_view);
+
+let result = matrix_c.sum();
+```
+
+## NdArray Views & Lifetimes
+
+There are 2 ways we can create NdArray views: by borrowing or by consuming:
+```rust
+let data = NdArray::<f64>::rand([9]);
+let matrix = (&data).reshape([3, 3]); // by borrowing (data remains alive after)
+
+let data = NdArray::<f64>::rand([9]);
+let matrix = data.reshape([3, 3]); // by consuming data
+```
+
+The consuming syntax allows us to chain operations without worrying about lifetimes
+```rust
+// a reshaped and transposed random matrix
+let matrix = NdArray::<f64>::rand([9]).reshape([3, 3]).T();
+```
+
+Operations like `reshape`, `view`, `diagonal`, `squeeze`, `unsqueeze`, `T`, `transpose`, and
+`ravel` do not create new NdArrays by duplicating memory (which would be slow).
+They always return `NdArray` views which share memory with the source `NdArray`.
+`NdArray::clone()` or `NdArray::flatten()` can be used to duplicate the underlying `NdArray`.
+
+This means that all `NdArray` views have a lifetime at-most as long as the source `NdArray`.
+
+## Linear Algebra, Broadcasting, and Reductions
+
+We currently support the core linear algebra operations including dot products,
+matrix-vector and matrix-matrix multiplications, batched matrix multiplications, and trace.
+
+```rust
+vector1.dot(vector2);
+
+matrix.trace(); // also trace_along/offset_trace
+matrix.diagonal(); // also diagonal_along/offset_diagonal
+matrix.matmul(vector);
+matrix1.matmul(matrix2);
+
+batch_matrices1.bmm(batch_matrices2);
+```
+
+We can also perform various reductions including `sum`, `product`, `min`, `max`,
+`min_magnitude`, and `max_magnitude`. Each of these is accelerated with various libraries
+including vDSP, Arm64 NEON SIMD, and BLAS.
+
+```rust
+let sum = ndarray.sum();
+let sum_along = ndarray.sum_along([0, -1]); // sum along first and last axes
+```
+
+`NdArrays` can be used in arithmetic operations using the usual binary operators including
+addition (`+`), subtraction (`-`), multiplication (`*`), division (`/`), remainder (`%`),
+and bitwise operations (`&`, `|`, `<<`, `>>`).
+
+```rust
+let result = &arr1 + &arr2; // non-consuming
+let result = &arr1 + arr2;  // consumes RHS
+let result = arr1 + arr2;   // consumes both
+```
+
+`NdArrays` are automatically broadcast using the exact same rules as NumPy
+to perform efficient computations with different-dimensional (yet compatible) data.
+
+## Slicing, Indexing, and Iterating
+
+Slicing and indexing an `NdArray` always return a view. This is how we can access various
+elements of vectors, columns/rows of matrices, and more.
+
+```rust
+let arr = NdArray::<f32>::rand([2, 4, 3, 5]); // 4D NdArray
+let slice1 = arr.slice(s![.., 0, ..=2]);      // use s! to specify a slice
+let slice2 = arr.slice_along(Axis(-2), 0);    // 0th element along second-to-last axis
+let el = arr[[0, 3, 2, 4]];
+```
+
+One can also iterate over an `NdArray` in various ways:
+```rust
+for subarray in arr.iter() { /* 4x3x5 subarrays */ }
+for subarray in arr.iter_along(Axis(2)) { /* 2x4x5 subarrays */ }
+for el in arr.flatiter() { /* element-wise iteration */ }
+```
+
+## Automatic Differentiation with Redstone
+
+The `Tensor` API is nearly identical to `NdArray` with the following differences:
+1. Only floating point (`f32`, `f64`) types are supported
+2. Operations without autograd implemented are omitted
+
+`Tensors` allow us to perform dynamic automatic differentiation which is independent of control flow. This allows us to find matrix derivatives in complicated scenarios:
 
 ```rust
 fn main() {
     let mut a = Tensor::new([[7.5, 12.0], [5.0, 6.25]]);
     let b = Tensor::new([[0.5, -2.0]]);
     let c = Tensor::scalar(10.0);
-
-    // we wish to compute the gradient for a and b
+    
     a.set_requires_grad(true); 
     b.set_requires_grad(true);
-
-    let result = (&a / &b) * (c + 5.0);
+    
+    let matrix_2x2 = (&a / &b) * (c + 5.0);
+    let result = matrix_2x2.matmul(b);
     result.backward();
 
     println!("{:?}", a.gradient().unwrap());
     println!("{:?}", b.gradient().unwrap());
 }
 ```
+
+Gradients are only computed for `Tensors` with `requires_grad = true` to avoid unnecessary computation.

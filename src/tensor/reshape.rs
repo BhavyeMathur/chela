@@ -30,10 +30,10 @@ impl<'a, T: TensorDataType> Reshape<T> for &'a Tensor<'a, T> {
     /// Provides a non-owning view of the tensor that shares its data with the original tensor.
     ///
     /// # Example
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
-    /// let tensor = Tensor::new(vec![1, 2, 3, 4]);
+    /// let tensor = Tensor::new([1.0, 2.0, 3.0, 4.0]);
     /// let view = (&tensor).view();
     /// assert!(view.is_view())
     /// ```
@@ -58,13 +58,13 @@ impl<'a, T: TensorDataType> Reshape<T> for &'a Tensor<'a, T> {
     /// - If `axis1` or `axis2` are out of bounds
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
-    /// let array = Tensor::new([[2, 3, 4], [10, 20, 30]]);
+    /// let array = Tensor::new([[2.0, 3.0, 4.0], [10.0, 20.0, 30.0]]);
     ///
     /// let transposed = array.transpose(0, 1);
-    /// assert_eq!(transposed, Tensor::new([[2, 10], [3, 20], [4, 30]]));
+    /// assert_eq!(transposed, Tensor::new([[2.0, 10.0], [3.0, 20.0], [4.0, 30.0]]));
     /// ```
     fn transpose(self, axis1: impl AxisType, axis2: impl AxisType) -> Self::Output {
         let requires_grad = self.requires_grad();
@@ -107,10 +107,10 @@ impl<T: TensorDataType> Reshape<T> for Tensor<'_, T> {
     /// Provides a non-owning view of the tensor that shares its data with the original tensor.
     ///
     /// # Example
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
-    /// let tensor = Tensor::new(vec![1, 2, 3, 4]);
+    /// let tensor = Tensor::new([1.0, 2.0, 3.0, 4.0]);
     /// let view = (&tensor).view();
     /// assert!(view.is_view())
     /// ```
@@ -128,13 +128,13 @@ impl<T: TensorDataType> Reshape<T> for Tensor<'_, T> {
     /// - If `axis1` or `axis2` are out of bounds
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
-    /// let array = Tensor::new([[2, 3, 4], [10, 20, 30]]);
+    /// let array = Tensor::new([[2.0, 3.0, 4.0], [10.0, 20.0, 30.0]]);
     ///
     /// let transposed = array.transpose(0, 1);
-    /// assert_eq!(transposed, Tensor::new([[2, 10], [3, 20], [4, 30]]));
+    /// assert_eq!(transposed, Tensor::new([[2.0, 10.0], [3.0, 20.0], [4.0, 30.0]]));
     /// ```
     fn transpose(self, axis1: impl AxisType, axis2: impl AxisType) -> Self::Output {
         let requires_grad = self.requires_grad();

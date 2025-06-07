@@ -1,4 +1,4 @@
-use chela::*;
+use redstone::*;
 use num::{NumCast, One, Zero};
 use paste::paste;
 

@@ -1,7 +1,7 @@
-use chela::*;
+use redstone::*;
 use std::env;
 
-use chela::profiler::profile_func;
+use redstone::profiler::profile_func;
 
 type T = f32;
 const M: usize = 100;

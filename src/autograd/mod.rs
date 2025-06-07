@@ -1,3 +1,5 @@
+//! # Dynamic, Reverse-Mode Auto-Differentiation Engine
+//!
 pub(super) mod util;
 
 pub mod gradient_function;

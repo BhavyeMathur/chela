@@ -20,8 +20,8 @@ pub trait AxisType {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// assert_eq!(Axis(-1).as_absolute(4), 3);
     /// assert_eq!(Axis(-2).as_absolute(4), 2);
     /// assert_eq!(Axis(1).as_absolute(4), 1);

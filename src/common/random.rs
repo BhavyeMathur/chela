@@ -1,7 +1,6 @@
 use crate::util::to_vec::ToVec;
 use crate::{Constructors, FloatDataType, NdArray, NumericDataType, RawDataType, Tensor, TensorDataType};
 use num::{Float, NumCast};
-use rand::distributions::uniform::SampleUniform;
 use rand::distributions::{Distribution, Uniform};
 use rand::thread_rng;
 use rand_distr::Normal;
@@ -11,15 +10,15 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// from a standard normal distribution (0 mean, unit standard deviation).
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::<f64>::randn([2, 3]);
     /// println!("{:?}", ndarray);
     /// ```
     fn randn(shape: impl ToVec<usize>) -> Self
     where
-        T: FloatDataType + SampleUniform
+        T: FloatDataType
     {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
@@ -38,15 +37,15 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// with values uniformly distributed in [0, 1).
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::<f64>::rand([2, 3]);
     /// println!("{:?}", ndarray);
     /// ```
     fn rand(shape: impl ToVec<usize>) -> Self
     where
-        T: FloatDataType + SampleUniform
+        T: FloatDataType
     {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
@@ -65,14 +64,14 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     ///
     /// # Examples
     /// ```
-    /// # use chela::*;
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::<f64>::uniform([2, 3], -5.0, 3.0);
     /// println!("{:?}", ndarray);
     /// ```
     fn uniform(shape: impl ToVec<usize>, low: T, high: T) -> Self
     where
-        T: FloatDataType + SampleUniform
+        T: FloatDataType
     {
         let mut rng = thread_rng();
         let shape = shape.to_vec();
@@ -90,8 +89,8 @@ pub trait RandomConstructors<T: RawDataType>: Constructors<T> {
     /// with integer values uniformly distributed between `low` (inclusive) and `high` (exclusive).
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::<isize>::randint([2, 3], -5, 3);
     /// println!("{:?}", ndarray);

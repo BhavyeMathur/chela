@@ -1,4 +1,4 @@
-use chela::*;
+use redstone::*;
 
 #[test]
 fn from_vector() {

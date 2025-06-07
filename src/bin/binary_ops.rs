@@ -1,6 +1,6 @@
-use chela::*;
+use redstone::*;
 use std::env;
-use chela::profiler::*;
+use redstone::profiler::*;
 
 type T = f32;
 const K: usize = 1000000;

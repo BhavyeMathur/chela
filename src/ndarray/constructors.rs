@@ -24,7 +24,7 @@ use std::ptr::NonNull;
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```
 /// let shape = vec![5, 3, 2, 1];
 ///
 /// // stride would be [10, 2, 1, 1]

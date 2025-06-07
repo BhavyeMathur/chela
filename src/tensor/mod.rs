@@ -1,3 +1,6 @@
+//! # Multidimensional Tensors with Dynamic Automatic Differentiation
+//!
+
 pub mod methods;
 pub mod ops;
 pub mod constructors;

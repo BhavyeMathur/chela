@@ -12,8 +12,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut tensor = Tensor::new([1.0, 2.0, 3.0]);
     /// tensor.set_requires_grad(true);
@@ -39,8 +39,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut tensor = Tensor::new([1.0, 2.0, 3.0]);
     /// tensor.set_requires_grad(true);
@@ -87,8 +87,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut a = Tensor::scalar(2.0f32);
     /// let b = Tensor::scalar(3.0);
@@ -109,8 +109,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut a = Tensor::scalar(2.0f32);
     /// let b = Tensor::scalar(3.0);
@@ -135,8 +135,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut a = Tensor::full(2.0, [3]);  // [2, 2, 2]
     /// let b = Tensor::new([3.0, 1.0, -1.0]);
@@ -160,8 +160,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut a = Tensor::full(2.0, [3]);  // [2, 2, 2]
     /// let b = Tensor::new([3.0, 1.0, -1.0]);
@@ -182,8 +182,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let mut a = Tensor::full(2.0, [3]);
     /// a.set_requires_grad(true);

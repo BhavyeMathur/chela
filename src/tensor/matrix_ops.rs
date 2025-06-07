@@ -13,8 +13,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// - Panics if the lengths of the two tensors are not equal
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let tensor1 = Tensor::new([1.0, 2.0, 3.0]);
     /// let tensor2 = Tensor::new([4.0, 5.0, 6.0]);
     /// let result = tensor1.dot(tensor2);
@@ -39,8 +39,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// - If the dimensions/shape of the tensors are incompatible
     ///
     /// # Example
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let a = Tensor::new(vec![
     ///     [1.0, 2.0, 3.0],
@@ -92,8 +92,8 @@ impl<'a, T: TensorDataType> Tensor<'a, T> {
     /// - If the tensors do not have dimensions compatible for batch matrix multiplication.
     ///
     /// # Example
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let arr1 = Tensor::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
     /// let arr2 = Tensor::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices

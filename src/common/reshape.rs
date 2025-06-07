@@ -16,8 +16,8 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     /// Provides a non-owning view of the ndarray that shares its data with the original ndarray.
     ///
     /// # Example
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::new(vec![1, 2, 3, 4]);
     /// let view = (&ndarray).view();
@@ -40,8 +40,8 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::new([[4, 5], [6, 7], [8, 9]]);  // shape is [3, 2]
     /// let reshaped_array = ndarray.reshape([1, 2, 3]);
@@ -81,8 +81,8 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     /// This method returns a view.
     ///
     /// # Example
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::new([[[[1], [3]], [[1], [4]]]]);  // shape [1, 2, 2, 1]
     /// let squeezed = ndarray.squeeze();
@@ -111,8 +111,8 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let ndarray = NdArray::new([2, 3]);  // shape is [2]
     /// let unsqueezed = ndarray.unsqueeze(-1);  // add dimension after the last axis
@@ -146,8 +146,8 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     /// - If the array is 1-dimensional or a scalar.
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let array = NdArray::new([[2, 3, 4], [10, 20, 30]]);
     ///
@@ -165,8 +165,8 @@ pub trait Reshape<T: RawDataType>: StridedMemory {
     /// - If `axis1` or `axis2` are out of bounds
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let array = NdArray::new([[2, 3, 4], [10, 20, 30]]);
     ///

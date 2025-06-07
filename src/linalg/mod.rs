@@ -1,3 +1,5 @@
+//! # Linear & Matrix Algebra for Tensors and NdArrays
+//!
 pub mod sum_of_products;
 pub mod specialized_einsum;
 

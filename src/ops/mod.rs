@@ -1,3 +1,6 @@
+//! # CPU & GPU Acceleration using vDSP, BLAS, LAPACK, CUDA, Arm64 NEON, etc
+//!
+
 pub mod simd_reduce_ops;
 pub mod simd_sum_of_products;
 pub mod simd_binary_ops;

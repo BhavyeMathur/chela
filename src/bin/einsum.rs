@@ -1,5 +1,5 @@
-use chela::profiler::profile_func;
-use chela::*;
+use redstone::profiler::profile_func;
+use redstone::*;
 use std::env;
 
 const I: usize = 100;

@@ -17,7 +17,7 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
     ///
     /// # Example
     /// ```
-    /// # use chela::*;
+    /// # use redstone::*;
     ///
     /// let a = NdArray::new(vec![
     ///     [1, 2, 3],
@@ -71,8 +71,8 @@ impl<'a, T: MatrixOps> NdArray<'a, T> {
     /// - If the arrays do not have dimensions compatible for batch matrix multiplication.
     ///
     /// # Example
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     ///
     /// let arr1 = NdArray::<f32>::rand([3, 2, 4]); // 3 batches of 2x4 matrices
     /// let arr2 = NdArray::<f32>::rand([3, 4, 5]); // 3 batches of 4x5 matrices
@@ -102,7 +102,7 @@ impl<'a, T: SumOfProductsType> NdArray<'a, T> {
     ///
     /// # Examples
     /// ```
-    /// # use chela::*;
+    /// # use redstone::*;
     /// let arr1 = NdArray::new([1, 2, 3]);
     /// let arr2 = NdArray::new([4, 5, 6]);
     /// let result = arr1.dot(arr2);
@@ -133,8 +133,8 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let arr = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
@@ -152,8 +152,8 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let arr = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
@@ -172,8 +172,8 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
@@ -192,8 +192,8 @@ impl<'a, T: NumericDataType> NdArray<'a, T> {
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
@@ -214,8 +214,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
@@ -234,8 +234,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - if the ndarray has fewer than 2 dimensions.
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
@@ -255,8 +255,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let ndarray = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
@@ -276,8 +276,8 @@ impl<'a, T: RawDataType> NdArray<'a, T> {
     /// - if `axis1` and `axis2` are the same or are out-of-bounds
     ///
     /// # Examples
-    /// ```ignore
-    /// # use chela::*;
+    /// ```
+    /// # use redstone::*;
     /// let arr = NdArray::new([
     ///     [1, 2, 3],
     ///     [4, 5, 6],
