@@ -1,10 +1,14 @@
 <div align="center">
-<img src="https://github.com/BhavyeMathur/redstone-ml/blob/master/assets/logo/redstone-ml-red-logo.png" width="450px"/>
+<img src="https://github.com/BhavyeMathur/redstone-ml/blob/master/assets/logo/redstone-ml-red-logo.png"/>
+
+<br/>
+<br/>
 
 ![Crates.io Version](https://img.shields.io/crates/v/redstone-ml?color=%23ff5757)
 [![Test Status](https://github.com/BhavyeMathur/redstone-ml/actions/workflows/rust.yml/badge.svg)](https://github.com/BhavyeMathur/redstone-ml/actions/workflows/rust.yml)
 ![license](https://shields.io/badge/license-MIT%2FApache--2.0-blue)
 
+---
 
 **High-performance Tensor Computation and Machine Learning
 <br/>
@@ -24,7 +28,7 @@ To install either do `cargo install redstone-ml` or add this library to `Cargo.t
 
 Internally, Redstone speeds up its operations using custom ARM NEON kernels, BLAS, and vDSP on supported architectures. This makes it blazing fast! The benchmark below is for single-threaded Apple Silicon.
 
-![tensor_operations.png](assets/tensor_operations.png)
+![https://github.com/BhavyeMathur/redstone-ml/blob/master/assets/tensor_operations.png](https://github.com/BhavyeMathur/redstone-ml/blob/master/assets/tensor_operations.png)
 
 This project is still in its early stage, so feature requests, bugs, and other contributions are very welcome. Please contact me if you are interested!
 
