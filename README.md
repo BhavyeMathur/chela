@@ -1,6 +1,16 @@
-# Redstone ML
+<div align="center">
+<img src="https://github.com/BhavyeMathur/redstone-ml/blob/master/assets/logo/redstone-ml-red-logo.png" width="350px"/>
 
-High-performance Tensor Computations and Machine Learning with Dynamic Auto-Differentiation natively in Rust.
+![Crates.io Version](https://img.shields.io/crates/v/redstone-ml?color=%23ff5757)
+[![Test Status](https://github.com/BhavyeMathur/redstone-ml/actions/workflows/rust.yml/badge.svg)](https://github.com/BhavyeMathur/redstone-ml/actions/workflows/rust.yml)
+![license](https://shields.io/badge/license-MIT%2FApache--2.0-blue)
+
+
+**High-performance Tensor Computation and Machine Learning with Dynamic Auto-Differentiation natively in Rust**
+
+<br/>
+</div>
+
 Modeled after PyTorch and NumPy, it provides the following features:
 
 1. [N-dimensional Arrays](#n-dimensional-array-for-tensor-computations) (`NdArray`) for tensor computations.
